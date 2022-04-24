@@ -5,6 +5,8 @@ export default class Block {
   protected values = new Map();
   protected txns: Txn[] = [];
 
+  /******************************/
+
   static fromBuffer(buffer: Buffer) {
     try {
       return new Block().fromBuffer(buffer);
