@@ -6,21 +6,45 @@ export function extendWithState(referenceToCore: unknown) {
   const core = referenceToCore as Core;
 
   const state = {
-    isRunning: false,
+    isRanActive: false,
+    isRanPassive: false,
     isInitialized: false,
     isSynchronized: false,
+    promiseRunningActive: null as Promise<void> | null,
+    promiseRunningPassive: null as Promise<void> | null,
     promiseInitializing: null as Promise<void> | null,
     promiseSynchronizing: null as Promise<void> | null
   };
 
   return { state: {
-    isRunning: () => state.isRunning,
+    isRunningActive: () => state.isRanActive,
+    isRunningPassive: () => state.isRanPassive,
     isInitialized: () => state.isInitialized,
     isSynchronized: () => state.isSynchronized,
 
-    goToStateRunning() {
-      if (!state.isRunning) {
-        state.isRunning = true;
+    goToStateRunningActive() {
+      if (state.promiseRunningActive === null) {
+        return state.promiseRunningActive = new Promise((resolve, reject) => {
+          if (!state.isRanActive) {
+            state.promiseRunningPassive = null;
+            state.isRanPassive = false;
+
+            core.state.goToStateInitialized()
+            .then(() => core.state.goToStateSync())
+            .then(() => {
+              state.isRanActive = true;
+              resolve();
+            });
+          }
+        });
+      }
+
+      return state.promiseRunningActive;
+    },
+    goToStateRunningPassive() {
+      if (!state.isRunningActive) {
+        state.isRunningActive = true;
+        state.isRunningPassive = false;
 
         core.state.goToStateInitialized();
       }

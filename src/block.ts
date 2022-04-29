@@ -9,6 +9,8 @@ export function extendWithBlock(referenceToCore: unknown) {
   return { block: {
     async createGenesis() {
       const block = new Block();
+
+      return block;
     }
   }};
 }

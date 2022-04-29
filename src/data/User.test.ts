@@ -17,7 +17,7 @@ describe('UserRoot', () => {
         }
 
         const [, publicKey] = getKeys();
-        const key = new KeySecp256k1(BufferWrapper.create(publicKey));
+        const key = new KeySecp256k1(publicKey);
 
         user.setKey(key);
         expect(user.isValid()).toBe(true);
@@ -36,7 +36,7 @@ describe('UserRoot', () => {
         }
 
         const [, publicKey] = getKeys();
-        const key = new KeySecp256k1(BufferWrapper.create(publicKey));
+        const key = new KeySecp256k1(publicKey);
 
         user.setKey(key);
 

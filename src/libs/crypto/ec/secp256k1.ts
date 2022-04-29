@@ -1,6 +1,7 @@
 import { ec as EC } from 'elliptic';
 import { instantiateSecp256k1, Secp256k1 } from 'bitcoin-ts/build/main';
 import LazyPromise from "@/libs/LazyPromise";
+import BufferWrapper from "@/libs/BufferWrapper";
 export type HexPrivateKey = string;
 export type HexPublicKey = string;
 export type HexSignature = string;
@@ -32,18 +33,18 @@ export function waitForWasmModule() {
 /**
  * @return [private, public]
  */
-export function getKeys(): [Buffer, Buffer];
+export function getKeys(): [BufferWrapper, BufferWrapper];
 export function getKeys(encode: 'hex'): [string, string];
 export function getKeys(encode?: 'hex') {
     let key = ec.genKeyPair(),
-        hexPrivateKey = key.getPrivate('hex'),
-        hexPublicKey = key.getPublic(true, 'hex'); // true - compressed
+        privateKey = key.getPrivate(),
+        publicKey = key.getPublic();
 
     switch (encode) {
-        case 'hex': return [hexPrivateKey, hexPublicKey];
+        case 'hex': return [privateKey.toString('hex'), publicKey.encode('hex', true)];
         default: return [
-            Buffer.from(hexPrivateKey, 'hex'),
-            Buffer.from(hexPublicKey, 'hex')
+            BufferWrapper.create(privateKey.toBuffer()),
+            BufferWrapper.create(Buffer.from(publicKey.encodeCompressed()))
         ];
     }
 }

@@ -11,7 +11,7 @@ describe('validate', () => {
 
         const [, publicKey] = getKeys();
 
-        key.setData(BufferWrapper.create(publicKey));
+        key.setData(publicKey);
 
         expect(key.isValid()).toBe(true);
     });
@@ -25,7 +25,7 @@ describe('toBuffer', () => {
 
         const [, publicKey] = getKeys();
 
-        key.setData(BufferWrapper.create(publicKey));
+        key.setData(publicKey);
 
         const bufferA = key.toBuffer();
         const bufferB = BufferWrapper.concat([
@@ -47,6 +47,6 @@ describe('fromBuffer', () => {
         const key = Key.fromBuffer(buffer) as KeySecp256k1;
 
         expect(key.getType()).toBe(TYPE_KEY_Secp256k1);
-        expect(BufferWrapper.compare(BufferWrapper.create(publicKey), key.getData())).toBe(0);
+        expect(BufferWrapper.compare(publicKey, key.getData())).toBe(0);
     });
 });

@@ -1,6 +1,6 @@
 import BufferWrapper from "@/libs/BufferWrapper";
 import Key from "@/data/Key";
-import { Structure } from "./Structure";
+import { Structure } from "@/data/Structure";
 
 /******************************/
 
@@ -12,99 +12,91 @@ export const TYPE_USER_PUBLIC = 3;
 /******************************/
 
 export default class User implements Structure<User> {
-  protected values = new Map();
+    protected type: number;
 
-  /******************************/
+    /******************************/
 
-  getType() {
-    const type = this.values.get('type');
-    return type !== undefined ? type as number : null;
-  }
+    getType(): number | undefined { return this.type; }
+    setType(type: typeof TYPE_USER_ROOT): UserRoot;
+    setType(type: number) {
+        this.type = type;
 
-  setType(type: typeof TYPE_USER_ROOT): UserRoot;
-  setType(type: unknown) {
-    this.values.set('type', type);
+        switch (type) {
+            case TYPE_USER_ROOT: return Object.setPrototypeOf(this, UserRoot.prototype);
+        }
 
-    switch (type) {
-      case TYPE_USER_ROOT: return Object.setPrototypeOf(this, UserRoot.prototype);
+        return null;
     }
 
-    return null;
-  }
+    /******************************/
 
-  /******************************/
-
-  static fromBuffer(buffer: BufferWrapper) {
-    try {
-      return new User().fromBuffer(buffer);
-    } catch (error) {
-      return null;
-    }
-  }
-
-  fromBuffer(buffer: BufferWrapper): User {
-    const type = buffer.readUleb128();
-
-    this.values.set('type', type);
-
-    switch (type) {
-      case TYPE_USER_ROOT: return Object.setPrototypeOf(UserRoot.prototype, this).fromBuffer(buffer, true);
+    static fromBuffer(buffer: BufferWrapper) {
+        try {
+            return new User().fromBuffer(buffer);
+        } catch (error) {
+            return null;
+        }
     }
 
-    return null;
-  }
+    fromBuffer(buffer: BufferWrapper): User {
+        const type = buffer.readUleb128();
+
+        this.type = type;
+
+        switch (type) {
+            case TYPE_USER_ROOT: return Object.setPrototypeOf(UserRoot.prototype, this).fromBuffer(buffer, true);
+        }
+
+        return null;
+    }
 
     // abstract
     toBuffer() { return null as BufferWrapper; };
     // abstract
-  isValid() { return false; }
+    isValid() { return false; }
 }
 
 export class UserRoot extends User {
-  getKey(): Key {
-    const key = this.values.get('key');
-    return key !== undefined ? key : null;
-  }
-  setKey(key: Key) {
-    this.values.set('key', key);
-    return this;
-  }
+    protected key: Key;
 
-  /******************************/
+    /******************************/
 
-  fromBuffer(buffer: BufferWrapper, skipType = false): UserRoot {
-    skipType || this.values.set('type', buffer.readUleb128());
-    this.values.set('key', Key.fromBuffer(buffer));
+    getKey(): Key | undefined { return this.key; }
+    setKey(key: Key) { this.key = key; return this; }
 
-    return this;
-  }
-  
-  toBuffer(): BufferWrapper {
-    const key = this.getKey();
+    /******************************/
 
-    if (key === null) {
-        return null;
+    fromBuffer(buffer: BufferWrapper, skipType = false): UserRoot {
+        skipType || (this.type = buffer.readUleb128());
+        this.key = Key.fromBuffer(buffer);
+
+        return this;
     }
 
-    const keyBuffer = key.toBuffer();
-    
-    if (keyBuffer === null) {
-      return null;
+    toBuffer(): BufferWrapper {
+        const type = this.getType();
+        const key = this.getKey();
+
+        if (type === undefined) return null;
+        if (key === undefined) return null;
+
+        const keyBuffer = key.toBuffer();
+
+        if (keyBuffer === null) return null;
+
+        return BufferWrapper.concat([
+            BufferWrapper.numberToUleb128Buffer(type),
+            keyBuffer
+        ]);
     }
 
-    return BufferWrapper.concat([
-        BufferWrapper.numberToUleb128Buffer(this.getType()),
-        keyBuffer
-    ]);
-}
+    isValid(): boolean {
+        const type = this.getType();
+        const key = this.getKey();
 
-  isValid(): boolean {
-      const key = this.getKey();
+        if (type === undefined) return false;
+        if (key === undefined) return false;
 
-      if (key === null || !key.isValid()) {
-        return false;
-      }
-
-      return true;
-  }
+        return key.isValid();
+    }
 }

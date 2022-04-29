@@ -1,11 +1,12 @@
 import BufferWrapper from "@/libs/BufferWrapper";
 import User from "@/data/User";
+import { Structure } from "@/data/Structure";
 
 export const TYPE_TXN_INSERT_ROOT_USER = 1;
 export const TYPE_TXN_SET_CONFIG = 2;
 export const TYPE_TXN_HASH_LIST = 3;
 
-export default class Txn {
+export default class Txn implements Structure<Txn> {
   protected values = new Map();
 
   /******************************/
@@ -29,6 +30,11 @@ export default class Txn {
 
     return null;
   }
+
+    // abstract
+    toBuffer() { return null as BufferWrapper; };
+    // abstract
+    isValid() { return false; };
 }
 
 class TxnInsertRootUser extends Txn {
