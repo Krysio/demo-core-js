@@ -1,84 +1,61 @@
 import { Core } from "@/main";
+import { EventEmitter } from "events";
+
+/******************************/
+
+export type BaseStateEvents = 'Stop' | 'ActiveWork' | 'PassiveWork';
+export type StateEvents = BaseStateEvents
+ | 'Stop/Start' | 'Stop/End'
+ | 'ActiveWork/Start' | 'ActiveWork/End'
+ | 'PassiveWork/Start' | 'PassiveWork/End'
+;
 
 /******************************/
 
 export function extendWithState(referenceToCore: unknown) {
   const core = referenceToCore as Core;
 
+  const eventEmmiter = new EventEmitter();
+
   const state = {
-    isRanActive: false,
-    isRanPassive: false,
-    isInitialized: false,
-    isSynchronized: false,
-    promiseRunningActive: null as Promise<void> | null,
-    promiseRunningPassive: null as Promise<void> | null,
+    workMode: null as 'active' | 'passive',
+    promiseGoToActiveWork: null as Promise<void> | null,
+    promiseGoToPassiveWork: null as Promise<void> | null,
+    promiseGoToStop: null as Promise<void> | null,
+  
     promiseInitializing: null as Promise<void> | null,
     promiseSynchronizing: null as Promise<void> | null
   };
 
+  const emit = (eventName: StateEvents) => {
+    return Promise.all(eventEmmiter.listeners(eventName).map((handler) => handler()));
+  };
+
   return { state: {
-    isRunningActive: () => state.isRanActive,
-    isRunningPassive: () => state.isRanPassive,
-    isInitialized: () => state.isInitialized,
-    isSynchronized: () => state.isSynchronized,
-
-    goToStateRunningActive() {
-      if (state.promiseRunningActive === null) {
-        return state.promiseRunningActive = new Promise((resolve, reject) => {
-          if (!state.isRanActive) {
-            state.promiseRunningPassive = null;
-            state.isRanPassive = false;
-
-            core.state.goToStateInitialized()
-            .then(() => core.state.goToStateSync())
-            .then(() => {
-              state.isRanActive = true;
-              resolve();
-            });
-          }
-        });
-      }
-
-      return state.promiseRunningActive;
+    on(eventName: StateEvents, eventHandler: () => Promise<void> | undefined) {
+      eventEmmiter.on(eventName, eventHandler);
     },
-    goToStateRunningPassive() {
-      if (!state.isRunningActive) {
-        state.isRunningActive = true;
-        state.isRunningPassive = false;
 
-        core.state.goToStateInitialized();
-      }
+    async goToStateActiveWork() {
+      await emit('Stop/End');
+      await emit('ActiveWork/Start');
+      state.workMode = "active";
+      emit('ActiveWork');
     },
-    goToStateInitialized() {
-      if (state.promiseInitializing === null) {
-        return state.promiseInitializing = new Promise((resolve, reject) => {
-          core.block.createGenesis().then(() => {
-            state.isInitialized = true;
-
-            core.state.goToStateSync();
-            resolve();
-          });
-        });
-      }
-
-      return state.promiseInitializing;
+    async goToStatePassiveWork() {
+      await emit('Stop/End');
+      await emit('PassiveWork/Start');
+      state.workMode = "passive";
+      emit('PassiveWork');
     },
-    goToStateSync() {
-      if (state.promiseSynchronizing === null) {
-        return state.promiseSynchronizing = new Promise((resolve, reject) => {
-          core.blockchain.update().then(() => {
-            state.isSynchronized = true;
-
-            resolve();
-          });
-        });
+    async goToStateStop() {
+      switch (state.workMode) {
+        case "active": await emit('ActiveWork/End'); break;
+        case "passive": await emit('PassiveWork/End'); break;
       }
-
-      return state.promiseSynchronizing;
-    },
-    updateStateOutOfSync() {
-      state.promiseSynchronizing = null;
-      state.isSynchronized = false;
+      await emit('Stop/Start');
+      state.workMode = null;
+      emit('Stop');
     }
   }};
 }
