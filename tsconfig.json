@@ -3,16 +3,15 @@
         "declaration": true,
         "declarationDir": "./dist",
         "moduleResolution": "Node",
-        "module": "es6",
+        "module": "esnext",
         "noImplicitAny": true,
         "outDir": "./dist",
-        "target": "es6",
+        "target": "esnext",
         "allowSyntheticDefaultImports": true,
         "baseUrl": ".",
         "rootDir": ".",
         "paths": {
-            "@/*": ["./src/*"],
-            "tw2/socket": ["../../socket"]
+            "@/*": ["./src/*"]
         }
     },
     "include": [
