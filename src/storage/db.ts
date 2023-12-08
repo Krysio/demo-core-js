@@ -1,24 +1,30 @@
 import LazyPromise from "@/libs/LazyPromise";
 import { Database } from "sqlite3";
 
-const db = new Database(':memory:');
+export function createDb() {
+    const db = new Database(':memory:');
+    const dbReady = new LazyPromise();
 
-export const dbReady = new LazyPromise();
+    db.serialize(() => {
+        db.run(`
+            CREATE TABLE IF NOT EXISTS users (
+                userID INTEGER PRIMARY KEY,
+                typeID INTEGER,
+                level INTEGER,
+                parentID INTEGER,
+                key BLOB,
+                areas BLOB,
+                timeStart INTEGER,
+                timeEnd INTEGER,
+                meta TEXT
+            );
+        `, () => dbReady.resolve());
+    });
 
-db.serialize(() => {
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            userID INTEGER PRIMARY KEY,
-            typeID INTEGER,
-            level INTEGER,
-            parentID INTEGER,
-            key BLOB,
-            areas BLOB,
-            timeStart INTEGER,
-            timeEnd INTEGER,
-            meta TEXT
-        );
-    `, () => dbReady.resolve());
-});
+    return {db, dbReady};
+}
+
+const { db, dbReady } = createDb();
 
 export default db;
+export { dbReady };

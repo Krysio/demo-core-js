@@ -1,9 +1,14 @@
 import WBuffer from "@/libs/WBuffer";
 import db, { dbReady } from "./db";
 
+const EmptyBuffer = WBuffer.from([0]);
+
 export const UserTypeRoot = 0;
 export const UserTypeAdmin = 1;
 export const UserTypeUser = 2;
+
+export const ErrorUnknown = 'Unknown error';
+export const ErrorDuplicateID = 'Duplicate ID';
 
 type UserType = typeof UserTypeRoot | typeof UserTypeAdmin | typeof UserTypeUser;
 
@@ -34,7 +39,7 @@ export async function getUser(userID: number): Promise<null | User> {
             `SELECT * FROM users WHERE userID = ${parseInt(userID as any) ?? 'NULL'}`,
             (error, row) => {
                 if (error) {
-                    reject(error);
+                    reject(new Error(ErrorUnknown));
                     return;
                 }
 
@@ -55,23 +60,92 @@ export async function setUser(userData: User): Promise<boolean> {
     return false;
 }
 
-export async function insertRoot(key: WBuffer): Promise<boolean> {
+export async function insertRoot(key: WBuffer): Promise<void> {
     await dbReady;
 
-    const result = await new Promise<boolean>((resolve) => {
+    const result = await new Promise<void>((resolve, reject) => {
         db.run(
-            `INSERT INTO users(userID, typeID, level, parentID, key, areas, timeStart, timeEnd, meta) VALUES(0, 0, 0, 0, ?, ?, ?, 0, "")`, 
-            [key, WBuffer.from([0]), Date.now()],
-            (error) => {
+            `INSERT INTO users(userID, typeID, level, parentID, key, areas, timeStart, timeEnd, meta) VALUES(0, ${UserTypeRoot}, 0, 0, ?, ?, 0, 0, "")`, 
+            [key, EmptyBuffer],
+            (error: Error & {code: string}) => {
                 if (error) {
-                    resolve(false);
+                    if (error.code === 'SQLITE_CONSTRAINT') {
+                        reject(new Error(ErrorDuplicateID));
+                        return;
+                    }
+
+                    reject(new Error(ErrorUnknown));
                     return;
                 }
 
-                resolve(true);
+                resolve();
             }
         );
     });
-    
+
     return result;
 }
+
+export async function insertAdmin(adminData: {
+    userID: number,
+    parentID: number
+    key: WBuffer,
+    level: number,
+    timeStart: number,
+    timeEnd: number,
+    meta: string
+}): Promise<void> {
+    await dbReady;
+
+    const result = await new Promise<void>((resolve, reject) => {
+        db.run(
+            `INSERT INTO users(
+                userID,
+                typeID,
+                level,
+                parentID,
+                key,
+                areas,
+                timeStart,
+                timeEnd,
+                meta
+            ) VALUES(
+                ?,
+                ${UserTypeAdmin},
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?
+            )`, 
+            [
+                adminData.userID,
+                adminData.level,
+                adminData.parentID,
+                adminData.key,
+                EmptyBuffer,
+                adminData.timeStart,
+                adminData.timeEnd,
+                adminData.meta
+            ],
+            (error: Error & {code: string}) => {
+                if (error) {
+                    if (error.code === 'SQLITE_CONSTRAINT') {
+                        reject(new Error(ErrorDuplicateID));
+                        return;
+                    }
+
+                    reject(new Error(ErrorUnknown));
+                    return;
+                }
+
+                resolve();
+            }
+        );
+    });
+
+    return result;
+}
+
