@@ -8,10 +8,10 @@ export function createDb() {
     db.serialize(() => {
         db.run(`
             CREATE TABLE IF NOT EXISTS users (
-                userID INTEGER PRIMARY KEY,
+                userID TEXT PRIMARY KEY,
                 typeID INTEGER,
                 level INTEGER,
-                parentID INTEGER,
+                parentID TEXT,
                 key BLOB,
                 areas BLOB,
                 timeStart INTEGER,

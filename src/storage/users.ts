@@ -1,3 +1,4 @@
+import { NIL as NIL_UUID } from "uuid";
 import WBuffer from "@/libs/WBuffer";
 import db, { dbReady } from "./db";
 
@@ -39,12 +40,13 @@ function enchanceUserRow(row: User): User {
 //#endregion Helpers
 //#region Get
 
-export async function getUser(userID: number): Promise<null | User> {
+export async function getUser(userID: string): Promise<null | User> {
     await dbReady;
 
     const user = await new Promise<null | User>((resolve, reject) => {
         db.get<User>(
-            `SELECT * FROM users WHERE userID = ${parseInt(userID as any) ?? 'NULL'}`,
+            `SELECT * FROM users WHERE userID = ?`,
+            [userID],
             (error, row) => {
                 if (error) {
                     reject(new Error(ErrorUnknown));
@@ -68,10 +70,10 @@ export async function getUser(userID: number): Promise<null | User> {
 //#region Insert
 
 async function insertCommon(adminData: {
-    userID: number,
+    userID: string,
     typeID: number,
     level: number,
-    parentID: number
+    parentID: string
     key: WBuffer,
     areas: WBuffer,
     timeStart: number,
@@ -125,10 +127,10 @@ async function insertCommon(adminData: {
 
 export function insertRoot(key: WBuffer): Promise<void> {
     return insertCommon({
-        userID: 0,
+        userID: NIL_UUID,
         typeID: UserTypeRoot,
         level: 0,
-        parentID: 0,
+        parentID: NIL_UUID,
         areas: EmptyBuffer,
         timeStart: 0,
         timeEnd: 0,
@@ -138,8 +140,8 @@ export function insertRoot(key: WBuffer): Promise<void> {
 }
 
 export function insertAdmin(adminData: {
-    userID: number,
-    parentID: number
+    userID: string,
+    parentID: string
     key: WBuffer,
     level: number,
     timeStart: number,
@@ -154,8 +156,8 @@ export function insertAdmin(adminData: {
 }
 
 export function insertUser(userData: {
-    userID: number,
-    parentID: number
+    userID: string,
+    parentID: string
     key: WBuffer,
     level: number,
     areas: WBuffer,
