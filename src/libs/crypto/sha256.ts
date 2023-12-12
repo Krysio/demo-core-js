@@ -1,4 +1,5 @@
-import { createHash, BinaryLike } from 'crypto';
+import { createHash } from 'crypto';
+import WBuffer from '../WBuffer';
 
 /******************************/
 
@@ -6,7 +7,7 @@ export function sha256(
     input: string,
     encoding: 'hex' | 'base64' = 'hex'
 ): string {
-    let hash = createHash('sha256').update(input, 'utf8');
+    let hash = createHash('SHA256').update(input, 'utf8');
 
     return hash.digest(encoding);
 }
@@ -14,30 +15,30 @@ export function sha256(
 export function doubleSha256(
     input: string,
     encoding: 'hex' | 'base64' = 'hex'
-): string | Buffer {
+): string | WBuffer {
     return sha256(input + sha256(input, 'hex'), encoding);
 }
 
 export class HashSum {
-    private hashsum = createHash('sha256');
-    push(data: Buffer) {
+    private hashsum = createHash('SHA256');
+    push(data: WBuffer) {
         try {
             this.hashsum.update(data);
         } catch (error) {
             console.error(error);
         }
     }
-    get(): Buffer;
+    get(): WBuffer;
     get(format: 'hex'): string;
-    get(format: 'buffer'): Buffer;
+    get(format: 'buffer'): WBuffer;
     get(format = 'buffer') {
         switch (format) {
             case 'hex': return this.hashsum.digest('hex');
-            case 'buffer': return this.hashsum.digest();
+            case 'buffer': return WBuffer.from(this.hashsum.digest());
         }
     }
     toString() {return this.get('hex')}
-    inspect() {return `<sha246:checksum>[${this.toString()}]`}
+    inspect() {return `<SHA256:${this.toString()}>`}
 }
 
 export const EMPTY_HASH = (new HashSum()).get();

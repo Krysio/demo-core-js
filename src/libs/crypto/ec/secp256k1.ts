@@ -1,64 +1,94 @@
-import { ec as EC } from 'elliptic';
-import { instantiateSecp256k1, Secp256k1 } from 'bitcoin-ts/build/main';
-import LazyPromise from "@/libs/LazyPromise";
+import * as crypto from 'crypto';
 import WBuffer from "@/libs/WBuffer";
-export type HexPrivateKey = string;
-export type HexPublicKey = string;
-export type HexSignature = string;
-
-/******************************/
-
-const ec = new EC('secp256k1');
+import getLazyPromise from "@/libs/LazyPromise";
+import { instantiateSecp256k1, Secp256k1 } from "@bitauth/libauth";
+import * as secp256k1 from "secp256k1";
 
 /******************************/
 
 let bitcoinSecp256k1: Secp256k1 | null = null;
-let initWasmPromise = null as LazyPromise<null>;
+const initWasmPromise = getLazyPromise();
+
+instantiateSecp256k1().then((api) => {
+    bitcoinSecp256k1 = api;
+    initWasmPromise.resolve(null);
+});
 
 export function waitForWasmModule() {
-    if (initWasmPromise === null) {
-        initWasmPromise = new LazyPromise<null>();
-
-        (async function(){
-            bitcoinSecp256k1 = await instantiateSecp256k1();
-            initWasmPromise.resolve(null);
-        })();
-    }
-
     return initWasmPromise;
 }
 
 /******************************/
 
+export function encryptAES256GCM(
+    publicKey: WBuffer | Buffer,
+    message: WBuffer | Buffer
+) {
+    const ec = crypto.createECDH('secp256k1');
+    const pkSecret = ec.generateKeys(undefined, 'compressed') as unknown as Buffer;
+    const secret = ec.computeSecret(publicKey);
+    const cipher = crypto.createCipheriv('aes-256-gcm', secret, secret);
+
+    return WBuffer.concat([pkSecret, cipher.update(message), cipher.final()]);
+}
+
+export function decryptAES256GCM(
+    privateKey: WBuffer | Buffer,
+    message: WBuffer | Buffer
+) {
+    const pkSecret = message.subarray(0, 33);
+    const encrypted = message.subarray(-message.length + 33);
+    const ec = crypto.createECDH('secp256k1');
+    
+    ec.setPrivateKey(privateKey);
+
+    const secret = ec.computeSecret(pkSecret);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', secret, secret);
+
+    return WBuffer.concat([decipher.update(encrypted)]);
+}
+
+/******************************/
+
 /**
- * @return [private, public]
+ * Return keypair in SEC compressed format
+ * @return [privateKey, publicKey]
  */
-export function getKeys(): [WBuffer, WBuffer];
-export function getKeys(encode: 'hex'): [string, string];
-export function getKeys(encode?: 'hex') {
-    let key = ec.genKeyPair(),
-        privateKey = key.getPrivate(),
-        publicKey = key.getPublic();
+export function getKeyPair() {
+    const ec = crypto.createECDH('secp256k1');
+    const publicKey = ec.generateKeys(undefined, 'compressed') as unknown as Buffer;
+    const privateKey = ec.getPrivateKey();
 
-    switch (encode) {
-        case 'hex': return [privateKey.toString('hex'), publicKey.encode('hex', true)];
-        default: return [
-            WBuffer.create(privateKey.toBuffer()),
-            WBuffer.create(Buffer.from(publicKey.encodeCompressed()))
-        ];
-    }
+    return [
+        WBuffer.from(privateKey),
+        WBuffer.from(publicKey)
+    ];
 }
 
-export function compressPublicKey(publicKey: HexPublicKey): HexPublicKey {
-    let keyPair = ec.keyFromPublic(publicKey, 'hex');
-
-    return keyPair.getPublic(true, 'hex');
+export function compressPublicKey(publicKey: WBuffer | Buffer) {
+    return crypto.ECDH.convertKey(publicKey, 'secp256k1', undefined, undefined, 'compressed') as unknown as Buffer;
 }
 
-export function decompressPublicKey(publicKey: HexPublicKey): HexPublicKey {
-    let keyPair = ec.keyFromPublic(publicKey, 'hex');
+export function decompressPublicKey(publicKey: WBuffer | Buffer) {
+    return crypto.ECDH.convertKey(publicKey, 'secp256k1', undefined, undefined, 'uncompressed') as unknown as Buffer;
+}
 
-    return keyPair.getPublic('hex');
+/** Convert to DER spki type format */
+export function getDERPublicKey(publicKey: WBuffer | Buffer) {
+    return WBuffer.concat([
+        WBuffer.from('3056301006072a8648ce3d020106052b8104000a034200', 'hex'),
+        decompressPublicKey(publicKey)
+    ]);
+}
+
+/** Convert to DER sec1 type format */
+export function getDerPrivateKey(privateKey: WBuffer | Buffer, publicKey: WBuffer | Buffer) {
+    return WBuffer.concat([
+        WBuffer.from('30740201010420', 'hex'),
+        privateKey,
+        WBuffer.from('a00706052b8104000aa144034200', 'hex'),
+        decompressPublicKey(publicKey)
+    ]);
 }
 
 /**
@@ -69,10 +99,10 @@ export function sign(
     inputHash: Buffer | Uint8Array
 ) {
     if (bitcoinSecp256k1 === null) {
-        return sign_js(
-            inputPrivateKey,
-            inputHash
-        );
+        return secp256k1.ecdsaSign(
+            inputHash,
+            inputPrivateKey
+        ).signature;
     }
 
     return bitcoinSecp256k1.signMessageHashCompact(
@@ -81,40 +111,16 @@ export function sign(
     );
 }
 
-/**
- * @return Uint8Array CompactLowS
- */
-export function sign_js(
-    inputPrivateKey: Buffer | Uint8Array,
-    inputHash: Buffer | Uint8Array
-) {
-    const keyPair = ec.keyFromPrivate(inputPrivateKey);
-    const result = ec.sign(
-        inputHash,
-        keyPair,
-        {
-            canonical: true
-        }
-    );
-
-    // convert to compact format
-    // https://github.com/indutny/elliptic/issues/164
-    return Buffer.concat([
-        result.r.toArrayLike(Buffer, 'be', 32),
-        result.s.toArrayLike(Buffer, 'be', 32)
-    ]) as Uint8Array;
-}
-
 export function verify(
     inputPublicKey: Buffer | Uint8Array,
     inputHash: Buffer | Uint8Array,
     inputSignature: Buffer | Uint8Array
 ): boolean {
     if (bitcoinSecp256k1 === null) {
-        return verify_js(
-            inputPublicKey,
+        return secp256k1.ecdsaVerify(
+            inputSignature,
             inputHash,
-            inputSignature
+            inputPublicKey
         );
     }
 
@@ -123,19 +129,6 @@ export function verify(
         inputPublicKey,
         inputHash
     );
-}
-
-export function verify_js(
-    inputPublicKey: Buffer | Uint8Array,
-    inputHash: Buffer | Uint8Array,
-    inputSignature: Buffer | Uint8Array
-): boolean {
-    const keyPair = ec.keyFromPublic(inputPublicKey);
-
-    return ec.verify(inputHash, {
-        r: inputSignature.slice(0, 32),
-        s: inputSignature.slice(32, 64)
-    }, keyPair);
 }
 
 const PrivateKeyMin = Buffer.from([1]);

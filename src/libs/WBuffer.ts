@@ -324,6 +324,22 @@ export default class WBuffer extends Buffer {
     public toJSON() {
         return `WB:${this.toString('hex')}`;
     }
+
+    public hex() {
+        return this.toString('hex');
+    }
+    public static hex(arg: TemplateStringsArray): WBuffer; // WBuffer.hex`00` == WBuffer.from('00', 'hex')
+    public static hex(buffer: Buffer | Uint8Array): string;
+    public static hex(buffer: any) {
+        if (Array.isArray(buffer) && 'raw' in buffer && Array.isArray(buffer.raw)) {
+            return WBuffer.from(buffer[0], 'hex');
+        }
+        return WBuffer.from(buffer).toString('hex');
+    }
+
+    public clone() {
+        return WBuffer.from(this);
+    }
 }
 
 export const EMPTY_BUFFER = WBuffer.from([]);
