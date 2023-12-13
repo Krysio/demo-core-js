@@ -3,17 +3,30 @@ import WBuffer from '../WBuffer';
 
 /******************************/
 
+export function sha256(input: string | Buffer | Uint8Array): WBuffer;
+export function sha256(input: string | Buffer | Uint8Array, encoding: 'hex' | 'base64'): string;
 export function sha256(
-    input: string,
-    encoding: 'hex' | 'base64' = 'hex'
-): string {
-    let hash = createHash('SHA256').update(input, 'utf8');
+    input: string | WBuffer | Buffer | Uint8Array,
+    encoding?: 'hex' | 'base64'
+): string | WBuffer {
+    let hash
+    if (typeof input === 'string') {
+        hash = createHash('SHA256').update(input, 'utf8');
+    } else {
+        hash = createHash('SHA256').update(input);
+    }
 
-    return hash.digest(encoding);
+    const result = hash.digest(encoding);
+
+    if (typeof result === 'string') {
+        return result;
+    } else {
+        return WBuffer.create(result);
+    }
 }
 
 export function doubleSha256(
-    input: string,
+    input: string | Buffer | Uint8Array,
     encoding: 'hex' | 'base64' = 'hex'
 ): string | WBuffer {
     return sha256(input + sha256(input, 'hex'), encoding);

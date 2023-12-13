@@ -3,6 +3,7 @@ import KeyPoolingCommand from "@/objects/commands/key-pooling";
 import Key from "@/objects/key";
 
 const ERROR_INVALID_MESSAGE = 'Invalid user message';
+const ERROR_INVALID_POOL_SIZE = 'Invalid count of keys in the pool';
 
 export interface UserConnection {
     userID: WBuffer,
@@ -23,7 +24,8 @@ export default class PoolingProcess {
     constructor(
         public area: number,
         public listOfConnections: UserConnection[],
-        public countOfInterations: number
+        public countOfInterations: number,
+        public getHashOfPrevBlock: () => WBuffer
     ) {
         this.command = new KeyPoolingCommand();
         this.mapOfMessages = new Map();
@@ -57,7 +59,7 @@ export default class PoolingProcess {
     async run() {
         await this.stage1();
 
-        for (let i = 0; i <= this.countOfInterations; i++) {
+        for (let i = 0; i < this.countOfInterations - 1; i++) {
             await this.stage2();
         }
 
@@ -65,9 +67,17 @@ export default class PoolingProcess {
         await this.stage4();
     }
 
+    /**
+     * Sending to each user:
+     * countOfInterations
+     * listOfUsers: userID + publicKey
+     * 
+     * Receiving packages of encrypted messages addressed to ther users
+     */
     async stage1() {
         const listOfPromises: Promise<WBuffer>[] = [];
         const userList = WBuffer.concat([
+            WBuffer.uleb128(this.countOfInterations),
             WBuffer.uleb128(this.command.listOfAuthors.length),
             ...this.createListOfUsers()
         ]);
@@ -85,6 +95,14 @@ export default class PoolingProcess {
         }
     }
 
+    /**
+     * Sending addressed packages to users
+     * 
+     * isLastStage = false
+     * Receiving packages of encrypted messages addressed to ther users
+     * isLastStage = true, stage3
+     * Receiving packages of publicKeys
+     */
     async stage2(isLastStage = false) {
         const listOfPromises: Promise<WBuffer>[] = [];
 
@@ -118,13 +136,24 @@ export default class PoolingProcess {
         return this.stage2(true);
     }
 
+    /**
+     * Sendging created command to each user
+     * 
+     * Receiving a signature for the command
+     */
     async stage4() {
+        if (this.command.listOfPublicKeys.length !== this.listOfConnections.length) {
+            throw new Error(ERROR_INVALID_POOL_SIZE);
+        }
+
+        this.command.hashOfPrevBlock = this.getHashOfPrevBlock();
+
         const listOfPromises: Promise<[WBuffer, WBuffer]>[] = [];
         const bufferOfCommand = this.command.toBuffer('net');
 
         for (const connection of this.listOfConnections) {
             listOfPromises.push(
-                connection.api.sendCommand(bufferOfCommand).then((data) => [data, connection.userID])
+                connection.api.sendCommand(bufferOfCommand.clone()).then((data) => [data, connection.userID])
             );
         }
 
@@ -184,18 +213,17 @@ export default class PoolingProcess {
 
         const countOfKeys = data.readUleb128();
 
-        if (countOfKeys === 0) {
-            throw new Error(ERROR_INVALID_MESSAGE);
-        }
-
         for (let i = 0; i < countOfKeys; i++) {
+            const isNotFake = data.readUleb128();
             const key = Key.fromBuffer(data);
 
             if (key.isValid() === false) {
                 throw new Error(ERROR_INVALID_MESSAGE);
             }
 
-            this.command.addPublicKey(key);
+            if (isNotFake) {
+                this.command.addPublicKey(key);
+            }
         }
     }
 

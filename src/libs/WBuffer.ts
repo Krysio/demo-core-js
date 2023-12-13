@@ -1,3 +1,5 @@
+const SymInspect = Symbol.for('nodejs.util.inspect.custom');
+
 type AvailableFormats = 'buffer' | 'hex' | 'number' | 'bigint';
 
 const getBitCount = (n: number) => n.toString(2).length;
@@ -21,7 +23,7 @@ export default class WBuffer extends Buffer {
         throw new Error('use WBuffer.create(buffer)');
     }
 
-    static create(buffer: Buffer) {
+    static create(buffer: Buffer | Uint8Array) {
         if (buffer instanceof WBuffer) {
             return buffer;
         }
@@ -30,14 +32,17 @@ export default class WBuffer extends Buffer {
     }
 
     protected $cursor = 0;
+    protected $isCursorAtTheEnd = false;
     public get cursor() {
         return this.$cursor;
     }
     public set cursor(value: number) {
+        this.$isCursorAtTheEnd = false;
         if (value < 0) {
             this.$cursor = 0;
         } else if (value >= this.length) {
             this.$cursor = this.length - 1;
+            this.$isCursorAtTheEnd = true;
         } else {
             this.$cursor = value;
         }
@@ -48,8 +53,8 @@ export default class WBuffer extends Buffer {
         return this;
     }
 
-    public isCursorAtTheEnd() {
-        return this.$cursor > this.length;
+    public get isCursorAtTheEnd() {
+        return this.$isCursorAtTheEnd;
     }
 
     public readLeb128(format: 'buffer'): WBuffer;
@@ -301,7 +306,6 @@ export default class WBuffer extends Buffer {
 
     public static alloc(...args: Parameters<typeof Buffer.alloc>) {
         return WBuffer.create(
-            //@ts-ignore
             super.alloc(...args)
         );
     }
@@ -312,6 +316,9 @@ export default class WBuffer extends Buffer {
     public static isEqual(a: WBuffer, b: WBuffer) {
         return super.compare(a, b) === 0;
     }
+    public isEqual(b: WBuffer) {
+        return WBuffer.compare(this, b) === 0;
+    }
 
     //@ts-ignore rewrite
     public slice(start?: number, end?: number): WBuffer {
@@ -321,8 +328,21 @@ export default class WBuffer extends Buffer {
     }
 
     //@ts-ignore rewrite
+    public subarray(...args: Parameters<typeof Buffer.subarray>) {
+        return WBuffer.create(
+            super.subarray(...args)
+        );
+    }
+
+    public inspect() {
+        return `<WB:${this.length}:${this.toString('hex')}:${this.cursor}>`;
+    }
+    //@ts-ignore rewrite
     public toJSON() {
-        return `WB:${this.toString('hex')}`;
+        return this.inspect();
+    }
+    public [SymInspect]() {
+        return this.inspect();
     }
 
     public hex() {

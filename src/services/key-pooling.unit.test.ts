@@ -4,28 +4,29 @@ import { getKeyPair, verify as verifySignature } from "@/libs/crypto/ec/secp256k
 import PoolingProcess, { UserConnection } from "@/services/key-pooling";
 import { KeySecp256k1 } from "@/objects/key";
 import Client from "@/tests/process/key-pooling/client";
+import { sha256 } from "@/libs/crypto/sha256";
 
 describe('Test with 4 clients', () => {
     const countOfUsers = 4;
     const listOfConnections: (UserConnection & {privateKey: WBuffer, signature: WBuffer, client: Client})[] = [];
     const area = 0;
     const countOfInterations = 5;
+    const getHashOfPrevBlock = () => WBuffer.from(sha256(WBuffer.from(Math.random().toString())));
 
     for (let i = 0; i < countOfUsers; i++) {
         const userID = WBuffer.from(uuidv4().replaceAll('-', ''));
         const signature = WBuffer.from([i]);
         const [privateKey, publicKey] = getKeyPair();
-        const key = new KeySecp256k1();
-        const client = new Client(userID, privateKey, publicKey);
+        const key = new KeySecp256k1(publicKey, privateKey);
+        const client = new Client(userID, key, area);
         const api = client.getApi();
 
-        key.key = publicKey;
         listOfConnections.push({ userID, area, level: 0, privateKey, key, signature, api, client });
     }
 
     listOfConnections.sort((a, b) => a.userID === b.userID ? 0 : a.userID < b.userID ? -1 : 1);
 
-    const process = new PoolingProcess(area, listOfConnections, countOfInterations);
+    const process = new PoolingProcess(area, listOfConnections, countOfInterations, getHashOfPrevBlock);
 
     test('Create list', () => {
         const result = process.createListOfUsers();
@@ -67,9 +68,10 @@ describe('Test with 4 clients', () => {
 
     test('Consume pack of keys', () => {
         const listOfKeys: KeySecp256k1[] = [];
+        const isNotFakeFlag = WBuffer.hex`01`;
 
         for (let i = 0; i < countOfUsers; i++) {
-            const [privateKey, publicKey] = getKeyPair();
+            const [, publicKey] = getKeyPair();
             const key = new KeySecp256k1(publicKey);
 
             listOfKeys.push(key);
@@ -78,7 +80,10 @@ describe('Test with 4 clients', () => {
         expect(() => {
             process.consumeKeyPack(WBuffer.concat([
                 WBuffer.uleb128(listOfKeys.length),
-                ...listOfKeys.map((key) => key.toBuffer())
+                ...listOfKeys.map((key) => WBuffer.concat([
+                    isNotFakeFlag,
+                    key.toBuffer()
+                ]))
             ]));
         }).not.toThrow();
 
@@ -89,7 +94,7 @@ describe('Test with 4 clients', () => {
 
             expect(listOfKeys.filter((key) => 
                 key.typeID == keyFromPool.typeID
-                && WBuffer.compare(key.key, keyFromPool.key) === 0
+                && WBuffer.isEqual(key.key, keyFromPool.key)
             ).length).toBe(1);
         }
     });

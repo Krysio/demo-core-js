@@ -1,5 +1,15 @@
 import WBuffer from "@/libs/WBuffer";
-import { isValidPublicKey } from "@/libs/crypto/ec/secp256k1";
+import {
+    isValidPublicKey as isValidPublicKeySecp256k1,
+    sign as signSecp256k1,
+    verify as verifySecp256k1,
+    encryptAES256GCM as encryptSecp256k1,
+    decryptAES256GCM as decryptSecp256k1
+} from "@/libs/crypto/ec/secp256k1";
+
+const SymInspect = Symbol.for('nodejs.util.inspect.custom');
+
+export const ERROR_NO_PRIVATE_KEY = 'No private key';
 
 /******************************/
 
@@ -26,11 +36,28 @@ interface IKey {
     fromBufferImplementation(buffer: WBuffer): void;
     toBufferImplementation(): WBuffer;
     isValidImplementation(): boolean;
+    signImplementation(hash: WBuffer, privateKey?: WBuffer): WBuffer;
+    verifyImplementation(hash: WBuffer, signature: WBuffer): boolean;
+    encryptImplementation(message: WBuffer): WBuffer;
+    decryptImplementation(message: WBuffer, privateKey?: WBuffer): WBuffer;
 }
 
 export default class Key {
     typeID: number;
     key: WBuffer;
+    privateKey: WBuffer = null;
+    buffer: WBuffer;
+    isBufferDirty = true;
+
+    constructor(
+        publicKey?: WBuffer,
+        privateKey?: WBuffer
+    ) {
+        this.key = publicKey || null;
+        this.privateKey = privateKey || null;
+    }
+
+    //#region buffer
 
     static fromBuffer(buffer: WBuffer) {
         try {
@@ -51,8 +78,13 @@ export default class Key {
 
     fromBuffer(buffer: WBuffer): Key {
         try {
+            const cursorStart = buffer.cursor;
+
             this.typeID = buffer.readUleb128();
             (this as unknown as IKey).fromBufferImplementation(buffer);
+            this.buffer = buffer.subarray(cursorStart, buffer.cursor);
+            this.isBufferDirty = false;
+
             return this;
         } catch (error) {
             return null;
@@ -60,6 +92,10 @@ export default class Key {
     }
 
     toBuffer(): WBuffer {
+        if (this.isBufferDirty = false) {
+            return this.buffer;
+        }
+
         try {
             return WBuffer.concat([
                 WBuffer.uleb128(this.typeID),
@@ -70,23 +106,51 @@ export default class Key {
         }
     }
 
+    //#endregion buffer
+
     isValid(): boolean {
         if (!mapOftypes.get(this.typeID)) return false;
+        if (!this.key) return false;
 
         return (this as unknown as IKey).isValidImplementation();
+    }
+
+    isEqual(key: Key) {
+        if (this.typeID !== key.typeID) return false;
+        if (!this.key.isEqual(key.key)) return false;
+        return true;
+    }
+
+    //#region crypto
+
+    sign(hash: WBuffer, privateKey?: WBuffer) {
+        return (this as unknown as IKey).signImplementation(hash, privateKey);
+    }
+    verify(hash: WBuffer, signature: WBuffer) {
+        return (this as unknown as IKey).verifyImplementation(hash, signature);
+    }
+    encrypt(message: WBuffer) {
+        return (this as unknown as IKey).encryptImplementation(message);
+    }
+    decrypt(message: WBuffer, privateKey?: WBuffer) {
+        return (this as unknown as IKey).decryptImplementation(message, privateKey);
+    }
+
+    //#endregion crypto
+
+    public inspect() {
+        return `<${this.constructor.name}:${WBuffer.hex(this.key)}>`;
+    }
+    public toJSON() {
+        return this.inspect();
+    }
+    [SymInspect]() {
+        return this.inspect();
     }
 }
 
 @Type(TYPE_KEY_Secp256k1)
 export class KeySecp256k1 extends Key implements IKey {
-    constructor(key?: WBuffer) {
-        super();
-
-        if (key) {
-            this.key = key;
-        }
-    }
-
     fromBufferImplementation(buffer: WBuffer) {
         this.key = buffer.read(33);
     }
@@ -96,8 +160,44 @@ export class KeySecp256k1 extends Key implements IKey {
     }
 
     isValidImplementation(): boolean {
-        if (this.key === undefined) return false;
-
-        return isValidPublicKey(this.key);
+        return isValidPublicKeySecp256k1(this.key);
     }
+
+    //#region crypto
+    
+    signImplementation(hash: WBuffer, privateKey?: WBuffer): WBuffer {
+        const key = privateKey || this.privateKey;
+
+        if (!key) throw new Error(ERROR_NO_PRIVATE_KEY);
+
+        return signSecp256k1(
+            key,
+            hash
+        );
+    }
+    verifyImplementation(hash: WBuffer, signature: WBuffer): boolean {
+        return verifySecp256k1(
+            this.key,
+            hash,
+            signature
+        );
+    }
+    encryptImplementation(message: WBuffer): WBuffer {
+        return encryptSecp256k1(
+            this.key,
+            message
+        );
+    }
+    decryptImplementation(message: WBuffer, privateKey?: WBuffer): WBuffer {
+        const key = privateKey || this.privateKey;
+
+        if (!key) throw new Error(ERROR_NO_PRIVATE_KEY);
+
+        return decryptSecp256k1(
+            key,
+            message
+        );
+    }
+
+    //#endregion crypto
 }

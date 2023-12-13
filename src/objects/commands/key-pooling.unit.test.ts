@@ -2,49 +2,81 @@ import { v4 as uuidv4 } from "uuid";
 import KeyPoolingCommand from "./key-pooling";
 import WBuffer from "@/libs/WBuffer";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
-import { KeySecp256k1 } from "@/objects/key";
-import { EMPTY_HASH } from "@/libs/crypto/sha256";
+import Key, { KeySecp256k1 } from "@/objects/key";
+import { sha256 } from "@/libs/crypto/sha256";
 
 const command = new KeyPoolingCommand();
 const listOfAuthors: {
     userID: WBuffer,
     signature: WBuffer,
-    privateKey: WBuffer,
-    publicKey: WBuffer
+    key: Key
 }[] = [];
 const countOfAuthors = 16;
 const area = 200;
+const hashOfPrevBlock = sha256(WBuffer.from(Math.random().toString()));
+
+command.addArea(area);
+command.hashOfPrevBlock = hashOfPrevBlock;
 
 for (let i = 0; i < countOfAuthors; i++) {
     const userID = WBuffer.from(uuidv4().replaceAll('-', ''));
-    const signature = WBuffer.from([i]);
     const [privateKey, publicKey] = getKeyPair();
-    const keySecp256k1 = new KeySecp256k1();
+    const key = new KeySecp256k1(publicKey, privateKey);
 
-    keySecp256k1.key = publicKey;
-    listOfAuthors.push({ userID, signature, privateKey, publicKey });
-    command.addAuthor(userID, signature);
-    command.addPublicKey(keySecp256k1);
+    listOfAuthors.push({ userID, signature: null, key });
+    command.addAuthor(userID);
+    command.addPublicKey(key);
 }
 
 listOfAuthors.sort((a, b) => a.userID === b.userID ? 0 : a.userID < b.userID ? -1 : 1);
-command.addArea(area);
-command.hashOfPrevBlock = EMPTY_HASH;
+
+test('To & from buffer without signatures', () => {
+    const buffer1 = command.toBuffer();
+    const hash1 = command.getHash();
+    command.fromBuffer(buffer1);
+    const buffer2 = command.toBuffer();
+    const hash2 = command.getHash();
+    
+    expect(buffer1.isEqual(buffer2)).toBe(true);
+    expect(hash1.isEqual(hash2)).toBe(true);
+});
+
+const hash = command.getHash();
+
+for (const { userID } of command.getSignatureInterator()) {
+    for (const item of listOfAuthors) {
+        if (userID.isEqual(item.userID)) {
+            const signature = item.key.sign(hash);
+
+            item.signature = signature;
+            command.addAuthor(userID, signature);
+        }
+    }
+}
 
 test('Signature interator', () => {
     let i = 0;
     for (const {userID, signature} of command.getSignatureInterator()) {
-        expect(userID).toBe(listOfAuthors[i].userID);
-        expect(WBuffer.compare(signature, listOfAuthors[i].signature)).toBe(0);
+        for (const item of listOfAuthors) {
+            if (userID.isEqual(item.userID)) {
+                expect(userID.isEqual(listOfAuthors[i].userID)).toBe(true);
+                expect(signature.isEqual(listOfAuthors[i].signature)).toBe(true);
+                expect(item.key.verify(hash, signature)).toBe(true);
+            }
+        }
         i++;
     }
     expect(i).toBe(countOfAuthors);
 });
 
-test('To & from buffer', () => {
+test('To & from buffer with signatures', () => {
     const buffer1 = command.toBuffer();
+    const hash1 = command.getHash();
     command.fromBuffer(buffer1);
     const buffer2 = command.toBuffer();
+    const hash2 = command.getHash();
     
-    expect(WBuffer.compare(buffer1, buffer2)).toBe(0);
+    expect(buffer1.isEqual(buffer2)).toBe(true);
+    expect(hash.isEqual(hash1)).toBe(true);
+    expect(hash1.isEqual(hash2)).toBe(true);
 });

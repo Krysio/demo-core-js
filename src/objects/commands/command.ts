@@ -1,5 +1,5 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
-import { EMPTY_HASH, HashSum } from "@/libs/crypto/sha256";
+import { EMPTY_HASH, sha256 } from "@/libs/crypto/sha256";
 
 const VERSION = 1;
 
@@ -19,7 +19,7 @@ export const Type = (typeID: number) => {
 
 export interface ICommandType {
     fromBufferCommandType(buffer: WBuffer, bufferType: 'block' | 'net'): void;
-    toBufferCommandType(bufferType: 'block' | 'net'): WBuffer;
+    toBufferCommandType(bufferType: 'block' | 'net' | 'nosignature'): WBuffer;
     isValidCommandType(): Boolean;
 }
 
@@ -38,6 +38,7 @@ export class Command {
     static fromBuffer(buffer: WBuffer, bufferType: 'block' | 'net' = 'net') {
         try {
             const cursor = buffer.cursor;
+            const version = buffer.readUleb128();
             const typeID = buffer.readUleb128();
             const Typed = mapOftypes.get(typeID) as typeof Command;
 
@@ -46,6 +47,7 @@ export class Command {
                 return new Typed().fromBuffer(buffer);
             }
         } catch (error) {
+            console.log(error);
             return null;
         }
     }
@@ -61,7 +63,7 @@ export class Command {
         }
     }
 
-    toBuffer(bufferType: 'block' | 'net' = 'net'): WBuffer {
+    toBuffer(bufferType: 'block' | 'net' | 'nosignature' = 'net'): WBuffer {
         try {
             return WBuffer.concat([
                 WBuffer.uleb128(VERSION),
@@ -78,18 +80,14 @@ export class Command {
             return this.hash;
         }
 
-        const buffer = this.toBuffer('net');
+        const buffer = this.toBuffer('nosignature');
 
         if (!buffer) {
             return null;
         }
 
-        const hasher = new HashSum();
-
-        hasher.push(buffer);
-
         this.isHashDirty = false;
-        this.hash = hasher.get();
+        this.hash = sha256(buffer);
 
         return this.hash;
     }
@@ -130,7 +128,7 @@ export class CommandTypeMultiUser extends Command implements ICommandType {
         (this as unknown as ICommandImplementation).fromBufferImplementation(buffer);
 
         for (let i = 0; i < countOfAuthors; i++) {
-            if (buffer.isCursorAtTheEnd() === false) {
+            if (buffer.isCursorAtTheEnd === false) {
                 const sizeOfSignature = buffer.readUleb128();
                 this.listOfSignatures.push(buffer.read(sizeOfSignature));
             } else {
@@ -139,13 +137,17 @@ export class CommandTypeMultiUser extends Command implements ICommandType {
         }
     }
 
-    toBufferCommandType(bufferType: 'block' | 'net' = 'net'): WBuffer {
+    toBufferCommandType(bufferType: 'block' | 'net' | 'nosignature' = 'net'): WBuffer {
         return WBuffer.concat([
-            bufferType === 'net' ? this.hashOfPrevBlock : EMPTY_BUFFER,
+            bufferType !== 'block'
+                ? this.hashOfPrevBlock
+                : EMPTY_BUFFER,
             WBuffer.uleb128(this.countOfAuthors),
             ...this.listOfAuthors,
             (this as unknown as ICommandImplementation).toBufferImplementation(),
-            WBuffer.arrayOfBufferToBuffer(this.listOfSignatures.filter(signature => signature), false)
+            bufferType !== 'nosignature'
+                ? WBuffer.arrayOfBufferToBuffer(this.listOfSignatures.filter(signature => signature), false)
+                : EMPTY_BUFFER
         ]);
     }
 

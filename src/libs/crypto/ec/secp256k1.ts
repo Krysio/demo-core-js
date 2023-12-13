@@ -76,7 +76,7 @@ export function decompressPublicKey(publicKey: WBuffer | Buffer) {
 /** Convert to DER spki type format */
 export function getDERPublicKey(publicKey: WBuffer | Buffer) {
     return WBuffer.concat([
-        WBuffer.from('3056301006072a8648ce3d020106052b8104000a034200', 'hex'),
+        WBuffer.hex`3056301006072a8648ce3d020106052b8104000a034200`,
         decompressPublicKey(publicKey)
     ]);
 }
@@ -84,9 +84,9 @@ export function getDERPublicKey(publicKey: WBuffer | Buffer) {
 /** Convert to DER sec1 type format */
 export function getDerPrivateKey(privateKey: WBuffer | Buffer, publicKey: WBuffer | Buffer) {
     return WBuffer.concat([
-        WBuffer.from('30740201010420', 'hex'),
+        WBuffer.hex`30740201010420`,
         privateKey,
-        WBuffer.from('a00706052b8104000aa144034200', 'hex'),
+        WBuffer.hex`a00706052b8104000aa144034200`,
         decompressPublicKey(publicKey)
     ]);
 }
@@ -99,16 +99,16 @@ export function sign(
     inputHash: Buffer | Uint8Array
 ) {
     if (bitcoinSecp256k1 === null) {
-        return secp256k1.ecdsaSign(
+        return WBuffer.create(secp256k1.ecdsaSign(
             inputHash,
             inputPrivateKey
-        ).signature;
+        ).signature);
     }
 
-    return bitcoinSecp256k1.signMessageHashCompact(
+    return WBuffer.create(bitcoinSecp256k1.signMessageHashCompact(
         inputPrivateKey,
         inputHash
-    );
+    ));
 }
 
 export function verify(
