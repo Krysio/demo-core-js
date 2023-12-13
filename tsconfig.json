@@ -3,6 +3,8 @@
         "declaration": true,
         "declarationDir": "./dist",
         "moduleResolution": "Node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "module": "esnext",
         "noImplicitAny": true,
         "outDir": "./dist",

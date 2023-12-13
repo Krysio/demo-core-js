@@ -1,3 +1,5 @@
+const SymInspect = Symbol.for('nodejs.util.inspect.custom');
+
 type AvailableFormats = 'buffer' | 'hex' | 'number' | 'bigint';
 
 const getBitCount = (n: number) => n.toString(2).length;
@@ -13,13 +15,15 @@ const bufferToBigInt = (buffer: Buffer, isUnsigned: boolean) => {
 };
 
 export default class WBuffer extends Buffer {
+    public _isBuffer = true;
+
     /* @depracted Use `WBuffer.from(string[, encoding])` instead.*/
     constructor(arg1: string, arg2?: BufferEncoding) {
         super(arg1, arg2);
         throw new Error('use WBuffer.create(buffer)');
     }
 
-    static create(buffer: Buffer) {
+    static create(buffer: Buffer | Uint8Array) {
         if (buffer instanceof WBuffer) {
             return buffer;
         }
@@ -28,14 +32,17 @@ export default class WBuffer extends Buffer {
     }
 
     protected $cursor = 0;
+    protected $isCursorAtTheEnd = false;
     public get cursor() {
         return this.$cursor;
     }
     public set cursor(value: number) {
+        this.$isCursorAtTheEnd = false;
         if (value < 0) {
             this.$cursor = 0;
         } else if (value >= this.length) {
             this.$cursor = this.length - 1;
+            this.$isCursorAtTheEnd = true;
         } else {
             this.$cursor = value;
         }
@@ -46,25 +53,29 @@ export default class WBuffer extends Buffer {
         return this;
     }
 
-    readLeb128(format: 'buffer'): WBuffer;
-    readLeb128(format: 'hex'): string;
-    readLeb128(format: 'number'): number;
-    readLeb128(format: 'bigint'): bigint;
-    readLeb128(): number;
-	readLeb128(format: AvailableFormats = 'number') {
+    public get isCursorAtTheEnd() {
+        return this.$isCursorAtTheEnd;
+    }
+
+    public readLeb128(format: 'buffer'): WBuffer;
+    public readLeb128(format: 'hex'): string;
+    public readLeb128(format: 'number'): number;
+    public readLeb128(format: 'bigint'): bigint;
+    public readLeb128(): number;
+	public readLeb128(format: AvailableFormats = 'number') {
         return this.$readLebUleb128(true, format);
     }
 
-    readUleb128(format: 'buffer'): WBuffer;
-    readUleb128(format: 'hex'): string;
-    readUleb128(format: 'number'): number;
-    readUleb128(format: 'bigint'): bigint;
-    readUleb128(): number;
-    readUleb128(format: AvailableFormats = 'number') {
+    public readUleb128(format: 'buffer'): WBuffer;
+    public readUleb128(format: 'hex'): string;
+    public readUleb128(format: 'number'): number;
+    public readUleb128(format: 'bigint'): bigint;
+    public readUleb128(): number;
+    public readUleb128(format: AvailableFormats = 'number') {
         return this.$readLebUleb128(false, format);
     }
 
-    $readLebUleb128(isLeb128: boolean, format: AvailableFormats = 'number') {
+    private $readLebUleb128(isLeb128: boolean, format: AvailableFormats = 'number') {
         let countOfInputBytes = 0;
         let countOfBits = 0;
         let isNegative = 0;
@@ -147,7 +158,7 @@ export default class WBuffer extends Buffer {
         }
     }
 
-    read(length: number) {
+    public read(length: number) {
         const result = this.slice(
             this.cursor,
             this.cursor + length
@@ -158,7 +169,7 @@ export default class WBuffer extends Buffer {
         return result;
     }
 
-    readArrayOfUleb128() {
+    public readArrayOfUleb128() {
         const arrayLength = this.readUleb128();
         const result = new Array(arrayLength) as WBuffer[];
 
@@ -169,17 +180,24 @@ export default class WBuffer extends Buffer {
         return result;
     }
 
-    static arrayUleb128ToBuffer(list: Buffer[]) {
+    public static arrayOfUnsignetToBuffer(list: number[], insertArraySize = true) {
         return WBuffer.create(Buffer.concat([
-            WBuffer.numberToUleb128Buffer(list.length),
-            ...list.map((item) => Buffer.concat([
+            insertArraySize ? WBuffer.uleb128(list.length) : EMPTY_BUFFER,
+            ...list.map((item) => WBuffer.uleb128(item))
+        ]));
+    }
+
+    public static arrayOfBufferToBuffer(list: WBuffer[], insertArraySize = true) {
+        return WBuffer.create(Buffer.concat([
+            insertArraySize ? WBuffer.uleb128(list.length) : EMPTY_BUFFER,
+            ...list.map((item) => WBuffer.concat([
                 WBuffer.numberToUleb128Buffer(item.length),
                 item
             ]))
         ]));
     }
 
-    static numberToLeb128Buffer(value: number | bigint) {
+    public static numberToLeb128Buffer(value: number | bigint) {
         const result = [] as number[];
 
         if (typeof value === 'bigint') {
@@ -213,11 +231,11 @@ export default class WBuffer extends Buffer {
         }
     }
 
-    static leb128(value: number | bigint) {
+    public static leb128(value: number | bigint) {
         return WBuffer.numberToLeb128Buffer(value);
     }
 
-    static numberToUleb128Buffer(value: number | bigint) {
+    public static numberToUleb128Buffer(value: number | bigint) {
         if (value < 0) {
             throw new Error('The value must be unsigned');
         }
@@ -262,40 +280,44 @@ export default class WBuffer extends Buffer {
         return WBuffer.from(result);
     }
 
-    static uleb128(value: number | bigint) {
+    public static uleb128(value: number | bigint) {
         return WBuffer.numberToUleb128Buffer(value);
     }
 
     /***************************/
 
-    static concat(...args: Parameters<typeof Buffer.concat>) {
+    public static concat(...args: Parameters<typeof Buffer.concat>) {
         return WBuffer.create(
             super.concat(...args)
         );
     }
 
-    static from(arrayBuffer: ArrayBuffer | SharedArrayBuffer, byteOffset?: number, length?: number): WBuffer;
-    static from(data: number[]): WBuffer;
-    static from(data: Uint8Array): WBuffer;
-    static from(obj: { valueOf(): string | object } | { [Symbol.toPrimitive](hint: 'string'): string }, byteOffset?: number, length?: number): WBuffer;
-    static from(str: string, encoding?: BufferEncoding): WBuffer;
-    static from(...args: any[]) {
+    public static from(arrayBuffer: ArrayBuffer | SharedArrayBuffer, byteOffset?: number, length?: number): WBuffer;
+    public static from(data: number[]): WBuffer;
+    public static from(data: Uint8Array): WBuffer;
+    public static from(obj: { valueOf(): string | object } | { [Symbol.toPrimitive](hint: 'string'): string }, byteOffset?: number, length?: number): WBuffer;
+    public static from(str: string, encoding?: BufferEncoding): WBuffer;
+    public static from(...args: any[]) {
         return WBuffer.create(
             //@ts-ignore
             super.from(...args)
         );
     }
 
-    static alloc(...args: Parameters<typeof Buffer.alloc>) {
+    public static alloc(...args: Parameters<typeof Buffer.alloc>) {
         return WBuffer.create(
-            //@ts-ignore
             super.alloc(...args)
         );
     }
 
-    public _isBuffer = true;
-    static compare(a: WBuffer, b: WBuffer) {
+    public static compare(a: WBuffer, b: WBuffer) {
         return super.compare(a, b);
+    }
+    public static isEqual(a: WBuffer, b: WBuffer) {
+        return super.compare(a, b) === 0;
+    }
+    public isEqual(b: WBuffer) {
+        return WBuffer.compare(this, b) === 0;
     }
 
     //@ts-ignore rewrite
@@ -306,7 +328,38 @@ export default class WBuffer extends Buffer {
     }
 
     //@ts-ignore rewrite
+    public subarray(...args: Parameters<typeof Buffer.subarray>) {
+        return WBuffer.create(
+            super.subarray(...args)
+        );
+    }
+
+    public inspect() {
+        return `<WB:${this.length}:${this.toString('hex')}:${this.cursor}>`;
+    }
+    //@ts-ignore rewrite
     public toJSON() {
-        return `WB:${this.toString('hex')}`;
+        return this.inspect();
+    }
+    public [SymInspect]() {
+        return this.inspect();
+    }
+
+    public hex() {
+        return this.toString('hex');
+    }
+    public static hex(arg: TemplateStringsArray): WBuffer; // WBuffer.hex`00` == WBuffer.from('00', 'hex')
+    public static hex(buffer: Buffer | Uint8Array): string;
+    public static hex(buffer: any) {
+        if (Array.isArray(buffer) && 'raw' in buffer && Array.isArray(buffer.raw)) {
+            return WBuffer.from(buffer[0], 'hex');
+        }
+        return WBuffer.from(buffer).toString('hex');
+    }
+
+    public clone() {
+        return WBuffer.from(this);
     }
 }
+
+export const EMPTY_BUFFER = WBuffer.from([]);

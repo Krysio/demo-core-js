@@ -1,9 +1,9 @@
-import LazyPromise from "@/libs/LazyPromise";
+import getLazyPromise from "@/libs/LazyPromise";
 import { Database } from "sqlite3";
 
 export function createDb() {
     const db = new Database(':memory:');
-    const dbReady = new LazyPromise();
+    const dbReady = getLazyPromise();
 
     db.serialize(() => {
         db.run(`
