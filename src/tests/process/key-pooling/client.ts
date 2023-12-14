@@ -48,7 +48,7 @@ export default class Client {
     //#region consume messages
 
     async consumeUserList(data: WBuffer): Promise<WBuffer> {
-        mark`start:consumeUserList`;
+        mark`consumeUserList`;
 
         const countOfInterations = data.readUleb128();
         const countOfUsers = data.readUleb128();
@@ -117,14 +117,13 @@ export default class Client {
             ...listOfKeys
         ]);
 
-        mark`end:consumeUserList`;
-        measure('client:consumeUserList', 'start:consumeUserList', 'end:consumeUserList');
+        measure`consumeUserList`;
 
         return response;
     }
 
     async consumeMessagePack(data: WBuffer) : Promise<WBuffer> {
-        mark`start:consumeMessagePack`;
+        mark`consumeMessagePack`;
 
         const countOfMessages = data.readUleb128();
         const listOfDecryptedMessages: WBuffer[] = [];
@@ -144,14 +143,13 @@ export default class Client {
             ...listOfDecryptedMessages
         ]);
 
-        mark`end:consumeMessagePack`;
-        measure('client:consumeMessagePack', 'start:consumeMessagePack', 'end:consumeMessagePack');
+        measure`consumeMessagePack`;
 
         return response;
     }
 
     async consumeCommand(data: WBuffer): Promise<WBuffer> {
-        mark`start:consumeCommand`;
+        mark`consumeCommand`;
 
         const command = Command.fromBuffer(data, 'net');
 
@@ -195,8 +193,7 @@ export default class Client {
             console.log(this.key);
             throw error;
         } finally {
-            mark`end:consumeCommand`;
-            measure('client:consumeCommand', 'start:consumeCommand', 'end:consumeCommand');
+            measure`consumeCommand`;
         }
     }
 

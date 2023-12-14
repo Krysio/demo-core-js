@@ -76,7 +76,7 @@ export default class PoolingProcess {
      * Receiving packages of encrypted messages addressed to ther users
      */
     async stage1() {
-        mark`start:PoolingProcess:stage1`;
+        mark`PoolingProcess:stage1`;
 
         const listOfPromises: Promise<WBuffer>[] = [];
         const userList = WBuffer.concat([
@@ -85,12 +85,7 @@ export default class PoolingProcess {
             ...this.createListOfUsers()
         ]);
 
-        mark`end:PoolingProcess:stage1`;
-        measure(
-            'PoolingProcess:stage1',
-            'start:PoolingProcess:stage1',
-            'end:PoolingProcess:stage1'
-        );
+        measure`PoolingProcess:stage1`;
 
         for (const connection of this.listOfConnections) {
             listOfPromises.push(
@@ -100,18 +95,13 @@ export default class PoolingProcess {
 
         const results = await Promise.all(listOfPromises);
 
-        mark`start:PoolingProcess:consumeMessagePack`;
+        mark`PoolingProcess:consumeMessagePack`;
     
         for (const result of results) {
             this.consumeMessagePack(result);
         }
 
-        mark`end:PoolingProcess:consumeMessagePack`;
-        measure(
-            'PoolingProcess:consumeMessagePack',
-            'start:PoolingProcess:consumeMessagePack',
-            'end:PoolingProcess:consumeMessagePack'
-        );
+        measure`PoolingProcess:consumeMessagePack`;
     }
 
     /**
@@ -139,34 +129,24 @@ export default class PoolingProcess {
         const results = await Promise.all(listOfPromises);
 
         if (isLastStage) {
-            mark`start:PoolingProcess:consumeKeyPack`;
+            mark`PoolingProcess:consumeKeyPack`;
 
             for (const result of results) {
                 this.consumeKeyPack(result);
             }
 
-            mark`end:PoolingProcess:consumeKeyPack`;
-            measure(
-                'PoolingProcess:consumeKeyPack',
-                'start:PoolingProcess:consumeKeyPack',
-                'end:PoolingProcess:consumeKeyPack'
-            );
+            measure`PoolingProcess:consumeKeyPack`;
 
             return;
         }
 
-        mark`start:PoolingProcess:consumeMessagePack`;
+        mark`PoolingProcess:consumeMessagePack`;
 
         for (const result of results) {
             this.consumeMessagePack(result);
         }
 
-        mark`end:PoolingProcess:consumeMessagePack`;
-        measure(
-            'PoolingProcess:consumeMessagePack',
-            'start:PoolingProcess:consumeMessagePack',
-            'end:PoolingProcess:consumeMessagePack'
-        );
+        measure`PoolingProcess:consumeMessagePack`;
     }
 
     stage3() {

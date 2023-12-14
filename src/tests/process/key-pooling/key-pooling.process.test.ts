@@ -35,7 +35,7 @@ test(`Test prcoess of key-pooling with ${countOfUsers} clients`, async () => {
 
     const hash = process.command.getHash();
 
-    mark`start:verifySignatures`;
+    mark`verifySignatures`;
 
     for (const { userID, signature } of process.command.getSignatureInterator()) {
         const { key } = listOfConnections.find((connection) => connection.userID.isEqual(userID));
@@ -43,8 +43,7 @@ test(`Test prcoess of key-pooling with ${countOfUsers} clients`, async () => {
         expect(key.verify(hash, signature)).toBe(true);
     }
 
-    mark`end:verifySignatures`;
-    measure('verifySignatures', 'start:verifySignatures', 'end:verifySignatures');
+    measure`verifySignatures`;
 });
 
 test('printMeasures', (done) => {
