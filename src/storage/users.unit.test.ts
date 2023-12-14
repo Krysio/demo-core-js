@@ -1,5 +1,5 @@
 import { v4 as uuidv4, NIL as NIL_UUID } from "uuid";
-import { getKeys } from "@/libs/crypto/ec/secp256k1";
+import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { ErrorDuplicateID, UserTypeAdmin, UserTypeRoot, getUser, insertAdmin, insertRoot } from "./users";
 import WBuffer from "@/libs/WBuffer";
 
@@ -15,7 +15,7 @@ describe('@/storage/users', () => {
     describe('Root', () => {
         describe('Inset', () => {
             const rootID = NIL_UUID;
-            const [rootPrivateKey, rootPublicKey] = getKeys();
+            const [rootPrivateKey, rootPublicKey] = getKeyPair();
 
             beforeAll(mockDb);
 
@@ -44,7 +44,7 @@ describe('@/storage/users', () => {
 
     describe('Admin', () => {
         describe('Inset', () => {
-            const [adminPrivateKey, adminPublicKey] = getKeys();
+            const [adminPrivateKey, adminPublicKey] = getKeyPair();
             const adminID = uuidv4();
             const adminDesc = 'Main admin';
 
