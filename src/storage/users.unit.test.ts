@@ -1,7 +1,9 @@
-import { v4 as uuidv4, NIL as NIL_UUID } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
-import { ErrorDuplicateID, UserTypeAdmin, UserTypeRoot, getUser, insertAdmin, insertRoot } from "./users";
+import { ErrorDuplicateID, getUser, insertAdmin, insertRoot } from "./users";
 import WBuffer from "@/libs/WBuffer";
+import { TYPE_USER_ADMIN, TYPE_USER_ROOT } from "@/objects/user";
+import { KeySecp256k1 } from "@/objects/key";
 
 function mockDb() {
     jest.mock('@/storage/db', () => {
@@ -10,6 +12,8 @@ function mockDb() {
         return { default: db, dbReady };
     });
 }
+
+const NIL_UUID = WBuffer.alloc(16).fill(0);
 
 describe('@/storage/users', () => {
     describe('Root', () => {
@@ -20,18 +24,19 @@ describe('@/storage/users', () => {
             beforeAll(mockDb);
 
             test('Insert root one', async () => {
-                await insertRoot(rootPublicKey);
+                await insertRoot(new KeySecp256k1(rootPublicKey).toBuffer());
         
-                const getResult = await getUser(rootID);
+                const user = await getUser(rootID);
         
-                expect(WBuffer.compare(rootPublicKey, getResult.key)).toBe(0);
-                expect(getResult.userID).toBe(rootID);
-                expect(getResult.typeID).toBe(UserTypeRoot);
-                expect(getResult.parentID).toBe(NIL_UUID);
-                expect(getResult.level).toBe(0);
-                expect(getResult.timeStart).toBe(0);
-                expect(getResult.timeEnd).toBe(0);
-                expect(getResult.meta).toBe('');
+                expect(user).not.toBe(null);
+                expect(user.key.key.hex()).toBe(rootPublicKey.hex());
+                expect(user.userID.hex()).toBe(rootID.hex());
+                expect(user.parentID.hex()).toBe(NIL_UUID.hex());
+                expect(user.typeID).toBe(TYPE_USER_ROOT);
+                expect(user.level).toBe(0);
+                expect(user.timeStart).toBe(0);
+                expect(user.timeEnd).toBe(0);
+                expect(user.meta).toBe('');
             });
 
             test('Insert root twice', async () => {
@@ -45,14 +50,14 @@ describe('@/storage/users', () => {
     describe('Admin', () => {
         describe('Inset', () => {
             const [adminPrivateKey, adminPublicKey] = getKeyPair();
-            const adminID = uuidv4();
+            const adminID = WBuffer.from(uuidv4().replaceAll('-', ''), 'hex');
             const adminDesc = 'Main admin';
 
             function insert() {
                 return insertAdmin({
                     userID: adminID,
                     parentID: NIL_UUID,
-                    key: adminPublicKey,
+                    key: new KeySecp256k1(adminPublicKey).toBuffer(),
                     level: 0,
                     timeStart: 0,
                     timeEnd: 0,
@@ -65,16 +70,17 @@ describe('@/storage/users', () => {
             test('Insert admin one', async () => {
                 await insert();
 
-                const getResult = await getUser(adminID);
+                const user = await getUser(adminID);
 
-                expect(WBuffer.compare(adminPublicKey, getResult.key)).toBe(0);
-                expect(getResult.userID).toBe(adminID);
-                expect(getResult.typeID).toBe(UserTypeAdmin);
-                expect(getResult.parentID).toBe(NIL_UUID);
-                expect(getResult.level).toBe(0);
-                expect(getResult.timeStart).toBe(0);
-                expect(getResult.timeEnd).toBe(0);
-                expect(JSON.parse(getResult.meta).desc).toBe(adminDesc);
+                expect(user).not.toBe(null);
+                expect(user.key.key.hex()).toBe(adminPublicKey.hex());
+                expect(user.userID.hex()).toBe(adminID.hex());
+                expect(user.parentID.hex()).toBe(NIL_UUID.hex());
+                expect(user.typeID).toBe(TYPE_USER_ADMIN);
+                expect(user.level).toBe(0);
+                expect(user.timeStart).toBe(0);
+                expect(user.timeEnd).toBe(0);
+                expect(JSON.parse(user.meta).desc).toBe(adminDesc);
             });
 
             test('Insert admin twice', async () => {

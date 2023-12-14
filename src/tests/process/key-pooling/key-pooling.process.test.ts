@@ -14,8 +14,8 @@ const listOfConnections: (UserConnection & { privateKey: WBuffer, signature: WBu
 const getHashOfPrevBlock = () => WBuffer.from(sha256(WBuffer.from(Math.random().toString())));
 
 for (let i = 0; i < countOfUsers; i++) {
-    const userID = WBuffer.from(uuidv4().replaceAll('-', ''));
-    const signature = WBuffer.from([i]);
+    const userID = WBuffer.from(uuidv4().replaceAll('-', ''), 'hex');
+    const signature: WBuffer = null;
     const [privateKey, publicKey] = getKeyPair();
     const key = new KeySecp256k1(publicKey, privateKey);
     const client = new Client(userID, key, area);

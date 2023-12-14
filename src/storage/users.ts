@@ -1,50 +1,67 @@
-import { NIL as NIL_UUID } from "uuid";
-import WBuffer from "@/libs/WBuffer";
-import db, { dbReady } from "./db";
+import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
+import db, { dbReady } from "@/storage/db";
+import User, { TYPE_USER_ADMIN, TYPE_USER_ROOT, TYPE_USER_VOTER } from "@/objects/user";
+import Key from "@/objects/key";
 
 //#region Constants
 
-const EmptyBuffer = WBuffer.from([0]);
-
-export const UserTypeRoot = 0;
-export const UserTypeAdmin = 1;
-export const UserTypeUser = 2;
+const NIL_UUID = WBuffer.alloc(16).fill(0);
 
 export const ErrorUnknown = 'Unknown error';
 export const ErrorDuplicateID = 'Duplicate ID';
 
-type UserType = typeof UserTypeRoot | typeof UserTypeAdmin | typeof UserTypeUser;
+type UserType = typeof TYPE_USER_ROOT | typeof TYPE_USER_ADMIN | typeof TYPE_USER_VOTER;
 
-type User = {
-    userID: number,
+type RowOfUser = {
+    userID: Buffer,
     typeID: UserType,
     level: number,
-    parentID: number,
-    key: WBuffer, // TODO WBufferKey
-    areas: WBuffer, // TODO WBufferListOfInteger
+    parentID: Buffer,
+    key: Buffer,
+    areas: Buffer, // TODO WBufferListOfInteger
     timeStart: number,
     timeEnd: number,
-    meta: string // JSON, information about account
+    meta: string
 };
 
 //#endregion Constants
 //#region Helpers
 
-function enchanceUserRow(row: User): User {
-    row.key = WBuffer.from(row.key);
-    // TODO areas
+function enchanceUserRow(row: RowOfUser): User {
+    if (row === null) return null;
+ 
+    const user = new User();
 
-    return row;
+    user.setType(row.typeID);
+    user.userID = WBuffer.create(row.userID);
+    user.key = Key.fromBuffer(WBuffer.create(row.key));
+    user.parentID = WBuffer.create(row.parentID);
+    user.level = row.level;
+    user.timeStart = row.timeStart;
+    user.timeEnd = row.timeEnd;
+    user.meta = row.meta;
+    user.listOfAreas = [];
+
+    const areas = WBuffer.create(row.areas);
+    const countOfAreas = areas.readUleb128();
+
+    for (let i = 0; i < countOfAreas; i++) {
+        user.listOfAreas.push(
+            areas.readUleb128()
+        );
+    }
+
+    return user;
 }
 
 //#endregion Helpers
 //#region Get
 
-export async function getUser(userID: string): Promise<null | User> {
+export async function getUser(userID: WBuffer): Promise<null | User> {
     await dbReady;
 
     const user = await new Promise<null | User>((resolve, reject) => {
-        db.get<User>(
+        db.get<RowOfUser>(
             `SELECT * FROM users WHERE userID = ?`,
             [userID],
             (error, row) => {
@@ -70,10 +87,10 @@ export async function getUser(userID: string): Promise<null | User> {
 //#region Insert
 
 async function insertCommon(adminData: {
-    userID: string,
+    userID: WBuffer,
     typeID: number,
     level: number,
-    parentID: string
+    parentID: WBuffer
     key: WBuffer,
     areas: WBuffer,
     timeStart: number,
@@ -128,10 +145,10 @@ async function insertCommon(adminData: {
 export function insertRoot(key: WBuffer): Promise<void> {
     return insertCommon({
         userID: NIL_UUID,
-        typeID: UserTypeRoot,
+        typeID: TYPE_USER_ROOT,
         level: 0,
         parentID: NIL_UUID,
-        areas: EmptyBuffer,
+        areas: WBuffer.hex`00`,
         timeStart: 0,
         timeEnd: 0,
         meta: '',
@@ -140,8 +157,8 @@ export function insertRoot(key: WBuffer): Promise<void> {
 }
 
 export function insertAdmin(adminData: {
-    userID: string,
-    parentID: string
+    userID: WBuffer,
+    parentID: WBuffer
     key: WBuffer,
     level: number,
     timeStart: number,
@@ -149,15 +166,15 @@ export function insertAdmin(adminData: {
     meta: string
 }): Promise<void> {
     return insertCommon({
-        typeID: UserTypeAdmin,
-        areas: EmptyBuffer,
+        typeID: TYPE_USER_ADMIN,
+        areas: WBuffer.hex`00`,
         ...adminData
     });
 }
 
 export function insertUser(userData: {
-    userID: string,
-    parentID: string
+    userID: WBuffer,
+    parentID: WBuffer
     key: WBuffer,
     level: number,
     areas: WBuffer,
@@ -166,7 +183,7 @@ export function insertUser(userData: {
     meta: string
 }): Promise<void> {
     return insertCommon({
-        typeID: UserTypeUser,
+        typeID: TYPE_USER_VOTER,
         ...userData
     });
 }

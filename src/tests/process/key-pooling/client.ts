@@ -54,7 +54,7 @@ export default class Client {
         const countOfUsers = data.readUleb128();
 
         for (let i = 0; i < countOfUsers; i++) {
-            const userID = data.read(32);
+            const userID = data.read(16);
             const key = Key.fromBuffer(data);
 
             if (WBuffer.isEqual(userID, this.userID)) {

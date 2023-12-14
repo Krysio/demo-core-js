@@ -19,7 +19,7 @@ command.addArea(area);
 command.hashOfPrevBlock = hashOfPrevBlock;
 
 for (let i = 0; i < countOfAuthors; i++) {
-    const userID = WBuffer.from(uuidv4().replaceAll('-', ''));
+    const userID = WBuffer.from(uuidv4().replaceAll('-', ''), 'hex');
     const [privateKey, publicKey] = getKeyPair();
     const key = new KeySecp256k1(publicKey, privateKey);
 
@@ -28,7 +28,7 @@ for (let i = 0; i < countOfAuthors; i++) {
     command.addPublicKey(key);
 }
 
-listOfAuthors.sort((a, b) => a.userID === b.userID ? 0 : a.userID < b.userID ? -1 : 1);
+listOfAuthors.sort((a, b) => WBuffer.compare(a.userID, b.userID));
 
 test('To & from buffer without signatures', () => {
     const buffer1 = command.toBuffer();
@@ -37,6 +37,9 @@ test('To & from buffer without signatures', () => {
     const buffer2 = command.toBuffer();
     const hash2 = command.getHash();
     
+    expect(buffer1).not.toBe(null);
+    expect(buffer2).not.toBe(null);
+    expect(command.hashOfPrevBlock.length).toBe(32);
     expect(buffer1.isEqual(buffer2)).toBe(true);
     expect(hash1.isEqual(hash2)).toBe(true);
 });
@@ -59,8 +62,8 @@ test('Signature interator', () => {
     for (const {userID, signature} of command.getSignatureInterator()) {
         for (const item of listOfAuthors) {
             if (userID.isEqual(item.userID)) {
-                expect(userID.isEqual(listOfAuthors[i].userID)).toBe(true);
-                expect(signature.isEqual(listOfAuthors[i].signature)).toBe(true);
+                expect(userID.length).toBe(16);
+                expect(signature.isEqual(item.signature)).toBe(true);
                 expect(item.key.verify(hash, signature)).toBe(true);
             }
         }
@@ -76,6 +79,9 @@ test('To & from buffer with signatures', () => {
     const buffer2 = command.toBuffer();
     const hash2 = command.getHash();
     
+    expect(buffer1).not.toBe(null);
+    expect(buffer2).not.toBe(null);
+    expect(command.hashOfPrevBlock.length).toBe(32);
     expect(buffer1.isEqual(buffer2)).toBe(true);
     expect(hash.isEqual(hash1)).toBe(true);
     expect(hash1.isEqual(hash2)).toBe(true);

@@ -6,15 +6,16 @@ import { KeySecp256k1 } from "@/objects/key";
 import Client from "@/tests/process/key-pooling/client";
 import { sha256 } from "@/libs/crypto/sha256";
 
-describe('Test with 4 clients', () => {
-    const countOfUsers = 4;
+const countOfUsers = 4;
+
+describe(`Test with ${countOfUsers} clients`, () => {
     const listOfConnections: (UserConnection & {privateKey: WBuffer, signature: WBuffer, client: Client})[] = [];
     const area = 0;
     const countOfInterations = 5;
     const getHashOfPrevBlock = () => WBuffer.from(sha256(WBuffer.from(Math.random().toString())));
 
     for (let i = 0; i < countOfUsers; i++) {
-        const userID = WBuffer.from(uuidv4().replaceAll('-', ''));
+        const userID = WBuffer.from(uuidv4().replaceAll('-', ''), 'hex');
         const signature = WBuffer.from([i]);
         const [privateKey, publicKey] = getKeyPair();
         const key = new KeySecp256k1(publicKey, privateKey);
@@ -23,8 +24,13 @@ describe('Test with 4 clients', () => {
 
         listOfConnections.push({ userID, area, level: 0, privateKey, key, signature, api, client });
     }
+    test('verify', () => {
+        listOfConnections.forEach((connection) => {
+            expect(connection.userID.length).toBe(16);
+        });
+    });
 
-    listOfConnections.sort((a, b) => a.userID === b.userID ? 0 : a.userID < b.userID ? -1 : 1);
+    listOfConnections.sort((a, b) => WBuffer.compare(a.userID, b.userID));
 
     const process = new PoolingProcess(area, listOfConnections, countOfInterations, getHashOfPrevBlock);
 

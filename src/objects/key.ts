@@ -46,8 +46,6 @@ export default class Key {
     typeID: number;
     key: WBuffer;
     privateKey: WBuffer = null;
-    buffer: WBuffer;
-    isBufferDirty = true;
 
     constructor(
         publicKey?: WBuffer,
@@ -55,6 +53,16 @@ export default class Key {
     ) {
         this.key = publicKey || null;
         this.privateKey = privateKey || null;
+    }
+
+    setType(typeID: number) {
+        this.typeID = typeID;
+
+        const Typed = mapOftypes.get(typeID) as typeof Key;
+
+        if (Typed) {
+            Object.setPrototypeOf(this, Typed.prototype);
+        }
     }
 
     //#region buffer
@@ -78,12 +86,8 @@ export default class Key {
 
     fromBuffer(buffer: WBuffer): Key {
         try {
-            const cursorStart = buffer.cursor;
-
             this.typeID = buffer.readUleb128();
             (this as unknown as IKey).fromBufferImplementation(buffer);
-            this.buffer = buffer.subarray(cursorStart, buffer.cursor);
-            this.isBufferDirty = false;
 
             return this;
         } catch (error) {
@@ -92,10 +96,6 @@ export default class Key {
     }
 
     toBuffer(): WBuffer {
-        if (this.isBufferDirty = false) {
-            return this.buffer;
-        }
-
         try {
             return WBuffer.concat([
                 WBuffer.uleb128(this.typeID),

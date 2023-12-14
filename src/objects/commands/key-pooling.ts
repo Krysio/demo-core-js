@@ -22,13 +22,10 @@ export default class KeyPoolingCommand extends CommandTypeMultiUser implements I
                 return WBuffer.compare(a.key, b.key);
             }
         });
-
-        this.isHashDirty = true;
     }
 
     addArea(area: number) {
         this.listOfAreas.push(area);
-        this.isHashDirty = true;
     }
 
     //#region buffer

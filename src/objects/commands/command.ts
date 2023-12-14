@@ -1,5 +1,9 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
-import { EMPTY_HASH, sha256 } from "@/libs/crypto/sha256";
+import { sha256 } from "@/libs/crypto/sha256";
+import Block from "@/objects/block";
+import Key from "@/objects/key";
+import { getUser } from "@/storage/users";
+import { TYPE_USER_VOTER } from "../user";
 
 const VERSION = 1;
 
@@ -7,7 +11,7 @@ const VERSION = 1;
 
 const mapOftypes = new Map<number, Function>();
 export const Type = (typeID: number) => {
-    return (target: new () => any) => {
+    return (target: new (...args: any[]) => any) => {
         const ref = {[target.prototype.constructor.name]: class extends target {typeID = typeID;} };
 
         mapOftypes.set(typeID, ref[target.prototype.constructor.name]);
@@ -21,6 +25,7 @@ export interface ICommandType {
     fromBufferCommandType(buffer: WBuffer, bufferType: 'block' | 'net'): void;
     toBufferCommandType(bufferType: 'block' | 'net' | 'nosignature'): WBuffer;
     isValidCommandType(): Boolean;
+    setPrevBlockCommandType(block: Block): void;
 }
 
 export interface ICommandImplementation {
@@ -32,8 +37,16 @@ export interface ICommandImplementation {
 export class Command {
     version = VERSION;
     typeID: number;
-    hash: WBuffer = EMPTY_HASH;
-    isHashDirty = true;
+
+    setType(typeID: number) {
+        this.typeID = typeID;
+
+        const Typed = mapOftypes.get(typeID) as typeof Key;
+
+        if (Typed) {
+            Object.setPrototypeOf(this, Typed.prototype);
+        }
+    }
 
     static fromBuffer(buffer: WBuffer, bufferType: 'block' | 'net' = 'net') {
         try {
@@ -44,10 +57,9 @@ export class Command {
 
             if (Typed) {
                 buffer.cursor = cursor;
-                return new Typed().fromBuffer(buffer);
+                return new Typed().fromBuffer(buffer, bufferType);
             }
         } catch (error) {
-            console.log(error);
             return null;
         }
     }
@@ -65,10 +77,14 @@ export class Command {
 
     toBuffer(bufferType: 'block' | 'net' | 'nosignature' = 'net'): WBuffer {
         try {
+            const version = bufferType !== 'block' ? WBuffer.uleb128(VERSION) : EMPTY_BUFFER;
+            const typeID = WBuffer.uleb128(this.typeID);
+            const content = (this as unknown as ICommandType).toBufferCommandType(bufferType);
+            
             return WBuffer.concat([
-                WBuffer.uleb128(VERSION),
-                WBuffer.uleb128(this.typeID),
-                (this as unknown as ICommandType).toBufferCommandType(bufferType)
+                version,
+                typeID,
+                content
             ]);
         } catch (error) {
             return null;
@@ -76,30 +92,47 @@ export class Command {
     }
 
     getHash(): WBuffer {
-        if (this.isHashDirty === false) {
-            return this.hash;
-        }
-
         const buffer = this.toBuffer('nosignature');
 
         if (!buffer) {
             return null;
         }
 
-        this.isHashDirty = false;
-        this.hash = sha256(buffer);
-
-        return this.hash;
+        return sha256(buffer);
     }
 
     isValid() {
-        if (this.version !== VERSION) return false;
-        if (!mapOftypes.get(this.typeID)) return false;
+        if (this.version !== VERSION) {
+            return false;
+        }
+
+        if (!mapOftypes.get(this.typeID)) {
+            return false;
+        }
+
         return (this as unknown as ICommandType).isValidCommandType();
+    }
+
+    setPrevBlock(block: Block) {
+        (this as unknown as ICommandType).setPrevBlockCommandType(block);
     }
 }
 
-// export class CommandTypeInternal extends Command implements ICommandType {}
+export class CommandTypeInternal extends Command implements ICommandType {
+    fromBufferCommandType(buffer: WBuffer): void {
+        (this as unknown as ICommandImplementation).fromBufferImplementation(buffer);
+    }
+
+    toBufferCommandType(): WBuffer {
+        return (this as unknown as ICommandImplementation).toBufferImplementation();
+    }
+
+    isValidCommandType(): Boolean {
+        return (this as unknown as ICommandImplementation).isValidImplementation();
+    }
+
+    setPrevBlockCommandType() {}
+}
 // export class CommandTypeAdmin extends Command implements ICommandType {}
 // export class CommandTypeUser extends Command implements ICommandType {}
 export class CommandTypeMultiUser extends Command implements ICommandType {
@@ -111,18 +144,18 @@ export class CommandTypeMultiUser extends Command implements ICommandType {
         return this.listOfAuthors.length;
     }
 
-    fromBufferCommandType(buffer: WBuffer, bufferType: 'block' | 'net' = 'net'): void {
+    fromBufferCommandType(buffer: WBuffer, bufferType: 'block' | 'net' | 'nosignature' = 'net'): void {
         this.listOfAuthors = [];
         this.listOfSignatures = [];
         
-        if (bufferType === 'net') {
+        if (bufferType !== 'block') {
             this.hashOfPrevBlock = buffer.read(32);
         }
 
         const countOfAuthors = buffer.readUleb128();
 
         for (let i = 0; i < countOfAuthors; i++) {
-            this.listOfAuthors.push(buffer.read(32));
+            this.listOfAuthors.push(buffer.read(16));
         }
 
         (this as unknown as ICommandImplementation).fromBufferImplementation(buffer);
@@ -138,16 +171,19 @@ export class CommandTypeMultiUser extends Command implements ICommandType {
     }
 
     toBufferCommandType(bufferType: 'block' | 'net' | 'nosignature' = 'net'): WBuffer {
+        const hashOfPrevBlock = bufferType !== 'block' ? this.hashOfPrevBlock : EMPTY_BUFFER;
+        const countOfAuthors = WBuffer.uleb128(this.countOfAuthors);
+        const data = (this as unknown as ICommandImplementation).toBufferImplementation();
+        const listOfSignatures = bufferType !== 'nosignature'
+            ? WBuffer.arrayOfBufferToBuffer(this.listOfSignatures.filter(signature => signature), false)
+            : EMPTY_BUFFER;
+        
         return WBuffer.concat([
-            bufferType !== 'block'
-                ? this.hashOfPrevBlock
-                : EMPTY_BUFFER,
-            WBuffer.uleb128(this.countOfAuthors),
+            hashOfPrevBlock,
+            countOfAuthors,
             ...this.listOfAuthors,
-            (this as unknown as ICommandImplementation).toBufferImplementation(),
-            bufferType !== 'nosignature'
-                ? WBuffer.arrayOfBufferToBuffer(this.listOfSignatures.filter(signature => signature), false)
-                : EMPTY_BUFFER
+            data,
+            listOfSignatures
         ]);
     }
 
@@ -160,24 +196,51 @@ export class CommandTypeMultiUser extends Command implements ICommandType {
                 case 1: {
                     this.listOfAuthors.splice(i, 0, userID);
                     this.listOfSignatures.splice(i, 0, signature);
-                    this.isHashDirty = true;
                 } return;
             }
         }
 
         this.listOfAuthors.push(userID);
         this.listOfSignatures.push(signature);
-        this.isHashDirty = true;
     }
 
     *getSignatureInterator() {
         for (let i = 0; i < this.countOfAuthors; i++) {
-            yield { userID: this.listOfAuthors[i], signature: this.listOfSignatures[i] };
+            yield {
+                userID: this.listOfAuthors[i],
+                signature: this.listOfSignatures[i]
+            };
         }
     }
 
+    async verifyCommandType() {
+        const hash = this.getHash();
+        let isInvalid = false;
+
+        for (const { userID, signature } of this.getSignatureInterator()) {
+            const user = await getUser(userID);
+
+            if (user.typeID !== TYPE_USER_VOTER) {
+                isInvalid = true;
+            }
+
+            if (user.key.verify(hash, signature) === false) {
+                isInvalid = true;
+            }
+        }
+
+        return !isInvalid;
+    }
+
     isValidCommandType() {
-        if (!this.hashOfPrevBlock) return false;
+        if (!this.hashOfPrevBlock) {
+            return false;
+        }
+
         return (this as unknown as ICommandImplementation).isValidImplementation();
+    }
+
+    setPrevBlockCommandType(block: Block) {
+        this.hashOfPrevBlock = block.hashOfPrevBlock;
     }
 }

@@ -33,7 +33,7 @@ export default class PoolingProcess {
 
         this.command.addArea(area);
         for (const connection of this.listOfConnections) {
-            const keyOfMap = connection.userID.toString('hex');
+            const keyOfMap = connection.userID.hex();
 
             this.command.addAuthor(connection.userID);
             this.mapOfMessages.set(keyOfMap, []);
@@ -49,7 +49,7 @@ export default class PoolingProcess {
             list.push(
                 this.command.listOfAuthors[i],
                 this.listOfConnections.find(
-                    (connection) => WBuffer.compare(connection.userID, userID) === 0
+                    (connection) => userID.isEqual(connection.userID)
                 ).key.toBuffer()
             );
         }
@@ -79,9 +79,11 @@ export default class PoolingProcess {
         mark`PoolingProcess:stage1`;
 
         const listOfPromises: Promise<WBuffer>[] = [];
+        const countOfInterations = WBuffer.uleb128(this.countOfInterations);
+        const countOfAuthors = WBuffer.uleb128(this.command.listOfAuthors.length);
         const userList = WBuffer.concat([
-            WBuffer.uleb128(this.countOfInterations),
-            WBuffer.uleb128(this.command.listOfAuthors.length),
+            countOfInterations,
+            countOfAuthors,
             ...this.createListOfUsers()
         ]);
 
@@ -116,11 +118,12 @@ export default class PoolingProcess {
         const listOfPromises: Promise<WBuffer>[] = [];
 
         for (const connection of this.listOfConnections) {
-            const keyOfMap = connection.userID.toString('hex');
+            const keyOfMap = connection.userID.hex();
             const listOfMessages = this.mapOfMessages.get(keyOfMap);
+            const packageOfMessages = WBuffer.arrayOfBufferToBuffer(listOfMessages);
 
             listOfPromises.push(
-                connection.api.sendMessagePack(WBuffer.arrayOfBufferToBuffer(listOfMessages))
+                connection.api.sendMessagePack(packageOfMessages)
             );
 
             listOfMessages.length = 0;
@@ -170,7 +173,8 @@ export default class PoolingProcess {
 
         for (const connection of this.listOfConnections) {
             listOfPromises.push(
-                connection.api.sendCommand(bufferOfCommand.clone()).then((data) => [data, connection.userID])
+                connection.api.sendCommand(bufferOfCommand.clone())
+                .then((data) => [data, connection.userID])
             );
         }
 
@@ -193,9 +197,9 @@ export default class PoolingProcess {
         }
 
         for (let i = 0; i < countOfMessages; i++) {
-            const userID = data.read(32);
+            const userID = data.read(16);
 
-            if (userID.length !== 32) {
+            if (userID.length !== 16) {
                 throw new Error(ERROR_INVALID_MESSAGE);
             }
 
@@ -215,7 +219,6 @@ export default class PoolingProcess {
             const listOfMessages = this.mapOfMessages.get(keyOfMap);
 
             if (listOfMessages === undefined) {
-                console.log(keyOfMap, this.mapOfMessages);
                 throw new Error(ERROR_INVALID_MESSAGE);
             }
 
