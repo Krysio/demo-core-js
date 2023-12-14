@@ -5,7 +5,7 @@ import PoolingProcess, { UserConnection } from "@/services/key-pooling";
 import { KeySecp256k1 } from "@/objects/key";
 import Client from "@/tests/process/key-pooling/client";
 import { sha256 } from "@/libs/crypto/sha256";
-import { isWaitForPerformanceObserver, printMeasures } from "@/performance";
+import { isWaitForPerformanceObserver, mark, measure, printMeasures } from "@/performance";
 
 const area = 0;
 const countOfUsers = 16;
@@ -35,11 +35,16 @@ test(`Test prcoess of key-pooling with ${countOfUsers} clients`, async () => {
 
     const hash = process.command.getHash();
 
+    mark`start:verifySignatures`;
+
     for (const { userID, signature } of process.command.getSignatureInterator()) {
         const { key } = listOfConnections.find((connection) => connection.userID.isEqual(userID));
 
         expect(key.verify(hash, signature)).toBe(true);
     }
+
+    mark`end:verifySignatures`;
+    measure('verifySignatures', 'start:verifySignatures', 'end:verifySignatures');
 });
 
 test('printMeasures', (done) => {

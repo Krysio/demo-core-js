@@ -181,17 +181,23 @@ export default class Client {
             return EMPTY_BUFFER;
         }
 
-        const hash = command.getHash();
-        const signature = this.key.sign(hash);
-        const response = WBuffer.concat([
-            WBuffer.uleb128(signature.length),
-            signature
-        ]);
+        try {
+            const hash = command.getHash();
+            const signature = this.key.sign(hash);
+            const response = WBuffer.concat([
+                WBuffer.uleb128(signature.length),
+                signature
+            ]);
 
-        mark`end:consumeCommand`;
-        measure('client:consumeCommand', 'start:consumeCommand', 'end:consumeCommand');
-
-        return response;
+            return response;
+        } catch (error) {
+            console.log(this.key.privateKey);
+            console.log(this.key);
+            throw error;
+        } finally {
+            mark`end:consumeCommand`;
+            measure('client:consumeCommand', 'start:consumeCommand', 'end:consumeCommand');
+        }
     }
 
     //#endregion consume messages
