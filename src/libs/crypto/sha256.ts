@@ -27,31 +27,9 @@ export function sha256(
 
 export function doubleSha256(
     input: string | Buffer | Uint8Array,
-    encoding: 'hex' | 'base64' = 'hex'
+    encoding?: 'hex' | 'base64'
 ): string | WBuffer {
     return sha256(input + sha256(input, 'hex'), encoding);
 }
 
-export class HashSum {
-    private hashsum = createHash('SHA256');
-    push(data: WBuffer) {
-        try {
-            this.hashsum.update(data);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-    get(): WBuffer;
-    get(format: 'hex'): string;
-    get(format: 'buffer'): WBuffer;
-    get(format = 'buffer') {
-        switch (format) {
-            case 'hex': return this.hashsum.digest('hex');
-            case 'buffer': return WBuffer.from(this.hashsum.digest());
-        }
-    }
-    toString() {return this.get('hex')}
-    inspect() {return `<SHA256:${this.toString()}>`}
-}
-
-export const EMPTY_HASH = (new HashSum()).get();
+export const EMPTY_HASH = WBuffer.alloc(32).fill(0);

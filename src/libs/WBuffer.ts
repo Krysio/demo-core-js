@@ -181,20 +181,20 @@ export default class WBuffer extends Buffer {
     }
 
     public static arrayOfUnsignetToBuffer(list: number[], insertArraySize = true) {
-        return WBuffer.create(Buffer.concat([
+        return WBuffer.concat([
             insertArraySize ? WBuffer.uleb128(list.length) : EMPTY_BUFFER,
             ...list.map((item) => WBuffer.uleb128(item))
-        ]));
+        ]);
     }
 
     public static arrayOfBufferToBuffer(list: WBuffer[], insertArraySize = true) {
-        return WBuffer.create(Buffer.concat([
+        return WBuffer.concat([
             insertArraySize ? WBuffer.uleb128(list.length) : EMPTY_BUFFER,
             ...list.map((item) => WBuffer.concat([
                 WBuffer.numberToUleb128Buffer(item.length),
                 item
             ]))
-        ]));
+        ]);
     }
 
     public static numberToLeb128Buffer(value: number | bigint) {
@@ -355,6 +355,18 @@ export default class WBuffer extends Buffer {
             return WBuffer.from(buffer[0], 'hex');
         }
         return WBuffer.from(buffer).toString('hex');
+    }
+
+    public utf8() {
+        return this.toString('utf8');
+    }
+    public static utf8(arg: TemplateStringsArray): WBuffer; // WBuffer.utf8`00` == WBuffer.from('00', 'utf8')
+    public static utf8(buffer: Buffer | Uint8Array): string;
+    public static utf8(buffer: any) {
+        if (Array.isArray(buffer) && 'raw' in buffer && Array.isArray(buffer.raw)) {
+            return WBuffer.from(buffer[0], 'utf8');
+        }
+        return WBuffer.from(buffer).toString('utf8');
     }
 
     public clone() {
