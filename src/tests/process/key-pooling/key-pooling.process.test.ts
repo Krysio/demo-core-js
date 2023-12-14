@@ -5,11 +5,12 @@ import PoolingProcess, { UserConnection } from "@/services/key-pooling";
 import { KeySecp256k1 } from "@/objects/key";
 import Client from "@/tests/process/key-pooling/client";
 import { sha256 } from "@/libs/crypto/sha256";
+import { isWaitForPerformanceObserver, printMeasures } from "@/performance";
 
 const area = 0;
 const countOfUsers = 16;
 const countOfInterations = 5;
-const listOfConnections: (UserConnection & {privateKey: WBuffer, signature: WBuffer, client: Client})[] = [];
+const listOfConnections: (UserConnection & { privateKey: WBuffer, signature: WBuffer, client: Client })[] = [];
 const getHashOfPrevBlock = () => WBuffer.from(sha256(WBuffer.from(Math.random().toString())));
 
 for (let i = 0; i < countOfUsers; i++) {
@@ -39,4 +40,13 @@ test(`Test prcoess of key-pooling with ${countOfUsers} clients`, async () => {
 
         expect(key.verify(hash, signature)).toBe(true);
     }
+});
+
+test('printMeasures', (done) => {
+    if (isWaitForPerformanceObserver) {
+        setTimeout(() => {
+            printMeasures();
+            done();
+        }, 10);
+    } else done();
 });

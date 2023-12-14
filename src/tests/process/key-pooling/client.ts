@@ -3,6 +3,7 @@ import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { Command } from "@/objects/commands/command";
 import KeyPoolingCommand from "@/objects/commands/key-pooling";
 import Key, { KeySecp256k1 } from "@/objects/key";
+import { mark, measure } from "@/performance";
 
 export default class Client {
     newPrivateKey: WBuffer;
@@ -47,6 +48,8 @@ export default class Client {
     //#region consume messages
 
     async consumeUserList(data: WBuffer): Promise<WBuffer> {
+        mark`start:consumeUserList`;
+
         const countOfInterations = data.readUleb128();
         const countOfUsers = data.readUleb128();
 
@@ -109,13 +112,20 @@ export default class Client {
             listOfKeys[i] = data;
         }
 
-        return WBuffer.concat([
+        const response = WBuffer.concat([
             WBuffer.uleb128(listOfKeys.length),
             ...listOfKeys
         ]);
+
+        mark`end:consumeUserList`;
+        measure('client:consumeUserList', 'start:consumeUserList', 'end:consumeUserList');
+
+        return response;
     }
 
     async consumeMessagePack(data: WBuffer) : Promise<WBuffer> {
+        mark`start:consumeMessagePack`;
+
         const countOfMessages = data.readUleb128();
         const listOfDecryptedMessages: WBuffer[] = [];
         
@@ -129,14 +139,20 @@ export default class Client {
         }
 
         const countOfDecryptedMessages = listOfDecryptedMessages.length; 
-
-        return WBuffer.concat([
+        const response = WBuffer.concat([
             WBuffer.uleb128(countOfDecryptedMessages),
             ...listOfDecryptedMessages
         ]);
+
+        mark`end:consumeMessagePack`;
+        measure('client:consumeMessagePack', 'start:consumeMessagePack', 'end:consumeMessagePack');
+
+        return response;
     }
 
     async consumeCommand(data: WBuffer): Promise<WBuffer> {
+        mark`start:consumeCommand`;
+
         const command = Command.fromBuffer(data, 'net');
 
         if (command instanceof KeyPoolingCommand) {
@@ -167,11 +183,15 @@ export default class Client {
 
         const hash = command.getHash();
         const signature = this.key.sign(hash);
-
-        return WBuffer.concat([
+        const response = WBuffer.concat([
             WBuffer.uleb128(signature.length),
             signature
         ]);
+
+        mark`end:consumeCommand`;
+        measure('client:consumeCommand', 'start:consumeCommand', 'end:consumeCommand');
+
+        return response;
     }
 
     //#endregion consume messages
