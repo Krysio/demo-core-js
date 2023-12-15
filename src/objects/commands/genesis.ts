@@ -1,56 +1,58 @@
 import WBuffer from "@/libs/WBuffer";
-import { COMMAND_TYPE_GENESIS, mapOfCommand } from "../types";
-import { Command } from "./command";
+import { COMMAND_TYPE_GENESIS } from "./types";
+import { Type, CommandTypeInternal, ICommandImplementation } from "./command";
+import Key from "../key";
+import User from "../user";
+import chainTop from "@/chaintop";
 
-export type Genesis = {
-    manifest: string,
-    genesisTime: number,
-    rootAccounts: {
-        userID: number,
-        key: string
-    }[]
-};
+@Type(COMMAND_TYPE_GENESIS)
+export default class GenesisCommand extends CommandTypeInternal implements ICommandImplementation {
+    constructor(
+        public rootPublicKey: Key,
+        public listOfAdminAccounts: User[] = [],
+        public manifest: string = '',
+    ) { super(); }
 
-const genesisCommand = new class GenesisCommand implements Command {
-    typeID = COMMAND_TYPE_GENESIS;
+    fromBufferImplementation(buffer: WBuffer): void {
+        const sizeOfManifest = buffer.readUleb128();
 
-    createBuffer(genesis: Genesis) {
-        const jsonString = WBuffer.from(JSON.stringify(genesis), 'utf-8');
+        this.manifest = buffer.read(sizeOfManifest).utf8();
+        this.rootPublicKey = Key.fromBuffer(buffer);
+
+        const countOfAdminAccounts = buffer.readUleb128();
+
+        for (let i = 0; i < countOfAdminAccounts; i++) {
+            this.listOfAdminAccounts.push(
+                User.fromBuffer(buffer) 
+            );
+        }
+    }
+
+    toBufferImplementation(): WBuffer {
+        const manifest = WBuffer.from(this.manifest, 'utf8');
+        const sizeOfManifest = WBuffer.uleb128(manifest.length);
+        const rootPublicKey = this.rootPublicKey.toBuffer();
+        const countOfAdminAccounts = WBuffer.uleb128(this.listOfAdminAccounts.length);
+        const listOfAdminAccounts = this.listOfAdminAccounts.map((account) => account.toBuffer());
 
         return WBuffer.concat([
-            WBuffer.uleb128(this.typeID),
-            WBuffer.uleb128(jsonString.length),
-            jsonString
+            sizeOfManifest,
+            manifest,
+            rootPublicKey,
+            countOfAdminAccounts,
+            ...listOfAdminAccounts
         ]);
     }
 
-    verifyBlockVersion(buffer: WBuffer, block: any): boolean {
-        buffer.cursor = 0;
-        try {
-            const typeID = buffer.readUleb128();
-            const jsonStringSize = buffer.readUleb128();
+    isValidImplementation(): boolean {
+        if (!this.rootPublicKey) {
+            return false;
+        }
 
-            if (typeID !== this.typeID) return false; 
-            if (jsonStringSize === 0) return false;
-            if (buffer.cursor + jsonStringSize !== buffer.length) return false;
-
-            const jsonString = buffer.read(jsonStringSize).toString('utf-8');
-            const json = JSON.parse(jsonString);
-
-            // TODO check manifest is string
-            // TODO check rootAccounts
-        } catch (error) {
+        if (chainTop.getHeight() !== 0) {
             return false;
         }
 
         return true;
     }
-
-    verifyNetworkVersion(buffer: WBuffer): boolean {
-        return false;
-    }
 };
-
-mapOfCommand.register(genesisCommand);
-
-export default genesisCommand;

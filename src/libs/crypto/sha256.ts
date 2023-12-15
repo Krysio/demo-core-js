@@ -1,35 +1,37 @@
-import { createHash } from 'crypto';
+import * as fs from 'node:fs';
+import * as crypto from 'node:crypto';
 import WBuffer from '../WBuffer';
 
 /******************************/
 
-export function sha256(input: string | Buffer | Uint8Array): WBuffer;
-export function sha256(input: string | Buffer | Uint8Array, encoding: 'hex' | 'base64'): string;
 export function sha256(
-    input: string | WBuffer | Buffer | Uint8Array,
-    encoding?: 'hex' | 'base64'
-): string | WBuffer {
+    input: string | WBuffer | Buffer | Uint8Array
+): WBuffer {
     let hash
     if (typeof input === 'string') {
-        hash = createHash('sha256').update(input, 'utf8');
+        hash = crypto.createHash('sha256').update(input, 'utf8');
     } else {
-        hash = createHash('sha256').update(input);
+        hash = crypto.createHash('sha256').update(input);
     }
 
-    const result = hash.digest(encoding);
+    const result = hash.digest();
 
-    if (typeof result === 'string') {
-        return result;
-    } else {
-        return WBuffer.create(result);
-    }
+    return WBuffer.create(result);
 }
 
-export function doubleSha256(
-    input: string | Buffer | Uint8Array,
-    encoding?: 'hex' | 'base64'
-): string | WBuffer {
-    return sha256(input + sha256(input, 'hex'), encoding);
+export function sha256File(
+    pathToFile: string
+): Promise<WBuffer> {
+    return new Promise<WBuffer>((resolve, reject) => {
+        const fileStream = fs.createReadStream(pathToFile);
+        const hasher = crypto.createHash('sha256');
+    
+        fileStream.pipe(hasher);
+        fileStream.on('end', () => {
+            hasher.end();
+            resolve(WBuffer.create(hasher.read()));
+        });
+    });
 }
 
 export const EMPTY_HASH = WBuffer.alloc(32).fill(0);

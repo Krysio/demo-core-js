@@ -49,10 +49,17 @@ const hash = command.getHash();
 for (const { userID } of command.getSignatureInterator()) {
     for (const item of listOfAuthors) {
         if (userID.isEqual(item.userID)) {
-            const signature = item.key.sign(hash);
-
-            item.signature = signature;
-            command.addAuthor(userID, signature);
+            try {
+                const signature = item.key.sign(hash);
+    
+                item.signature = signature;
+                command.addAuthor(userID, signature);
+            } catch (error) {
+                console.log([
+                    'Sign problem',
+                    item
+                ]);
+            }
         }
     }
 }

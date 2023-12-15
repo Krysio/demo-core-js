@@ -18,7 +18,7 @@ export async function getUser(userID: WBuffer): Promise<null | User> {
     await dbReady;
 
     const user = await new Promise<null | User>((resolve, reject) => {
-        db.get<RowOfUser>(
+        db.users.get<RowOfUser>(
             `SELECT * FROM users WHERE userID = ?`,
             [userID],
             (error, row) => {
@@ -53,7 +53,7 @@ export async function insertUser(
 
     const result = await new Promise<void>(
         (resolve, reject) => {
-            db.run(
+            db.users.run(
                 `INSERT INTO users(userID, data) VALUES (?, ?)`,
                 [user.userID, user.toBuffer('db')],
                 (error: Error & {code: string}) => {    

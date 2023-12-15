@@ -1,23 +1,38 @@
 import getLazyPromise from "@/libs/LazyPromise";
+import * as path from "node:path";
+import * as fs from "node:fs";
 import { Database } from "sqlite3";
 
-export function createDb() {
-    const db = new Database(':memory:');
-    const dbReady = getLazyPromise();
+const dbReady = getLazyPromise();
+const db = {
+    'users': null as Database
+};
 
-    db.serialize(() => {
-        db.run(`
+export async function createDb() {
+    if (!fs.existsSync('./db')) {
+        fs.mkdirSync('./db', 0x744);
+    }
+
+    const dbUsers = new Database('./db/users.db');
+    const dbUsersReady = getLazyPromise();
+
+    dbUsers.serialize(() => {
+        dbUsers.run(`
             CREATE TABLE IF NOT EXISTS users (
                 userID BLOB PRIMARY KEY,
                 data BLOB
             );
-        `, () => dbReady.resolve());
+        `, () => dbUsersReady.resolve());
     });
 
-    return {db, dbReady};
-}
+    await Promise.all([
+        dbUsersReady
+    ]);
 
-const { db, dbReady } = createDb();
+    db['users'] = dbUsers;
+
+    dbReady.resolve();
+}
 
 export default db;
 export { dbReady };
