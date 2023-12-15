@@ -38,7 +38,7 @@ export default class WBuffer extends Buffer {
     }
     public set cursor(value: number) {
         this.$isCursorAtTheEnd = false;
-        if (value < 0) {
+        if (value <= 0) {
             this.$cursor = 0;
         } else if (value >= this.length) {
             this.$cursor = this.length - 1;

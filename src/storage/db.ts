@@ -9,14 +9,7 @@ export function createDb() {
         db.run(`
             CREATE TABLE IF NOT EXISTS users (
                 userID BLOB PRIMARY KEY,
-                typeID INTEGER,
-                level INTEGER,
-                parentID BLOB,
-                key BLOB,
-                areas BLOB,
-                timeStart INTEGER,
-                timeEnd INTEGER,
-                meta TEXT
+                data BLOB
             );
         `, () => dbReady.resolve());
     });

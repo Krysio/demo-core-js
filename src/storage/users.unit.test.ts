@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
-import { ErrorDuplicateID, getUser, insertAdmin, insertRoot } from "./users";
+import { ErrorDuplicateID, getUser, insertUser } from "./users";
 import WBuffer from "@/libs/WBuffer";
-import { TYPE_USER_ADMIN, TYPE_USER_ROOT } from "@/objects/user";
+import { TYPE_USER_ADMIN, TYPE_USER_ROOT, UserAdmin, UserRoot } from "@/objects/user";
 import { KeySecp256k1 } from "@/objects/key";
 
 function mockDb() {
@@ -13,25 +13,27 @@ function mockDb() {
     });
 }
 
-const NIL_UUID = WBuffer.alloc(16).fill(0);
+const EMPTY_UUID = WBuffer.alloc(16).fill(0);
 
 describe('@/storage/users', () => {
     describe('Root', () => {
         describe('Inset', () => {
-            const rootID = NIL_UUID;
+            const rootID = EMPTY_UUID;
             const [rootPrivateKey, rootPublicKey] = getKeyPair();
+            const key = new KeySecp256k1(rootPublicKey);
+            const rootUser = new UserRoot(key);
 
             beforeAll(mockDb);
 
             test('Insert root one', async () => {
-                await insertRoot(new KeySecp256k1(rootPublicKey).toBuffer());
+                await insertUser(rootUser);
         
                 const user = await getUser(rootID);
         
                 expect(user).not.toBe(null);
                 expect(user.key.key.hex()).toBe(rootPublicKey.hex());
                 expect(user.userID.hex()).toBe(rootID.hex());
-                expect(user.parentID.hex()).toBe(NIL_UUID.hex());
+                expect(user.parentID.hex()).toBe(EMPTY_UUID.hex());
                 expect(user.typeID).toBe(TYPE_USER_ROOT);
                 expect(user.level).toBe(0);
                 expect(user.timeStart).toBe(0);
@@ -41,7 +43,7 @@ describe('@/storage/users', () => {
 
             test('Insert root twice', async () => {
                 expect(async () => {
-                    await insertRoot(rootPublicKey);
+                    await insertUser(rootUser);
                 }).rejects.toThrow(ErrorDuplicateID);
             });
         });
@@ -49,20 +51,18 @@ describe('@/storage/users', () => {
 
     describe('Admin', () => {
         describe('Inset', () => {
-            const [adminPrivateKey, adminPublicKey] = getKeyPair();
             const adminID = WBuffer.from(uuidv4().replaceAll('-', ''), 'hex');
             const adminDesc = 'Main admin';
+            const [adminPrivateKey, adminPublicKey] = getKeyPair();
+            const key = new KeySecp256k1(adminPublicKey);
+            const adminUser = new UserAdmin({
+                userID: adminID,
+                key,
+                meta: JSON.stringify({desc: adminDesc})
+            });
 
             function insert() {
-                return insertAdmin({
-                    userID: adminID,
-                    parentID: NIL_UUID,
-                    key: new KeySecp256k1(adminPublicKey).toBuffer(),
-                    level: 0,
-                    timeStart: 0,
-                    timeEnd: 0,
-                    meta: JSON.stringify({desc: adminDesc})
-                });
+                return insertUser(adminUser);
             }
 
             beforeAll(mockDb);
@@ -75,7 +75,7 @@ describe('@/storage/users', () => {
                 expect(user).not.toBe(null);
                 expect(user.key.key.hex()).toBe(adminPublicKey.hex());
                 expect(user.userID.hex()).toBe(adminID.hex());
-                expect(user.parentID.hex()).toBe(NIL_UUID.hex());
+                expect(user.parentID.hex()).toBe(EMPTY_UUID.hex());
                 expect(user.typeID).toBe(TYPE_USER_ADMIN);
                 expect(user.level).toBe(0);
                 expect(user.timeStart).toBe(0);

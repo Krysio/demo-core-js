@@ -11,9 +11,9 @@ export function sha256(
 ): string | WBuffer {
     let hash
     if (typeof input === 'string') {
-        hash = createHash('SHA256').update(input, 'utf8');
+        hash = createHash('sha256').update(input, 'utf8');
     } else {
-        hash = createHash('SHA256').update(input);
+        hash = createHash('sha256').update(input);
     }
 
     const result = hash.digest(encoding);
