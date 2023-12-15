@@ -31,8 +31,8 @@ export const Type = (typeID: number) => {
 /******************************/
 
 interface IUser {
-    fromBufferImplementation(buffer: WBuffer): void;
-    toBufferImplementation(): WBuffer;
+    fromBufferImplementation(buffer: WBuffer, bufferType: 'db' | 'net' | 'hash'): void;
+    toBufferImplementation(bufferType: 'db' | 'net' | 'hash'): WBuffer;
     isValidImplementation(): boolean;
 }
 
@@ -61,7 +61,7 @@ export default class User {
 
     static fromBuffer(
         buffer: WBuffer,
-        bufferType: 'db' | 'net' = 'net'
+        bufferType: 'db' | 'net' | 'hash' = 'net'
     ) {
         try {
             const cursor = buffer.cursor;
@@ -79,7 +79,7 @@ export default class User {
 
     fromBuffer(
         buffer: WBuffer,
-        bufferType: 'db' | 'net' = 'net'
+        bufferType: 'db' | 'net' | 'hash' = 'net'
     ): User {
         try {
             this.typeID = buffer.readUleb128();
@@ -89,7 +89,7 @@ export default class User {
             }
     
             this.key = Key.fromBuffer(buffer);
-            (this as unknown as IUser).fromBufferImplementation(buffer);
+            (this as unknown as IUser).fromBufferImplementation(buffer, bufferType);
 
             return this;
         } catch (error) {
@@ -98,7 +98,7 @@ export default class User {
     }
 
     toBuffer(
-        bufferType: 'db' | 'net' = 'net'
+        bufferType: 'db' | 'net' | 'hash' = 'net'
     ): WBuffer {
         try {
             const typeID = WBuffer.uleb128(this.typeID);
@@ -106,7 +106,7 @@ export default class User {
                 ? this.userID
                 : EMPTY_BUFFER;
             const key = this.key.toBuffer();
-            const data = (this as unknown as IUser).toBufferImplementation();
+            const data = (this as unknown as IUser).toBufferImplementation(bufferType);
 
             return WBuffer.concat([
                 typeID,
@@ -122,7 +122,7 @@ export default class User {
     //#endregion buffer
 
     getHash() {
-        return sha256(this.toBuffer('net'));
+        return sha256(this.toBuffer('hash'));
     }
 
     public inspect() {
@@ -187,8 +187,14 @@ export class UserAdmin extends User implements IUser {
         }
     }
 
-    fromBufferImplementation(buffer: WBuffer) {
-        this.parentID = buffer.read(16);
+    fromBufferImplementation(
+        buffer: WBuffer,
+        bufferType: 'db' | 'net' | 'hash' = 'net'
+    ) {
+        if (bufferType !== 'net') {
+            this.parentID = buffer.read(16);
+        }
+
         this.timeStart = buffer.readUleb128();
         this.timeEnd = buffer.readUleb128();
         this.level = buffer.readUleb128();
@@ -198,7 +204,10 @@ export class UserAdmin extends User implements IUser {
         this.meta = buffer.read(sizeOfMeta).utf8();
     }
 
-    toBufferImplementation(): WBuffer {
+    toBufferImplementation(
+        bufferType: 'db' | 'net' | 'hash' = 'net'
+    ): WBuffer {
+        const parentID = bufferType !== 'net' ? this.parentID : EMPTY_BUFFER;
         const timeStart = WBuffer.uleb128(this.timeStart);
         const timeEnd = WBuffer.uleb128(this.timeStart);
         const level = WBuffer.uleb128(this.level);
@@ -206,7 +215,7 @@ export class UserAdmin extends User implements IUser {
         const meta = WBuffer.from(this.meta, 'utf8');
 
         return WBuffer.concat([
-            this.parentID,
+            parentID,
             timeStart,
             timeEnd,
             level,
@@ -236,8 +245,13 @@ export class UserVoter extends User implements IUser {
         }
     }
 
-    fromBufferImplementation(buffer: WBuffer) {
-        this.parentID = buffer.read(16);
+    fromBufferImplementation(
+        buffer: WBuffer,
+        bufferType: 'db' | 'net' | 'hash' = 'net'
+    ) {
+        if (bufferType !== 'net') {
+            this.parentID = buffer.read(16);
+        }
 
         const countOfAreas = buffer.readUleb128();
 
@@ -255,7 +269,10 @@ export class UserVoter extends User implements IUser {
         this.meta = buffer.read(sizeOfMeta).utf8();
     }
 
-    toBufferImplementation(): WBuffer {
+    toBufferImplementation(
+        bufferType: 'db' | 'net' | 'hash' = 'net'
+    ): WBuffer {
+        const parentID = bufferType !== 'net' ? this.parentID : EMPTY_BUFFER;
         const countOfAreas = WBuffer.uleb128(this.listOfAreas.length);
         const listOfAreas = this.listOfAreas.map((area) => WBuffer.uleb128(area));
         const timeStart = WBuffer.uleb128(this.timeStart);
@@ -264,7 +281,7 @@ export class UserVoter extends User implements IUser {
         const sizeOfMeta = WBuffer.uleb128(meta.length);
 
         return WBuffer.concat([
-            this.parentID,
+            parentID,
             countOfAreas,
             ...listOfAreas,
             timeStart,
