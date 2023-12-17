@@ -121,6 +121,14 @@ export default class User {
 
     //#endregion buffer
 
+    isValid(): boolean {
+        if (!this.key || !this.key.isValid()) {
+            return false;
+        }
+
+        return (this as unknown as IUser).isValidImplementation();
+    }
+
     getHash() {
         return sha256(this.toBuffer('hash'));
     }
@@ -225,7 +233,11 @@ export class UserAdmin extends User implements IUser {
     }
 
     isValidImplementation(): boolean {
-        return false;
+        if (!this.meta) {
+            return false;
+        }
+
+        return true;
     }
 }
 

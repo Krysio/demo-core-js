@@ -20,11 +20,17 @@ export default class DBSnapshotCommand extends CommandTypeInternal implements IC
         ]);
     }
 
-    isValidImplementation(): Boolean {
+    isValidImplementation(): boolean {
         if (this.hashOfUsersDB.length !== 32) {
             return false;
         }
 
         return true;
     }
+
+    async verifyImplementation(): Promise<boolean> {
+        return true;
+    }
+
+    async applyImplementation(): Promise<void> {}
 };

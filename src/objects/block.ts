@@ -11,9 +11,7 @@ export default class Block {
     hashOfPrevBlock: WBuffer;
     listOfCommands: Command[] = [];
 
-    addCommand(command: Command) {
-        this.listOfCommands.push(command);
-    }
+    //#region buffer
 
     static fromBuffer(buffer: WBuffer) {
         const block = new Block();
@@ -56,15 +54,18 @@ export default class Block {
         ]);
     }
 
+    //#endregion buffer
+
+    addCommand(command: Command) {
+        this.listOfCommands.push(command);
+    }
+
     getHash() {
         return sha256(this.toBuffer());
     }
 
     isValid() {
-        if (this.version !== 1) return false;
-        if (this.index !== chainTop.getHeight()) return false;
         if (!this.hashOfPrevBlock) return false;
-        if (!WBuffer.isEqual(this.hashOfPrevBlock, chainTop.hashOfPrevBlock)) return false;
 
         for (const command of this.listOfCommands) {
             if (!command.isValid()) return false;
@@ -73,28 +74,24 @@ export default class Block {
         return true;
     }
 
-    verify(buffer: WBuffer) {
-        buffer.cursor = 0;
-
-        this.version = buffer.readUleb128();
-        this.index = buffer.readUleb128();
-        this.hashOfPrevBlock = buffer.read(32);
-
-        const countOfCommands = buffer.readUleb128();
-
-        if (this.version !== 1) return false;
+    verify() {
         if (this.index !== chainTop.getHeight()) return false;
-        if (WBuffer.compare(this.hashOfPrevBlock, chainTop.hashOfPrevBlock) !== 0) return false;
+        if (!this.hashOfPrevBlock.isEqual(chainTop.hashOfPrevBlock)) return false;
 
-        for (let i = 0; i < countOfCommands; i++) {
-            const commandSize = buffer.readUleb128();
-            const commandBuffer = buffer.read(commandSize);
-            const command = Command.fromBuffer(commandBuffer);
-
+        for (const command of this.listOfCommands) {
             command.setPrevBlock(this);
-            if (!command.isValid()) return false;
+
+            if (!command.verify()) {
+                return false;
+            }
         }
         
         return true;
+    }
+
+    async apply() {
+        for (const command of this.listOfCommands) {
+            await command.apply();
+        }
     }
 }

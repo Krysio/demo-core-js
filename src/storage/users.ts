@@ -56,7 +56,7 @@ export async function insertUser(
             db.users.run(
                 `INSERT INTO users(userID, data) VALUES (?, ?)`,
                 [user.userID, user.toBuffer('db')],
-                (error: Error & {code: string}) => {    
+                (error: Error & {code: string}) => { 
                     if (error) {
                         if (error.code === 'SQLITE_CONSTRAINT') {
                             reject(new Error(ErrorDuplicateID));

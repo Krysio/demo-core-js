@@ -4,6 +4,8 @@ import Block from "@/objects/block";
 import Key from "@/objects/key";
 import { getUser } from "@/storage/users";
 import { TYPE_USER_VOTER } from "../user";
+import chainTop from "@/chaintop";
+import config from "@/config";
 
 const VERSION = 1;
 
@@ -24,14 +26,17 @@ export const Type = (typeID: number) => {
 export interface ICommandType {
     fromBufferCommandType(buffer: WBuffer, bufferType: 'block' | 'net'): void;
     toBufferCommandType(bufferType: 'block' | 'net' | 'nosignature'): WBuffer;
-    isValidCommandType(): Boolean;
+    isValidCommandType(): boolean;
+    verifyCommandType(): Promise<boolean>;
     setPrevBlockCommandType(block: Block): void;
 }
 
 export interface ICommandImplementation {
     fromBufferImplementation(buffer: WBuffer): void;
     toBufferImplementation(): WBuffer;
-    isValidImplementation(): Boolean;
+    isValidImplementation(): boolean;
+    verifyImplementation(): Promise<boolean>;
+    applyImplementation(): Promise<void>;
 }
 
 export class Command {
@@ -101,6 +106,10 @@ export class Command {
         return sha256(buffer);
     }
 
+    setPrevBlock(block: Block) {
+        (this as unknown as ICommandType).setPrevBlockCommandType(block);
+    }
+
     isValid() {
         if (this.version !== VERSION) {
             return false;
@@ -113,8 +122,16 @@ export class Command {
         return (this as unknown as ICommandType).isValidCommandType();
     }
 
-    setPrevBlock(block: Block) {
-        (this as unknown as ICommandType).setPrevBlockCommandType(block);
+    verify() {
+        if (chainTop.getHeight() % config.spaceBetweenDBSnapshot !== 0) {
+            return false;
+        }
+
+        return (this as unknown as ICommandType).verifyCommandType();
+    }
+
+    apply(): Promise<void> {
+        return (this as unknown as ICommandImplementation).applyImplementation();
     }
 }
 
@@ -127,8 +144,12 @@ export class CommandTypeInternal extends Command implements ICommandType {
         return (this as unknown as ICommandImplementation).toBufferImplementation();
     }
 
-    isValidCommandType(): Boolean {
+    isValidCommandType(): boolean {
         return (this as unknown as ICommandImplementation).isValidImplementation();
+    }
+
+    verifyCommandType(): Promise<boolean> {
+        return (this as unknown as ICommandImplementation).verifyImplementation();
     }
 
     setPrevBlockCommandType() {}
@@ -213,7 +234,7 @@ export class CommandTypeMultiUser extends Command implements ICommandType {
         }
     }
 
-    async verifyCommandType() {
+    async verifyCommandType(): Promise<boolean> {
         const hash = this.getHash();
         let isInvalid = false;
 

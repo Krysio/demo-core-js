@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { COMMAND_TYPE_CONFIG } from "./types";
 import { Type, CommandTypeInternal, ICommandImplementation } from "./command";
-import { Config } from "@/config";
+import config, { Config } from "@/config";
 
 @Type(COMMAND_TYPE_CONFIG)
 export default class ConfigCommand extends CommandTypeInternal implements ICommandImplementation {
@@ -16,14 +16,9 @@ export default class ConfigCommand extends CommandTypeInternal implements IComma
     
     constructor(config: Config) {
         super();
-        this.genesisTime = config.genesisTime;
-        this.timeBetweenBlocks = config.timeBetweenBlocks;
-        this.spaceBetweenDBSnapshot = config.spaceBetweenDBSnapshot;
-        this.countOfVoteTransfer = config.countOfVoteTransfer;
-        this.countOfSupportGiving = config.countOfSupportGiving;
-        this.timeLiveOfUserAccount = config.timeLiveOfUserAccount;
-        this.timeLiveOfIncognitoAccount = config.timeLiveOfIncognitoAccount;
-        this.timeBeforeAccountActivation = config.timeBeforeAccountActivation;
+        for (const key in config) {
+            this[key as keyof typeof config] = config[key as keyof typeof config];
+        }
     }
 
     fromBufferImplementation(buffer: WBuffer): void {
@@ -67,5 +62,15 @@ export default class ConfigCommand extends CommandTypeInternal implements IComma
         }
 
         return true;
+    }
+
+    async verifyImplementation(): Promise<boolean> {
+        return true;
+    }
+
+    async applyImplementation(): Promise<void> {
+        for (const key in config) {
+            config[key as keyof typeof config] = this[key as keyof typeof config];
+        }
     }
 }

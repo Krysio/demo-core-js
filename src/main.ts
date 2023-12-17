@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import chainTop from "./chaintop";
-import config from "./config";
+import { initialConfig } from "./config";
 import { getKeyPair } from "./libs/crypto/ec/secp256k1";
 import { EMPTY_HASH, sha256File } from "./libs/crypto/sha256";
 import Block from "@/objects/block";
@@ -8,7 +8,7 @@ import ConfigCommand from "@/objects/commands/config";
 import DBSnapshotCommand from "@/objects/commands/db-snapshots";
 import GenesisCommand from "@/objects/commands/genesis";
 import { KeySecp256k1 } from "@/objects/key";
-import { createDb, dbReady } from "@/storage/db";
+import db, { createDb, dbReady } from "@/storage/db";
 
 const pathToUsersDB = './db/users.db';
 
@@ -32,12 +32,29 @@ const main = new class Main {
         block.hashOfPrevBlock = EMPTY_HASH;
 
         const genesisCommand = new GenesisCommand(rootKey);
-        const configCommand = new ConfigCommand(config);
+        const configCommand = new ConfigCommand(initialConfig);
         const dbSnapshotCommand = await this.generateDBSnapshotCommand();
 
         block.addCommand(genesisCommand);
         block.addCommand(configCommand);
         block.addCommand(dbSnapshotCommand);
+
+        if (!block.isValid()) {
+            throw new Error('!1!');
+        }
+
+        if (await block.verify()) {
+            throw new Error('!2!');
+        }
+
+        await block.apply();
+
+        await new Promise<void>((resolve, reject) => {
+            db.users.all('SELECT * FROM users;', (error, rows) => {
+                console.log(rows);
+                resolve();
+            });
+        });
     }
 
     async generateDBSnapshotCommand() {
