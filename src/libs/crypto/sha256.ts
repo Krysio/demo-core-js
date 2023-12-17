@@ -19,6 +19,10 @@ export function sha256(
     return WBuffer.create(result);
 }
 
+export function doubleSha256(input: Parameters<typeof sha256>[0]): WBuffer {
+    return sha256(sha256(input));
+};
+
 export function sha256File(
     pathToFile: string
 ): Promise<WBuffer> {

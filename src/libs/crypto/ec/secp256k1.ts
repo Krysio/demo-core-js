@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import WBuffer from "@/libs/WBuffer";
-import getLazyPromise from "@/libs/LazyPromise";
+import getLazyPromise from "@/libs/lazyPromise";
 import { instantiateSecp256k1, Secp256k1 } from "@bitauth/libauth";
 import * as secp256k1 from "secp256k1";
 

@@ -1,5 +1,4 @@
-import getLazyPromise from "@/libs/LazyPromise";
-import * as path from "node:path";
+import getLazyPromise from "@/libs/lazyPromise";
 import * as fs from "node:fs";
 import { Database } from "sqlite3";
 
