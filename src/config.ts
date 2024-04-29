@@ -1,26 +1,22 @@
 import Time from "@/libs/Time";
 
-const config = {
-    genesisTime: Time.now(),
-    timeBetweenBlocks: 0,
-    spaceBetweenDBSnapshot: 0,
-    countOfVoteTransfer: 0,
-    countOfSupportGiving: 0,
-    timeLiveOfUserAccount: 0,
-    timeLiveOfIncognitoAccount: 0,
-    timeBeforeAccountActivation: 0
-};
+export class Config {
+    constructor(
+        public genesisTime = 0,
+        public timeBetweenBlocks = 0,
+        public spaceBetweenDBSnapshot = 0,
+        public countOfVoteTransfer = 0,
+        public countOfSupportGiving = 0,
+        public timeLiveOfUserAccount = 0,
+        public timeLiveOfIncognitoAccount = 0,
+        public timeBeforeAccountActivation = 0
+    ) {}
+}
 
-export const initialConfig = {
-    genesisTime: Time.now(),
-    timeBetweenBlocks: 1e4,
-    spaceBetweenDBSnapshot: 100,
-    countOfVoteTransfer: 5,
-    countOfSupportGiving: 5,
-    timeLiveOfUserAccount: 1e6,
-    timeLiveOfIncognitoAccount: 1e5,
-    timeBeforeAccountActivation: 10
-};
+const timeBetweenBlocks = 1e4;
 
-export default config;
-export type Config = typeof config;
+export const initialConfig = new Config(
+    Time.now() - timeBetweenBlocks
+);
+
+export default Config;

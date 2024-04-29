@@ -38,6 +38,7 @@ interface IKey {
     isValidImplementation(): boolean;
     signImplementation(hash: WBuffer, privateKey?: WBuffer): WBuffer;
     verifyImplementation(hash: WBuffer, signature: WBuffer): boolean;
+    isValidSignatureLengthImplementation(sizeOfSignature: number): boolean;
     encryptImplementation(message: WBuffer): WBuffer;
     decryptImplementation(message: WBuffer, privateKey?: WBuffer): WBuffer;
 }
@@ -126,12 +127,19 @@ export default class Key {
     sign(hash: WBuffer, privateKey?: WBuffer) {
         return (this as unknown as IKey).signImplementation(hash, privateKey);
     }
+
     verify(hash: WBuffer, signature: WBuffer) {
         return (this as unknown as IKey).verifyImplementation(hash, signature);
     }
+
+    isValidSignatureLength(sizeOfSignature: number): boolean {
+        return (this as unknown as IKey).isValidSignatureLengthImplementation(sizeOfSignature);
+    }
+
     encrypt(message: WBuffer) {
         return (this as unknown as IKey).encryptImplementation(message);
     }
+
     decrypt(message: WBuffer, privateKey?: WBuffer) {
         return (this as unknown as IKey).decryptImplementation(message, privateKey);
     }
@@ -175,6 +183,7 @@ export class KeySecp256k1 extends Key implements IKey {
             hash
         );
     }
+
     verifyImplementation(hash: WBuffer, signature: WBuffer): boolean {
         return verifySecp256k1(
             this.key,
@@ -182,12 +191,18 @@ export class KeySecp256k1 extends Key implements IKey {
             signature
         );
     }
+
+    isValidSignatureLengthImplementation(sizeOfSignature: number): boolean {
+        return sizeOfSignature === 64;
+    }
+
     encryptImplementation(message: WBuffer): WBuffer {
         return encryptSecp256k1(
             this.key,
             message
         );
     }
+
     decryptImplementation(message: WBuffer, privateKey?: WBuffer): WBuffer {
         const key = privateKey || this.privateKey;
 

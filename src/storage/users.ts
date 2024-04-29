@@ -1,79 +1,104 @@
+import { Database } from "sqlite3";
 import WBuffer from "@/libs/WBuffer";
-import db, { dbReady } from "@/storage/db";
-import User from "@/objects/user";
 
 //#region Constants
 
 export const ErrorUnknown = 'Unknown error';
 export const ErrorDuplicateID = 'Duplicate ID';
 
-type RowOfUser = {
-    data: Buffer
-};
+//#endregion Insert
 
-//#endregion Constants
-//#region Get
-
-export async function getUser(userID: WBuffer): Promise<null | User> {
-    await dbReady;
-
-    const user = await new Promise<null | User>((resolve, reject) => {
-        db.users.get<RowOfUser>(
-            `SELECT * FROM users WHERE userID = ?`,
-            [userID],
-            (error, row) => {
-                if (error) {
-                    reject(new Error(ErrorUnknown));
-                    return;
-                }
-
-                if (row) {
-                    const user = User.fromBuffer(WBuffer.create(row.data), 'db');
-
-                    user.userID = userID;
-                    resolve(user);
-                    return;
-                }
-
-                resolve(null);
-            }
-        );
-    });
-
-    return user;
-}
-
-//#endregion Get
-//#region Insert
-
-export async function insertUser(
-    user: User
-): Promise<void> {
-    await dbReady;
-
-    const result = await new Promise<void>(
-        (resolve, reject) => {
-            db.users.run(
-                `INSERT INTO users(userID, data) VALUES (?, ?)`,
-                [user.userID, user.toBuffer('db')],
-                (error: Error & {code: string}) => { 
-                    if (error) {
-                        if (error.code === 'SQLITE_CONSTRAINT') {
-                            reject(new Error(ErrorDuplicateID));
+export function createListOfActiveUserID() {
+    const db = new Database(':memory:');
+    const api = {
+        addUserID(userID: WBuffer) {
+            return new Promise<void>((resolve, reject) => {
+                db.run(
+                    `INSERT INTO users(userID) VALUES (?)`,
+                    [userID],
+                    (error: Error & {code: string}) => {
+                        if (error) {
+                            if (error.code === 'SQLITE_CONSTRAINT') {
+                                reject(new Error(ErrorDuplicateID));
+                                return;
+                            }
+        
+                            reject(new Error(ErrorUnknown));
                             return;
                         }
-    
-                        reject(new Error(ErrorUnknown));
-                        return;
+        
+                        resolve();
                     }
-    
-                    resolve();
-                }
-            );
+                );
+            });
+        },
+        hasUserID(userID: WBuffer) {
+            return new Promise<boolean>((resolve, reject) => {
+                db.get(
+                    `SELECT userID FROM users WHERE userID = ?`,
+                    [userID],
+                    (error, row) => {
+                        if (error) {
+                            reject(new Error(ErrorUnknown));
+                            return;
+                        }
+        
+                        if (row) {
+                            resolve(true);
+                            return;
+                        }
+        
+                        resolve(false);
+                    }
+                );
+            });
         }
-    );
+    };
 
-    return result;
+    return new Promise<Database & typeof api>((resolve, reject) => {
+        db.serialize(() => {
+            db.run(`
+                CREATE TABLE IF NOT EXISTS users (
+                    userID BLOB PRIMARY KEY
+                );
+            `, () => resolve(Object.assign(db, api)));
+        });
+    });
 }
 
-//#endregion Insert
+export class StoreUsers {
+    currentCadency: ReturnType<typeof createListOfActiveUserID> = null;
+    nextCadency: ReturnType<typeof createListOfActiveUserID> = null;
+
+    constructor() {
+        this.currentCadency = createListOfActiveUserID();
+        this.nextCadency = createListOfActiveUserID();
+    }
+
+    async active(userID: WBuffer, nextCadency = false) {
+        const cadencyDB = await this[nextCadency ? 'nextCadency' : 'currentCadency'];
+        const result = await cadencyDB.addUserID(userID);
+
+        return result;
+    }
+
+    async isActive(userID: WBuffer) {
+        const cadencyDB = await this.currentCadency;
+        const result = await cadencyDB.hasUserID(userID);
+
+        return result;
+    }
+
+    changeCadency() {
+        this.currentCadency = this.nextCadency;
+        this.nextCadency = createListOfActiveUserID();
+    }
+}
+
+export function createStore(){
+    return new StoreUsers();
+}
+
+const storeUsers = createStore();
+
+export default storeUsers;

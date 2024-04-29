@@ -32,5 +32,5 @@ export default class DBSnapshotCommand extends CommandTypeInternal implements IC
         return true;
     }
 
-    async applyImplementation(): Promise<void> {}
+    async getEffectsImplementation(): Promise<void> {}
 };

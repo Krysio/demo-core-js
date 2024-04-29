@@ -5,22 +5,18 @@ import WBuffer from '../WBuffer';
 /******************************/
 
 export function sha256(
-    input: string | WBuffer | Buffer | Uint8Array
+    input: WBuffer | Buffer | Uint8Array
 ): WBuffer {
-    let hash
-    if (typeof input === 'string') {
-        hash = crypto.createHash('sha256').update(input, 'utf8');
-    } else {
-        hash = crypto.createHash('sha256').update(input);
-    }
+    const hash = crypto.createHash('sha256').update(input).digest();
 
-    const result = hash.digest();
-
-    return WBuffer.create(result);
+    return WBuffer.create(hash);
 }
 
-export function doubleSha256(input: Parameters<typeof sha256>[0]): WBuffer {
-    return sha256(sha256(input));
+export function doubleSha256(input: WBuffer): WBuffer {
+    return sha256(WBuffer.concat([
+        sha256(input),
+        input
+    ]));
 };
 
 export function sha256File(

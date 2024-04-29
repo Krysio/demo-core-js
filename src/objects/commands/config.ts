@@ -68,7 +68,7 @@ export default class ConfigCommand extends CommandTypeInternal implements IComma
         return true;
     }
 
-    async applyImplementation(): Promise<void> {
+    async getEffectsImplementation(): Promise<void> {
         for (const key in config) {
             config[key as keyof typeof config] = this[key as keyof typeof config];
         }

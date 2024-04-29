@@ -3,7 +3,7 @@ import { COMMAND_TYPE_GENESIS } from "./types";
 import { Type, CommandTypeInternal, ICommandImplementation } from "./command";
 import Key from "../key";
 import User, { UserRoot } from "../user";
-import chainTop from "@/chaintop";
+import chainTop from "@/ChainTop";
 import { insertUser } from "@/storage/users";
 
 @Type(COMMAND_TYPE_GENESIS)
@@ -72,7 +72,7 @@ export default class GenesisCommand extends CommandTypeInternal implements IComm
         return true;
     }
 
-    async applyImplementation(): Promise<void> {
+    async getEffectsImplementation(): Promise<void> {
         const rootUser = new UserRoot(this.rootPublicKey);
 
         insertUser(rootUser);

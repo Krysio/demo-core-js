@@ -7,12 +7,12 @@ const db = {
     'users': null as Database
 };
 
-export async function createDb() {
-    if (!fs.existsSync('./db')) {
+export async function createDb(memory = false) {
+    if (!memory && !fs.existsSync('./db')) {
         fs.mkdirSync('./db', 0x744);
     }
 
-    const dbUsers = new Database('./db/users.db');
+    const dbUsers = new Database(memory ? ':memory:' :'./db/users.db');
     const dbUsersReady = getLazyPromise();
 
     dbUsers.serialize(() => {
@@ -32,6 +32,8 @@ export async function createDb() {
 
     dbReady.resolve();
 }
+
+createDb(true);
 
 export default db;
 export { dbReady };

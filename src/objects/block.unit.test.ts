@@ -1,5 +1,5 @@
 import { EMPTY_HASH } from "@/libs/crypto/sha256";
-import Block from "./block";
+import Block from "./Block";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import GenesisCommand from "./commands/genesis";
 import { KeySecp256k1 } from "./key";

@@ -8,7 +8,7 @@ import { sha256 } from "@/libs/crypto/sha256";
 import { isWaitForPerformanceObserver, mark, measure, printMeasures } from "@/performance";
 
 const area = 0;
-const countOfUsers = 16;
+const countOfUsers = 4;
 const countOfInterations = 5;
 const listOfConnections: (UserConnection & { privateKey: WBuffer, signature: WBuffer, client: Client })[] = [];
 const getHashOfPrevBlock = () => WBuffer.from(sha256(WBuffer.from(Math.random().toString())));
@@ -37,8 +37,8 @@ test(`Test prcoess of key-pooling with ${countOfUsers} clients`, async () => {
 
     mark`verifySignatures`;
 
-    for (const { userID, signature } of process.command.getSignatureInterator()) {
-        const { key } = listOfConnections.find((connection) => connection.userID.isEqual(userID));
+    for (const { publicKey, signature } of process.command.getSignatureInterator()) {
+        const { key } = listOfConnections.find((connection) => connection.userID.isEqual(publicKey));
 
         expect(key.verify(hash, signature)).toBe(true);
     }

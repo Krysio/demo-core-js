@@ -68,5 +68,5 @@ export default class KeyPoolingCommand extends CommandTypeMultiUser implements I
         return true;
     }
 
-    async applyImplementation(): Promise<void> {}
+    async getEffectsImplementation(): Promise<void> {}
 };

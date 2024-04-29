@@ -1,93 +1,35 @@
-import { v4 as uuidv4 } from "uuid";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
-import { ErrorDuplicateID, getUser, insertUser } from "./users";
-import WBuffer from "@/libs/WBuffer";
-import { TYPE_USER_ADMIN, TYPE_USER_ROOT, UserAdmin, UserRoot } from "@/objects/user";
-import { KeySecp256k1 } from "@/objects/key";
+import storeUsers, { ErrorDuplicateID } from "@/storage/users";
 
 function mockDb() {
-    jest.mock('@/storage/db', () => {
-        const {db, dbReady} = jest.requireActual('@/storage/db').createDb();
+    jest.mock('@/storage/users', () => {
+        const store = jest.requireActual('@/storage/users').createStore();
 
-        return { default: db, dbReady };
+        return { default: store };
     });
 }
 
-const EMPTY_UUID = WBuffer.alloc(16).fill(0);
-
 describe('@/storage/users', () => {
-    describe('Root', () => {
-        describe('Inset', () => {
-            const rootID = EMPTY_UUID;
-            const [rootPrivateKey, rootPublicKey] = getKeyPair();
-            const key = new KeySecp256k1(rootPublicKey);
-            const rootUser = new UserRoot(key);
+    describe('Inset', () => {
+        const [hash1] = getKeyPair();
+        const [hash2] = getKeyPair();
 
-            beforeAll(mockDb);
+        beforeAll(mockDb);
 
-            test('Insert root one', async () => {
-                await insertUser(rootUser);
-        
-                const user = await getUser(rootID);
-        
-                expect(user).not.toBe(null);
-                expect(user.key.key.hex()).toBe(rootPublicKey.hex());
-                expect(user.userID.hex()).toBe(rootID.hex());
-                expect(user.parentID.hex()).toBe(EMPTY_UUID.hex());
-                expect(user.typeID).toBe(TYPE_USER_ROOT);
-                expect(user.level).toBe(0);
-                expect(user.timeStart).toBe(0);
-                expect(user.timeEnd).toBe(0);
-                expect(user.meta).toBe('');
-            });
+        test('Insert once', async () => {
+            await storeUsers.active(hash1);
 
-            test('Insert root twice', async () => {
-                expect(async () => {
-                    await insertUser(rootUser);
-                }).rejects.toThrow(ErrorDuplicateID);
-            });
+            const isActive1 = await storeUsers.isActive(hash1);
+            const isActive2 = await storeUsers.isActive(hash2);
+
+            expect(isActive1).toBe(true);
+            expect(isActive2).toBe(false);
         });
-    });
 
-    describe('Admin', () => {
-        describe('Inset', () => {
-            const adminID = WBuffer.from(uuidv4().replaceAll('-', ''), 'hex');
-            const adminDesc = 'Main admin';
-            const [adminPrivateKey, adminPublicKey] = getKeyPair();
-            const key = new KeySecp256k1(adminPublicKey);
-            const adminUser = new UserAdmin({
-                userID: adminID,
-                key,
-                meta: JSON.stringify({desc: adminDesc})
-            });
-
-            function insert() {
-                return insertUser(adminUser);
-            }
-
-            beforeAll(mockDb);
-
-            test('Insert admin one', async () => {
-                await insert();
-
-                const user = await getUser(adminID);
-
-                expect(user).not.toBe(null);
-                expect(user.key.key.hex()).toBe(adminPublicKey.hex());
-                expect(user.userID.hex()).toBe(adminID.hex());
-                expect(user.parentID.hex()).toBe(EMPTY_UUID.hex());
-                expect(user.typeID).toBe(TYPE_USER_ADMIN);
-                expect(user.level).toBe(0);
-                expect(user.timeStart).toBe(0);
-                expect(user.timeEnd).toBe(0);
-                expect(JSON.parse(user.meta).desc).toBe(adminDesc);
-            });
-
-            test('Insert admin twice', async () => {
-                expect(async () => {
-                    await insert();
-                }).rejects.toThrow(ErrorDuplicateID);
-            });
+        test('Insert twice', async () => {
+            expect(async () => {
+                await storeUsers.active(hash1);
+            }).rejects.toThrow(ErrorDuplicateID);
         });
     });
 });
