@@ -5,6 +5,7 @@ import Key from "@/objects/key";
 import storeUsers from "@/storage/users";
 import { TYPE_USER_ADMIN, TYPE_USER_VOTER } from "../user";
 import { MapOfEffects } from "@/constants";
+import { Node } from '@/main';
 
 const VERSION = 1;
 
@@ -39,17 +40,17 @@ export interface ICommandType {
     valueCommandType: number;
     fromBufferCommandType(buffer: WBuffer, bufferType: 'block' | 'net'): void;
     toBufferCommandType(bufferType: 'block' | 'net' | 'nosignature'): WBuffer;
-    isValidCommandType(): boolean;
-    verifyCommandType(): Promise<boolean>;
+    isValidCommandType(node: Node): boolean;
+    verifyCommandType(node: Node): Promise<boolean>;
     setBlockCommandType(block: Block): void;
 }
 
 export interface ICommandImplementation {
     fromBufferImplementation(buffer: WBuffer): void;
     toBufferImplementation(): WBuffer;
-    isValidImplementation(): boolean;
-    verifyImplementation(): Promise<boolean>;
-    getEffectsImplementation(refToEffects: MapOfEffects): void;
+    isValidImplementation(node: Node): boolean;
+    verifyImplementation(node: Node): Promise<boolean>;
+    getEffectsImplementation(node: Node, refToEffects: MapOfEffects): void;
 }
 
 export class Command {
@@ -127,7 +128,7 @@ export class Command {
         (this as unknown as ICommandType).setBlockCommandType(block);
     }
 
-    isValid() {
+    isValid(node: Node) {
         if (this.version !== VERSION) {
             return false;
         }
@@ -136,18 +137,19 @@ export class Command {
             return false;
         }
 
-        return (this as unknown as ICommandType).isValidCommandType();
+        return (this as unknown as ICommandType).isValidCommandType(node);
     }
 
-    verify() {
-        return (this as unknown as ICommandType).verifyCommandType();
+    verify(node: Node) {
+        return (this as unknown as ICommandType).verifyCommandType(node);
     }
 
     getEffects(
+        node: Node,
         refToEffects: MapOfEffects
     ): void {
         return (this as unknown as ICommandImplementation)
-        .getEffectsImplementation(refToEffects);
+        .getEffectsImplementation(node, refToEffects);
     }
 }
 
@@ -162,12 +164,12 @@ export class CommandTypeInternal extends Command implements ICommandType {
         return (this as unknown as ICommandImplementation).toBufferImplementation();
     }
 
-    isValidCommandType(): boolean {
-        return (this as unknown as ICommandImplementation).isValidImplementation();
+    isValidCommandType(node: Node): boolean {
+        return (this as unknown as ICommandImplementation).isValidImplementation(node);
     }
 
-    verifyCommandType(): Promise<boolean> {
-        return (this as unknown as ICommandImplementation).verifyImplementation();
+    verifyCommandType(node: Node): Promise<boolean> {
+        return (this as unknown as ICommandImplementation).verifyImplementation(node);
     }
 
     setBlockCommandType() {}
@@ -217,11 +219,11 @@ export class CommandTypeAdmin extends Command implements ICommandType {
         ]);
     }
 
-    isValidCommandType(): boolean {
+    isValidCommandType(node: Node): boolean {
         if (!(this.indexOfPrevBlock ?? false)) return false;
         if (!this.keyOfAuthor || !this.keyOfAuthor.isValid()) return false; 
         
-        return (this as unknown as ICommandImplementation).isValidImplementation();
+        return (this as unknown as ICommandImplementation).isValidImplementation(node);
     }
 
     async verifyCommandType(): Promise<boolean> {
@@ -289,11 +291,11 @@ export class CommandTypeUser extends Command implements ICommandType {
         ]);
     }
 
-    isValidCommandType(): boolean {
+    isValidCommandType(node: Node): boolean {
         if (!this.hashOfPrevBlock) return false;
         if (!this.keyOfAuthor || !this.keyOfAuthor.isValid()) return false; 
         
-        return (this as unknown as ICommandImplementation).isValidImplementation();
+        return (this as unknown as ICommandImplementation).isValidImplementation(node);
     }
 
     async verifyCommandType(): Promise<boolean> {
@@ -396,12 +398,12 @@ export class CommandTypeMultiUser extends Command implements ICommandType {
         }
     }
 
-    isValidCommandType() {
+    isValidCommandType(node: Node) {
         if (!this.hashOfPrevBlock) {
             return false;
         }
 
-        return (this as unknown as ICommandImplementation).isValidImplementation();
+        return (this as unknown as ICommandImplementation).isValidImplementation(node);
     }
 
     async verifyCommandType(): Promise<boolean> {

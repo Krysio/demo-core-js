@@ -1,71 +1,44 @@
-import * as fs from "node:fs/promises";
-import chainTop from "./ChainTop";
-import config, { Config, initialConfig } from "./config";
-import { getKeyPair } from "./libs/crypto/ec/secp256k1";
-import { EMPTY_HASH, sha256File } from "./libs/crypto/sha256";
+import { EventEmitter, TypedEventEmitter } from "node:stream";
+import { createConfig, Config } from "@/modules/config";
+import { createState } from "@/modules/state";
+import { createBlockGenerator } from "@/modules/blockGenerator";
+import { createChainTop } from "@/modules/chaintTop";
+import { createStoreUser } from "@/modules/storeUser";
+import { createStoreBlock } from "@/modules/storeBlock";
+import { createStoreCommand } from "@/modules/storeCommand";
 import Block from "@/objects/Block";
-import ConfigCommand from "@/objects/commands/config";
-import DBSnapshotCommand from "@/objects/commands/db-snapshots";
-import GenesisCommand from "@/objects/commands/genesis";
-import { KeySecp256k1 } from "@/objects/key";
-import db, { createDb, dbReady } from "@/storage/db";
-import WBuffer from "./libs/WBuffer";
+import WBuffer from "@/libs/WBuffer";
 
-const pathToUsersDB = './db/users.db';
+export function createNode(initialConfig: Config) {
+    const protoScope = {
+        events: new EventEmitter() as TypedEventEmitter<{
+            'init/config': [Config],
+            'start': [],
+            'stop': [],
+            'creaed/genesis': [Block],
+            'creaed/block': [Block],
+            'creaed/snapshot/user': [{ path: string, hash: WBuffer }],
+        }>
+    };
+    const scope = {
+        events: protoScope.events,
+        config: createConfig(protoScope),
+        state: createState(protoScope),
+        storeUser: createStoreUser(protoScope),
+        storeBlock: createStoreBlock(protoScope),
+        storeCommand: createStoreCommand(protoScope),
+        chainTop: createChainTop(protoScope),
+        blockGenerator: createBlockGenerator(protoScope),
 
-const main = new class Main {
-    state: 'none' = 'none';
+        start: () => scope.events.emit('start'),
+        stop: () => scope.events.emit('stop'),
+    };
 
-    loadConfig(newConfig: Config) {
-        Object.assign(config, newConfig);
-    }
+    Object.assign(protoScope, scope);
 
-    loadGenesis(buffer: WBuffer) {
+    scope.events.emit('init/config', initialConfig);
 
-    }
+    return scope;
+}
 
-    async start() {
-        if (chainTop.getHeight()) {
-
-        }
-
-        await this.generateGenesisBlock();
-    }
-
-    async generateGenesisBlock() {
-        await fs.rm(pathToUsersDB);
-
-        createDb();
-        await dbReady;
-
-        const block = new Block();
-        const [rootPrivateKey, rootPublicKey] = getKeyPair();
-        const rootKey = new KeySecp256k1(rootPublicKey);
-
-        block.hashOfPrevBlock = EMPTY_HASH;
-
-        const genesisCommand = new GenesisCommand(rootKey);
-        const configCommand = new ConfigCommand(config);
-        const dbSnapshotCommand = await this.generateDBSnapshotCommand();
-
-        block.addCommand(genesisCommand);
-        block.addCommand(configCommand);
-        block.addCommand(dbSnapshotCommand);
-
-        await block.apply();
-    }
-
-    async generateDBSnapshotCommand() {
-        const dbSnapshotCommand = new DBSnapshotCommand(EMPTY_HASH);
-
-        await fs.copyFile(pathToUsersDB, `${pathToUsersDB}.snapshot`)
-        
-        const hashOfUserDB = await sha256File(`${pathToUsersDB}.snapshot`);
-
-        dbSnapshotCommand.hashOfUsersDB = hashOfUserDB;
-
-        return dbSnapshotCommand;
-    }
-};
-
-export default main;
+export type Node = ReturnType<typeof createNode>;

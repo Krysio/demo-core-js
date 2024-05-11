@@ -2,9 +2,8 @@ import WBuffer from "@/libs/WBuffer";
 import { COMMAND_TYPE_GENESIS } from "./types";
 import { Type, CommandTypeInternal, ICommandImplementation } from "./command";
 import Key from "../key";
-import User, { UserRoot } from "../user";
-import chainTop from "@/ChainTop";
-import { insertUser } from "@/storage/users";
+import User from "../user";
+import { Node } from '@/main';
 
 @Type(COMMAND_TYPE_GENESIS)
 export default class GenesisCommand extends CommandTypeInternal implements ICommandImplementation {
@@ -45,8 +44,8 @@ export default class GenesisCommand extends CommandTypeInternal implements IComm
         ]);
     }
 
-    isValidImplementation(): boolean {
-        if (chainTop.getHeight() !== 0) {
+    isValidImplementation(node: Node): boolean {
+        if (node.chainTop.getHeight() !== 0) {
             return false;
         }
 
@@ -64,21 +63,13 @@ export default class GenesisCommand extends CommandTypeInternal implements IComm
         return true;
     }
 
-    async verifyImplementation(): Promise<boolean> {
-        if (chainTop.getHeight() !== 0) {
+    async verifyImplementation(node: Node): Promise<boolean> {
+        if (node.chainTop.getHeight() !== 0) {
             return false;
         }
 
         return true;
     }
 
-    async getEffectsImplementation(): Promise<void> {
-        const rootUser = new UserRoot(this.rootPublicKey);
-
-        insertUser(rootUser);
-
-        for (const adminUser of this.listOfAdminAccounts) {
-            insertUser(rootUser);
-        }
-    }
+    async getEffectsImplementation(node: Node): Promise<void> {}
 };

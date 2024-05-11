@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { COMMAND_TYPE_CONFIG } from "./types";
 import { Type, CommandTypeInternal, ICommandImplementation } from "./command";
-import config, { Config } from "@/config";
+import { Config } from "@/modules/config";
 
 @Type(COMMAND_TYPE_CONFIG)
 export default class ConfigCommand extends CommandTypeInternal implements ICommandImplementation {
@@ -68,9 +68,5 @@ export default class ConfigCommand extends CommandTypeInternal implements IComma
         return true;
     }
 
-    async getEffectsImplementation(): Promise<void> {
-        for (const key in config) {
-            config[key as keyof typeof config] = this[key as keyof typeof config];
-        }
-    }
+    async getEffectsImplementation(): Promise<void> {}
 }

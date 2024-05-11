@@ -1,16 +1,17 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { Command } from "./commands/command";
-import { doubleSha256, sha256 } from "@/libs/crypto/sha256";
+import { doubleSha256, sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
 import { merkleCreateRoot } from "@/libs/merkle";
 import { MapOfEffects } from "@/constants";
+import { Node } from '@/main';
 
 const VERSION = 1;
 
 export default class Block {
     version = VERSION;
     index = 0;
-    hashOfPrevBlock: WBuffer;
-    merkleRootHash: WBuffer;
+    hashOfPrevBlock: WBuffer = EMPTY_HASH;
+    merkleRootHash: WBuffer = EMPTY_HASH;
     value = 0;
     listOfCommands: Command[] = [];
 
@@ -101,21 +102,21 @@ export default class Block {
         return doubleSha256(this.toBuffer('header'));
     }
 
-    isValid() {
+    isValid(node: Node) {
         if (!this.hashOfPrevBlock) return false;
 
         for (const command of this.listOfCommands) {
-            if (!command.isValid()) return false;
+            if (!command.isValid(node)) return false;
         }
 
         return true;
     }
 
-    verifyCommands() {
+    verifyCommands(node: Node) {
         for (const command of this.listOfCommands) {
             command.setBlock(this);
 
-            if (!command.verify()) {
+            if (!command.verify(node)) {
                 return false;
             }
         }
@@ -123,14 +124,14 @@ export default class Block {
         return true;
     }
     
-    getCommandEffects() {
+    getCommandEffects(node: Node) {
         const effects: MapOfEffects = {
             activeUsers: [],
             deactiveUsers: []
         };
 
         for (const command of this.listOfCommands) {
-            command.getEffects(effects);
+            command.getEffects(node, effects);
         }
 
         return effects;
