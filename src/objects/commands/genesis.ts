@@ -1,75 +1,71 @@
 import WBuffer from "@/libs/WBuffer";
 import { COMMAND_TYPE_GENESIS } from "./types";
-import { Type, CommandTypeInternal, ICommandImplementation } from "./command";
-import Key from "../key";
-import User from "../user";
+import { Type, ICommand, TYPE_ANCHOR_INDEX } from "@/objects/commands";
+import Key from "@/objects/key";
+import { Admin } from "@/objects/users/admin";
 import { Node } from '@/main';
+import { Frame } from "@/objects/frame";
 
 @Type(COMMAND_TYPE_GENESIS)
-export default class GenesisCommand extends CommandTypeInternal implements ICommandImplementation {
+export class GenesisCommand implements ICommand {
+    anchorTypeID = TYPE_ANCHOR_INDEX;
+    isInternal = true;
+    isMultiAuthor = false;
+    value = 0;
+
     constructor(
         public rootPublicKey: Key,
-        public listOfAdminAccounts: User[] = [],
+        public listOfAdminAccounts: Admin[] = [],
         public manifest: string = '',
-    ) { super(); }
+    ) {}
 
-    fromBufferImplementation(buffer: WBuffer): void {
+    public parse(buffer: WBuffer) {
         const sizeOfManifest = buffer.readUleb128();
 
         this.manifest = buffer.read(sizeOfManifest).utf8();
-        this.rootPublicKey = Key.fromBuffer(buffer);
+        this.rootPublicKey = Key.parse(buffer);
 
         const countOfAdminAccounts = buffer.readUleb128();
 
         for (let i = 0; i < countOfAdminAccounts; i++) {
             this.listOfAdminAccounts.push(
-                User.fromBuffer(buffer) 
+                Admin.parse(buffer) 
             );
         }
+
+        return this;
     }
 
-    toBufferImplementation(): WBuffer {
-        const manifest = WBuffer.from(this.manifest, 'utf8');
-        const sizeOfManifest = WBuffer.uleb128(manifest.length);
+    public toBuffer(): WBuffer {
         const rootPublicKey = this.rootPublicKey.toBuffer();
         const countOfAdminAccounts = WBuffer.uleb128(this.listOfAdminAccounts.length);
         const listOfAdminAccounts = this.listOfAdminAccounts.map((account) => account.toBuffer());
 
         return WBuffer.concat([
-            sizeOfManifest,
-            manifest,
+            this.toBufferManifest(),
             rootPublicKey,
             countOfAdminAccounts,
             ...listOfAdminAccounts
         ]);
     }
 
-    isValidImplementation(node: Node): boolean {
-        if (node.chainTop.getHeight() !== 0) {
-            return false;
+    public toBufferManifest() {
+        if (this.manifest.length === 0) {
+            return WBuffer.uleb128(0);
         }
 
-        if (!this.rootPublicKey || !this.rootPublicKey.isValid()) {
-            return false;
-        }
-        
+        const manifest = WBuffer.from(this.manifest, 'utf8');
+        const sizeOfManifest = WBuffer.uleb128(manifest.length);
 
-        for (const adminUser of this.listOfAdminAccounts) {
-            if (!adminUser.isValid()) {
-                return false;
-            }
-        }
-
-        return true;
+        return WBuffer.concat([
+            sizeOfManifest,
+            manifest
+        ]);
     }
 
-    async verifyImplementation(node: Node): Promise<boolean> {
+    public async verify(node: Node, frame: Frame): Promise<void> {
         if (node.chainTop.getHeight() !== 0) {
-            return false;
+            throw new Error(`${GenesisCommand.name}: Invalid height of blockChain`);
         }
-
-        return true;
     }
-
-    async getEffectsImplementation(node: Node): Promise<void> {}
 };

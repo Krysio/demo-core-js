@@ -2,30 +2,33 @@ import WBuffer from "@/libs/WBuffer";
 import { Node } from '@/main';
 import { createCommandParser } from "./commandParser";
 import { EventEmitter } from "node:stream";
-import { CommandData, CommandImplementation, TYPE_ANCHOR_HASH } from "@/constants";
+import { Frame } from "@/objects/frame";
+import { ICommand, Type, TYPE_ANCHOR_HASH } from "@/objects/commands";
 import { EMPTY_HASH, sha256 } from "@/libs/crypto/sha256";
-import { TYPE_USER_VOTER } from "@/objects/user";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
-import { KeySecp256k1 } from "@/objects/key/secp256k1";
+import { KeySecp256k1 } from "@/objects/key";
 
 describe('Testing parser', () => {
-    const testTypeImplementation: CommandImplementation = {
-        isInternalType: false,
-        isMultiAuthor: false,
-        isNeedAutorize: false,
-        parse: (buffer: WBuffer) => {
+    @Type(0) class TestCommand implements ICommand {
+        isInternal = false;
+        isMultiAuthor = false;
+        anchorTypeID = TYPE_ANCHOR_HASH;
+        value = 0;
+
+        public foo: WBuffer = null;
+    
+        public parse(buffer: WBuffer) {
             const sizeOfData = buffer.readUleb128();
 
-            return { foo: buffer.read(sizeOfData) };
-        },
-        anchorTypeID: TYPE_ANCHOR_HASH,
-        userTypeID: TYPE_USER_VOTER
+            this.foo = buffer.read(sizeOfData);
+
+            return this;
+        }
+        public toBuffer() { return null as WBuffer; }
+        public async verify(node: Node, frame: Frame) {};
     };
     const fakeNode = {
-        events: new EventEmitter() as Node['events'],
-        commandImplementations: {
-            get: () => testTypeImplementation
-        }
+        events: new EventEmitter() as Node['events']
     };
     const testedModule = createCommandParser(fakeNode);
 
@@ -38,14 +41,14 @@ describe('Testing parser', () => {
         `  01      00   ${hash} ${key}            01 99`;
         const signature = key.sign(sha256(command));
         const signedCommand = WBuffer.concat([command, signature]);
-        let parsingResult: CommandData;
+        let parsingResult: Frame;
     
         test('Parsing', () => {
             parsingResult = testedModule.parseCommand(signedCommand);
     
             expect(parsingResult.invalidMsg).toBe(null);
             expect(parsingResult.version).toBe(1);
-            expect(parsingResult.typeID).toBe(0);
+            expect(parsingResult.data.typeID).toBe(0);
     
             expect(parsingResult.anchorHash.hex()).toBe(hash);
     
@@ -53,8 +56,9 @@ describe('Testing parser', () => {
             expect(parsingResult.authors[0].publicKey.isEqual(key)).toBe(true);
             expect(parsingResult.authors[0].signature.isEqual(signature)).toBe(true);
     
-            expect(parsingResult.data.foo.isEqual(WBuffer.hex`99`)).toBe(true);
-            expect(parsingResult.hashableCommandPart.isEqual(command)).toBe(true);
+            expect(parsingResult.data).toBeInstanceOf(TestCommand);
+            expect((parsingResult.data as any).foo.isEqual(WBuffer.hex`99`)).toBe(true);
+            expect(parsingResult.bufferForHash.isEqual(command)).toBe(true);
         });
 
         test('Full flow through the module', () => {

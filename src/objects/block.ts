@@ -1,29 +1,27 @@
-import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
-import { Command } from "./commands/command";
+import WBuffer from "@/libs/WBuffer";
 import { doubleSha256, sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
 import { merkleCreateRoot } from "@/libs/merkle";
-import { MapOfEffects } from "@/constants";
-import { Node } from '@/main';
+import { Frame } from "@/objects/frame";
 
 const VERSION = 1;
 
-export default class Block {
-    version = VERSION;
-    index = 0;
-    hashOfPrevBlock: WBuffer = EMPTY_HASH;
-    merkleRootHash: WBuffer = EMPTY_HASH;
-    value = 0;
-    listOfCommands: Command[] = [];
+export class Block {
+    public version = VERSION;
+    public index = 0;
+    public hashOfPrevBlock: WBuffer = EMPTY_HASH;
+    public merkleRootHash: WBuffer = EMPTY_HASH;
+    public value = 0;
+    public listOfCommands: Frame[] = [];
 
     //#region buffer
 
-    static fromBuffer(buffer: WBuffer) {
+    public static parse(buffer: WBuffer) {
         const block = new Block();
 
-        return block.fromBuffer(buffer);
+        return block.parse(buffer);
     }
 
-    fromBuffer(buffer: WBuffer) {
+    public parse(buffer: WBuffer) {
         this.listOfCommands = [];
 
         this.version = buffer.readUleb128();
@@ -37,21 +35,18 @@ export default class Block {
 
         for (let i = 0; i < countOfCommands; i++) {
             this.listOfCommands.push(
-                Command.fromBuffer(buffer)
+                Frame.parse(buffer, 'block')
             );
         }
 
         return this;
     }
 
-    toBuffer(
-        bufferType: 'header' | 'full' = 'full'
-    ): WBuffer {
+    public toBuffer(target: 'header' | 'full' = 'full'): WBuffer {
         const version = WBuffer.uleb128(this.version);
         const index = WBuffer.uleb128(this.index);
         const merkleRootHash = this.getMerkleRoot();
         const value = WBuffer.uleb128(this.value);
-        const countOfCommands = WBuffer.uleb128(this.listOfCommands.length);
 
         return WBuffer.concat([
             version,
@@ -59,27 +54,35 @@ export default class Block {
             this.hashOfPrevBlock,
             merkleRootHash,
             value,
-            countOfCommands,
-            ...(bufferType !== 'header' ? this.listOfCommands.map((command) => {
-                return command.toBuffer();
-            }) : [EMPTY_BUFFER])
+            this.toBufferCommands(target)
+        ]);
+    }
+
+    public toBufferCommands(target: 'header' | 'full' = 'full') {
+        if (target === 'header') {
+            return WBuffer.uleb128(this.listOfCommands.length);
+        }
+
+        return WBuffer.concat([
+            WBuffer.uleb128(this.listOfCommands.length),
+            ...this.listOfCommands.map((frame) => frame.toBuffer('block'))
         ]);
     }
 
     //#endregion buffer
 
-    isDirtyMerkleRoot = true;
+    public isDirtyMerkleRoot = true;
 
-    getMerkleRoot() {
+    public getMerkleRoot() {
         if (this.isDirtyMerkleRoot === false) {
             return this.merkleRootHash;
         }
         
         const listOfHashes: WBuffer[] = [];
 
-        for (const command of this.listOfCommands) {
+        for (const frame of this.listOfCommands) {
             listOfHashes.push(
-                sha256(command.toBuffer('block'))
+                sha256(frame.toBuffer())
             );
         }
 
@@ -89,51 +92,16 @@ export default class Block {
         return this.merkleRootHash;
     }
 
-    addCommand(command: Command) {
-        this.listOfCommands.push(command);
+    public addCommand(frame: Frame) {
+        this.listOfCommands.push(frame);
         this.listOfCommands.sort((a, b) => WBuffer.compare(
             a.toBuffer('block'),
             b.toBuffer('block')
         ));
-        this.value+= command.value;
+        this.value+= frame.data.value;
     }
 
-    getHash() {
+    public getHash() {
         return doubleSha256(this.toBuffer('header'));
-    }
-
-    isValid(node: Node) {
-        if (!this.hashOfPrevBlock) return false;
-
-        for (const command of this.listOfCommands) {
-            if (!command.isValid(node)) return false;
-        }
-
-        return true;
-    }
-
-    verifyCommands(node: Node) {
-        for (const command of this.listOfCommands) {
-            command.setBlock(this);
-
-            if (!command.verify(node)) {
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    getCommandEffects(node: Node) {
-        const effects: MapOfEffects = {
-            activeUsers: [],
-            deactiveUsers: []
-        };
-
-        for (const command of this.listOfCommands) {
-            command.getEffects(node, effects);
-        }
-
-        return effects;
     }
 }

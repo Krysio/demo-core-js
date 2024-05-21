@@ -1,10 +1,17 @@
 import WBuffer from "@/libs/WBuffer";
+import { Node } from "@/main";
 import { COMMAND_TYPE_CONFIG } from "./types";
-import { Type, CommandTypeInternal, ICommandImplementation } from "./command";
+import { Type, ICommand, TYPE_ANCHOR_INDEX } from ".";
 import { Config } from "@/modules/config";
+import { Frame } from "@/objects/frame";
 
 @Type(COMMAND_TYPE_CONFIG)
-export default class ConfigCommand extends CommandTypeInternal implements ICommandImplementation {
+export class ConfigCommand implements ICommand {
+    anchorTypeID = TYPE_ANCHOR_INDEX;
+    isInternal = true;
+    isMultiAuthor = false;
+    value = 0;
+
     public genesisTime: number;
     public timeBetweenBlocks: number;
     public spaceBetweenDBSnapshot: number;
@@ -15,13 +22,12 @@ export default class ConfigCommand extends CommandTypeInternal implements IComma
     public timeBeforeAccountActivation: number;
     
     constructor(config: Config) {
-        super();
         for (const key in config) {
             this[key as keyof typeof config] = config[key as keyof typeof config];
         }
     }
 
-    fromBufferImplementation(buffer: WBuffer): void {
+    public parse(buffer: WBuffer) {
         this.genesisTime = buffer.readUleb128();
         this.timeBetweenBlocks = buffer.readUleb128();
         this.spaceBetweenDBSnapshot = buffer.readUleb128();
@@ -30,9 +36,11 @@ export default class ConfigCommand extends CommandTypeInternal implements IComma
         this.timeLiveOfUserAccount = buffer.readUleb128();
         this.timeLiveOfIncognitoAccount = buffer.readUleb128();
         this.timeBeforeAccountActivation = buffer.readUleb128();
+
+        return this;
     }
 
-    toBufferImplementation(): WBuffer {
+    public toBuffer(): WBuffer {
         const genesisTime = WBuffer.uleb128(this.genesisTime);
         const timeBetweenBlocks = WBuffer.uleb128(this.timeBetweenBlocks);
         const spaceBetweenDBSnapshot = WBuffer.uleb128(this.spaceBetweenDBSnapshot);
@@ -54,19 +62,5 @@ export default class ConfigCommand extends CommandTypeInternal implements IComma
         ]);
     }
 
-    isValidImplementation(): boolean {
-        try {
-            
-        } catch (error) {
-            return false;
-        }
-
-        return true;
-    }
-
-    async verifyImplementation(): Promise<boolean> {
-        return true;
-    }
-
-    async getEffectsImplementation(): Promise<void> {}
+    public async verify(node: Node, frame: Frame) {}
 }

@@ -1,14 +1,13 @@
 import WBuffer from "@/libs/WBuffer";
-import { EMPTY_HASH } from "@/libs/crypto/sha256";
+import Time from "@/libs/Time";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { KeySecp256k1 } from "@/objects/key";
-import GenesisCommand from "@/objects/commands/genesis";
-import ConfigCommand from "@/objects/commands/config";
-import DBSnapshotCommand from "@/objects/commands/db-snapshots";
-import Block from "@/objects/Block";
-import { Command } from "@/objects/commands/command";
+import { GenesisCommand } from "@/objects/commands";
+import { ConfigCommand } from "@/objects/commands";
+import { Block } from "@/objects/Block";
+import { Command } from "@/objects/commands";
 import { Node } from '@/main';
-import Time from "@/libs/Time";
+import { Frame } from "@/objects/frame";
 
 export function createBlockGenerator(refToNode: unknown) {
     let requestCreateBlockTimeoutId: ReturnType<typeof setTimeout> = null;
@@ -36,15 +35,11 @@ export function createBlockGenerator(refToNode: unknown) {
             const [rootPrivateKey, rootPublicKey] = getKeyPair();
             const rootKey = new KeySecp256k1(rootPublicKey);
 
-            const genesisCommand = new GenesisCommand(rootKey);
-            const configCommand = new ConfigCommand(node.config);
-            const dbSnapshotCommand = new DBSnapshotCommand(EMPTY_HASH);
-    
-            dbSnapshotCommand.hashOfUsersDB = await node.storeUser.createSnapshot();
+            const genesisCommand = new Frame(new GenesisCommand(rootKey));
+            const configCommand = new Frame(new ConfigCommand(node.config));
 
             block.addCommand(genesisCommand);
             block.addCommand(configCommand);
-            block.addCommand(dbSnapshotCommand);
 
             node.events.emit('creaed/genesis', block);
             node.events.emit('creaed/block', block);
@@ -63,7 +58,7 @@ export function createBlockGenerator(refToNode: unknown) {
                     throw new Error('No prev block');
                 }
     
-                const commandsByPrevIndex: WBuffer[] = node.storeCommand.getByPrevIndex(index);
+                const commandsByPrevIndex: Frame[] = node.commandPool.getByPrevIndex(index);
     
                 for (const {block: prevBlock} of listOfPrevBlock) {
                     const hashOfPrevBlock = prevBlock.getHash();
@@ -72,14 +67,14 @@ export function createBlockGenerator(refToNode: unknown) {
                     block.index = index + 1;
                     block.hashOfPrevBlock = hashOfPrevBlock;
 
-                    const commandsByPrevHash: WBuffer[] = node.storeCommand.getByPrevHash(hashOfPrevBlock);
+                    const commandsByPrevHash: Frame[] = node.commandPool.getByPrevHash(hashOfPrevBlock);
         
                     for (const command of commandsByPrevIndex) {
-                        block.addCommand(Command.fromBuffer(command));
+                        block.addCommand(command);
                     }
 
                     for (const command of commandsByPrevHash) {
-                        block.addCommand(Command.fromBuffer(command));
+                        block.addCommand(command);
                     }
 
                     block.getMerkleRoot();

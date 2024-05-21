@@ -1,17 +1,18 @@
-import ConfigCommand from "./config";
-import config from "@/config";
+import { EventEmitter } from "stream";
+import { ConfigCommand } from "./config";
+import { createConfig } from "@/modules/config";
 
-const command = new ConfigCommand(config);
+const fakeNode = { events: new EventEmitter() };
+const configModule = createConfig(fakeNode);
+
+const command = new ConfigCommand(configModule);
 
 test('To & from buffer', () => {
     const buffer1 = command.toBuffer();
-    const hash1 = command.getHash();
 
-    command.fromBuffer(buffer1);
+    command.parse(buffer1);
 
     const buffer2 = command.toBuffer();
-    const hash2 = command.getHash();
     
     expect(buffer1.isEqual(buffer2)).toBe(true);
-    expect(hash1.isEqual(hash2)).toBe(true);
 });
