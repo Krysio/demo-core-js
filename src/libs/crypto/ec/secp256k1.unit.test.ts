@@ -16,7 +16,7 @@ test('secp256k1 + aes-256-gcm', () => {
 test('Sign & verify', async () => {
     const str = 'secp256k1';
     const [sk, pk] = getKeyPair();
-    const hash = sha256(str);
+    const hash = sha256(WBuffer.utf8(str));
     const signatureCompact = sign(sk, hash);
 
     expect(verify(pk, hash, signatureCompact)).toBe(true);

@@ -1,7 +1,5 @@
 import WBuffer from "@/libs/WBuffer";
 
-const SymInspect = Symbol.for('nodejs.util.inspect.custom');
-
 /******************************/
 
 export const TYPE_KEY_Testing = 0;
@@ -143,5 +141,7 @@ export default class Key {
     public toString() { return this.toBuffer().hex(); }
     public inspect() { return `<${this.constructor.name}:${WBuffer.hex(this.key)}>`; }
     public toJSON() { return this.inspect(); }
-    [SymInspect]() { return this.inspect(); }
+    [Symbol.for('nodejs.util.inspect.custom')]() { return this.inspect(); }
 }
+
+export * from "./secp256k1";
