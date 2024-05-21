@@ -6,18 +6,31 @@ import { createChainTop } from "@/modules/chaintTop";
 import { createStoreUser } from "@/modules/storeUser";
 import { createStoreBlock } from "@/modules/storeBlock";
 import { createStoreCommand } from "@/modules/storeCommand";
+import { createCommandParser } from "./modules/commandParser";
+import { createCommandAutorizer } from "./modules/commandAutorizer";
+import { CommandData } from "./constants";
+import { createCommandImplementations } from "./modules/commandImplementations";
 import Block from "@/objects/Block";
 import WBuffer from "@/libs/WBuffer";
+import { createCommandVerifier } from "./modules/commandVerifier";
 
 export function createNode(initialConfig: Config) {
     const protoScope = {
         events: new EventEmitter() as TypedEventEmitter<{
-            'init/config': [Config],
-            'start': [],
-            'stop': [],
-            'creaed/genesis': [Block],
-            'creaed/block': [Block],
-            'creaed/snapshot/user': [{ path: string, hash: WBuffer }],
+            'init/config': [Config];
+            'start': [];
+            'stop': [];
+            'creaed/genesis': [Block];
+            'creaed/block': [Block];
+            'creaed/snapshot/user': [{ path: string, hash: WBuffer }];
+
+            'network/receiveCommand': [WBuffer];
+            'commandParser/acceptCommand': [CommandData];
+            'commandParser/rejectCommand': [CommandData];
+            'commandVerifier/acceptCommand': [CommandData];
+            'commandVerifier/rejectCommand': [CommandData];
+            'commandAutorizer/acceptCommand': [CommandData];
+            'commandAutorizer/rejectCommand': [CommandData];
         }>
     };
     const scope = {
@@ -29,6 +42,11 @@ export function createNode(initialConfig: Config) {
         storeCommand: createStoreCommand(protoScope),
         chainTop: createChainTop(protoScope),
         blockGenerator: createBlockGenerator(protoScope),
+        commandImplementations: createCommandImplementations(protoScope),
+
+        commandParser: createCommandParser(protoScope),
+        commandVerifier: createCommandVerifier(protoScope),
+        commandAutorizer: createCommandAutorizer(protoScope),
 
         start: () => scope.events.emit('start'),
         stop: () => scope.events.emit('stop'),

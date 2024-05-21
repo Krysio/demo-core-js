@@ -88,7 +88,7 @@ export default class User {
                 this.userID = buffer.read(16);
             }
     
-            this.key = Key.fromBuffer(buffer);
+            this.key = Key.parse(buffer);
             (this as unknown as IUser).fromBufferImplementation(buffer, bufferType);
 
             return this;
@@ -122,10 +122,6 @@ export default class User {
     //#endregion buffer
 
     isValid(): boolean {
-        if (!this.key || !this.key.isValid()) {
-            return false;
-        }
-
         return (this as unknown as IUser).isValidImplementation();
     }
 
