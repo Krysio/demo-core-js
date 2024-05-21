@@ -1,4 +1,5 @@
 const SymInspect = Symbol.for('nodejs.util.inspect.custom');
+const regeSpaces = /\s/g;
 
 type AvailableFormats = 'buffer' | 'hex' | 'number' | 'bigint';
 
@@ -14,9 +15,9 @@ const bufferToBigInt = (buffer: Buffer, isUnsigned: boolean) => {
     return value;
 };
 
-export default class WBuffer extends Buffer {
-    public _isBuffer = true;
+type iBuffer = Buffer;
 
+export default class WBuffer extends Buffer {
     /* @depracted Use `WBuffer.from(string[, encoding])` instead.*/
     constructor(arg1: string, arg2?: BufferEncoding) {
         super(arg1, arg2);
@@ -167,6 +168,12 @@ export default class WBuffer extends Buffer {
         this.cursor += length;
 
         return result;
+    }
+
+    public skipRead(length: number) {
+        this.cursor += length;
+
+        return this;
     }
 
     public readArrayOfUleb128() {
@@ -321,14 +328,14 @@ export default class WBuffer extends Buffer {
     }
 
     //@ts-ignore rewrite
-    public slice(start?: number, end?: number): WBuffer {
+    public slice(...args: Parameters<iBuffer['slice']>): WBuffer {
         return WBuffer.create(
-            Uint8Array.prototype.slice.call(this, start, end)
+            super.slice(...args)
         );
     }
 
     //@ts-ignore rewrite
-    public subarray(...args: Parameters<typeof Buffer.subarray>) {
+    public subarray(...args: Parameters<iBuffer['subarray']>) {
         return WBuffer.create(
             super.subarray(...args)
         );
@@ -345,28 +352,39 @@ export default class WBuffer extends Buffer {
         return this.inspect();
     }
 
+    public toString (format: Parameters<iBuffer['toString']>[0] = 'hex') {
+        return super.toString(format);
+    }
     public hex() {
         return this.toString('hex');
     }
-    public static hex(arg: TemplateStringsArray): WBuffer; // WBuffer.hex`00` == WBuffer.from('00', 'hex')
+    public static hex(arg: TemplateStringsArray, ...args: any[]): WBuffer; // WBuffer.hex`00` == WBuffer.from('00', 'hex')
+    public static hex(str: string): WBuffer;
     public static hex(buffer: Buffer | Uint8Array): string;
-    public static hex(buffer: any) {
-        if (Array.isArray(buffer) && 'raw' in buffer && Array.isArray(buffer.raw)) {
-            return WBuffer.from(buffer[0], 'hex');
+    public static hex(arg0: any) {
+        if (Array.isArray(arg0) && 'raw' in arg0 && Array.isArray(arg0.raw)) {
+            return WBuffer.from(String.raw.apply(null, arguments).replace(regeSpaces, ''), 'hex');
         }
-        return WBuffer.from(buffer).toString('hex');
+        if (typeof arg0 === 'string') {
+            return WBuffer.from(arg0, 'hex');
+        }
+        return WBuffer.from(arg0).toString('hex');
     }
 
     public utf8() {
         return this.toString('utf8');
     }
-    public static utf8(arg: TemplateStringsArray): WBuffer; // WBuffer.utf8`00` == WBuffer.from('00', 'utf8')
+    public static utf8(arg: TemplateStringsArray, ...args: any[]): WBuffer; // WBuffer.utf8`00` == WBuffer.from('00', 'utf8')
+    public static utf8(str: string): WBuffer;
     public static utf8(buffer: Buffer | Uint8Array): string;
-    public static utf8(buffer: any) {
-        if (Array.isArray(buffer) && 'raw' in buffer && Array.isArray(buffer.raw)) {
-            return WBuffer.from(buffer[0], 'utf8');
+    public static utf8(arg0: any) {
+        if (Array.isArray(arg0) && 'raw' in arg0 && Array.isArray(arg0.raw)) {
+            return WBuffer.from(String.raw.apply(null, arguments), 'utf8');
         }
-        return WBuffer.from(buffer).toString('utf8');
+        if (typeof arg0 === 'string') {
+            return WBuffer.from(arg0, 'utf8');
+        }
+        return WBuffer.from(arg0).toString('utf8');
     }
 
     public clone() {
