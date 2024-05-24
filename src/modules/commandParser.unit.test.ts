@@ -1,12 +1,12 @@
-import WBuffer from "@/libs/WBuffer";
-import { Node } from '@/main';
-import { createCommandParser } from "./commandParser";
 import { EventEmitter } from "node:stream";
-import { Frame } from "@/objects/frame";
-import { ICommand, Type, TYPE_ANCHOR_HASH } from "@/objects/commands";
+import WBuffer from "@/libs/WBuffer";
 import { EMPTY_HASH, sha256 } from "@/libs/crypto/sha256";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
+import { Node } from '@/main';
+import { Frame } from "@/objects/frame";
+import { ICommand, Type, TYPE_ANCHOR_HASH } from "@/objects/commands";
 import { KeySecp256k1 } from "@/objects/key";
+import { createCommandParser } from "./commandParser";
 
 describe('Testing parser', () => {
     @Type(0) class TestCommand implements ICommand {
@@ -30,6 +30,7 @@ describe('Testing parser', () => {
     const fakeNode = {
         events: new EventEmitter() as Node['events']
     };
+
     const testedModule = createCommandParser(fakeNode);
 
     describe('Positive scenario', () => {
@@ -66,7 +67,7 @@ describe('Testing parser', () => {
     
             fakeNode.events.on('commandParser/acceptCommand', fn);
             fakeNode.events.emit('network/receiveCommand', signedCommand.seek(0));
-    
+
             expect(fn).toBeCalledWith(parsingResult);
         });
     });

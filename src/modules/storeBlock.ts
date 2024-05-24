@@ -1,5 +1,5 @@
 import WBuffer from "@/libs/WBuffer";
-import Block from "@/objects/Block";
+import { Block } from "@/objects/Block";
 import { Node } from '@/main';
 
 export function createStoreBlock(refToNode: unknown) {
@@ -39,7 +39,7 @@ export function createStoreBlock(refToNode: unknown) {
         },
     };
 
-    node.events.on('creaed/block', (block) => {
+    node.events.on('created/block', (block) => {
         module.add(block);
     });
 

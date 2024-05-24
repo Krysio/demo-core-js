@@ -5,18 +5,17 @@ test('Create chain', async () => {
     const timeBetweenBlocks = 1e3;
     const genesisTime = Time.now() - 2 * timeBetweenBlocks - 1;
     const node = createNode({ genesisTime, timeBetweenBlocks });
+    const spyCreateBlock = jest.fn();
+
+    node.events.on('created/block', spyCreateBlock);
+
+    await new Promise((resolve) => node.events.on('init/end', () => resolve(null)));
 
     expect(node.config.timeBetweenBlocks).toBe(timeBetweenBlocks);
-
-    const spyFn = jest.fn();
-
-    node.events.on('creaed/block', spyFn);
-
-    await new Promise((resolve) => node.events.on('creaed/genesis', resolve));
 
     node.start();
     node.stop();
 
-    expect(spyFn).toBeCalledTimes(3);
+    expect(spyCreateBlock).toBeCalledTimes(3);
     expect(node.chainTop.getIndexOfLastBlock()).toBe(2);
 });

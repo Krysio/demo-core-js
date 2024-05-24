@@ -1,39 +1,34 @@
 import Time from "@/libs/Time";
 import WBuffer from "@/libs/WBuffer";
-import { MapOfEffects } from "@/constants";
-import Block from "@/objects/Block";
+import { Block } from "@/objects/Block";
 import { Node } from '@/main';
 
-type CacheValue = {block: Block, effects: MapOfEffects};
-
-const sortBlocksByValues = (a: CacheValue, b: CacheValue) => {
-    if (a.block.value == b.block.value) {
+const sortBlocksByValues = (a: Block, b: Block) => {
+    if (a.value == b.value) {
         return WBuffer.compare(
-            a.block.getHash(),
-            b.block.getHash()
+            a.getHash(),
+            b.getHash()
         );
     }
 
-    return a.block.value < b.block.value ? 1 : -1;
+    return a.value < b.value ? 1 : -1;
 };
 
 export function createChainTop(refToNode: unknown) {
     const node = refToNode as Node;
     const module = {
         currentHeight: 0,
-        blockCache: new Map() as Map<number, CacheValue[]>,
+        blockCache: new Map() as Map<number, Block[]>,
 
         addBlock(block: Block) {
             const index = block.index;
-            const effects = block.getCommandEffects(node);
-            const item = {block, effects};
             let existList = this.blockCache.get(index);
     
             if (existList) {
-                existList.push(item);
+                existList.push(block);
                 existList.sort(sortBlocksByValues);
             } else {
-                module.blockCache.set(index, [item]);
+                module.blockCache.set(index, [block]);
             }
     
             if (module.currentHeight < index) {
@@ -72,7 +67,7 @@ export function createChainTop(refToNode: unknown) {
         }
     };
 
-    node.events.on('creaed/block', (block) => {
+    node.events.on('created/block', (block) => {
         module.addBlock(block);
     });
 

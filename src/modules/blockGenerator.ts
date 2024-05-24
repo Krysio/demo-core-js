@@ -1,11 +1,9 @@
-import WBuffer from "@/libs/WBuffer";
 import Time from "@/libs/Time";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { KeySecp256k1 } from "@/objects/key";
 import { GenesisCommand } from "@/objects/commands";
 import { ConfigCommand } from "@/objects/commands";
 import { Block } from "@/objects/Block";
-import { Command } from "@/objects/commands";
 import { Node } from '@/main';
 import { Frame } from "@/objects/frame";
 
@@ -41,8 +39,12 @@ export function createBlockGenerator(refToNode: unknown) {
             block.addCommand(genesisCommand);
             block.addCommand(configCommand);
 
-            node.events.emit('creaed/genesis', block);
-            node.events.emit('creaed/block', block);
+            block.getMerkleRoot();
+
+            node.fs.saveBlock(block);
+
+            node.events.emit('created/genesis', block);
+            node.events.emit('created/block', block);
         },    
         createNewBlocks() {
             requestCreateBlockTimeoutId = null;
@@ -60,7 +62,7 @@ export function createBlockGenerator(refToNode: unknown) {
     
                 const commandsByPrevIndex: Frame[] = node.commandPool.getByPrevIndex(index);
     
-                for (const {block: prevBlock} of listOfPrevBlock) {
+                for (const prevBlock of listOfPrevBlock) {
                     const hashOfPrevBlock = prevBlock.getHash();
                     const block = new Block();
         
@@ -79,7 +81,9 @@ export function createBlockGenerator(refToNode: unknown) {
 
                     block.getMerkleRoot();
 
-                    node.events.emit('creaed/block', block);
+                    node.fs.saveBlock(block);
+
+                    node.events.emit('created/block', block);
                 }
             }
 
@@ -87,7 +91,7 @@ export function createBlockGenerator(refToNode: unknown) {
         }
     };
 
-    node.events.on('init/config', () => {
+    node.events.on('init/end', () => {
         module.createGenesisBlock();
     });
 
