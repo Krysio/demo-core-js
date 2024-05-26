@@ -29,6 +29,7 @@ export class Frame {
     constructor(data?: ICommand) {
         if (data) {
             this.data = data as ICommandWithType;
+            this.typeID = this.data.typeID;
         }
     }
 
