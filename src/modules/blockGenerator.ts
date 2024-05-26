@@ -1,8 +1,4 @@
 import Time from "@/libs/Time";
-import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
-import { KeySecp256k1 } from "@/objects/key";
-import { GenesisCommand } from "@/objects/commands";
-import { ConfigCommand } from "@/objects/commands";
 import { Block } from "@/objects/Block";
 import { Node } from '@/main';
 import { Frame } from "@/objects/frame";
@@ -27,25 +23,6 @@ export function createBlockGenerator(refToNode: unknown) {
 
             requestCreateBlockTimeoutId = setTimeout(module.createNewBlocks, timeToWaint);
         },
-        async createGenesisBlock() {
-            const block = new Block();
-
-            const [rootPrivateKey, rootPublicKey] = getKeyPair();
-            const rootKey = new KeySecp256k1(rootPublicKey);
-
-            const genesisCommand = new Frame(new GenesisCommand(rootKey));
-            const configCommand = new Frame(new ConfigCommand(node.config));
-
-            block.addCommand(genesisCommand);
-            block.addCommand(configCommand);
-
-            block.getMerkleRoot();
-
-            node.fs.saveBlock(block);
-
-            node.events.emit('created/genesis', block);
-            node.events.emit('created/block', block);
-        },    
         createNewBlocks() {
             requestCreateBlockTimeoutId = null;
 
@@ -81,8 +58,6 @@ export function createBlockGenerator(refToNode: unknown) {
 
                     block.getMerkleRoot();
 
-                    node.fs.saveBlock(block);
-
                     node.events.emit('created/block', block);
                 }
             }
@@ -90,10 +65,6 @@ export function createBlockGenerator(refToNode: unknown) {
             module.requestCreateBlock();
         }
     };
-
-    node.events.on('init/end', () => {
-        module.createGenesisBlock();
-    });
 
     node.events.on('start', () => {
         module.start();

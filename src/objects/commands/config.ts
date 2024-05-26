@@ -12,43 +12,45 @@ export class ConfigCommand implements ICommand {
     isMultiAuthor = false;
     value = 0;
 
-    public genesisTime: number;
-    public timeBetweenBlocks: number;
-    public spaceBetweenDBSnapshot: number;
-    public countOfVoteTransfer: number;
-    public countOfSupportGiving: number;
-    public timeLiveOfUserAccount: number;
-    public timeLiveOfIncognitoAccount: number;
-    public timeBeforeAccountActivation: number;
+    public values = {
+        genesisTime: 0,
+        timeBetweenBlocks: 0,
+        spaceBetweenDBSnapshot: 0,
+        countOfVoteTransfer: 0,
+        countOfSupportGiving: 0,
+        timeLiveOfUserAccount: 0,
+        timeLiveOfIncognitoAccount: 0,
+        timeBeforeAccountActivation: 0,
+    };
     
     constructor(config: Config) {
         for (const key in config) {
-            this[key as keyof typeof config] = config[key as keyof typeof config];
+            this.values[key as keyof typeof config] = config[key as keyof typeof config];
         }
     }
 
     public parse(buffer: WBuffer) {
-        this.genesisTime = buffer.readUleb128();
-        this.timeBetweenBlocks = buffer.readUleb128();
-        this.spaceBetweenDBSnapshot = buffer.readUleb128();
-        this.countOfVoteTransfer = buffer.readUleb128();
-        this.countOfSupportGiving = buffer.readUleb128();
-        this.timeLiveOfUserAccount = buffer.readUleb128();
-        this.timeLiveOfIncognitoAccount = buffer.readUleb128();
-        this.timeBeforeAccountActivation = buffer.readUleb128();
+        this.values.genesisTime = buffer.readUleb128();
+        this.values.timeBetweenBlocks = buffer.readUleb128();
+        this.values.spaceBetweenDBSnapshot = buffer.readUleb128();
+        this.values.countOfVoteTransfer = buffer.readUleb128();
+        this.values.countOfSupportGiving = buffer.readUleb128();
+        this.values.timeLiveOfUserAccount = buffer.readUleb128();
+        this.values.timeLiveOfIncognitoAccount = buffer.readUleb128();
+        this.values.timeBeforeAccountActivation = buffer.readUleb128();
 
         return this;
     }
 
     public toBuffer(): WBuffer {
-        const genesisTime = WBuffer.uleb128(this.genesisTime);
-        const timeBetweenBlocks = WBuffer.uleb128(this.timeBetweenBlocks);
-        const spaceBetweenDBSnapshot = WBuffer.uleb128(this.spaceBetweenDBSnapshot);
-        const countOfVoteTransfer = WBuffer.uleb128(this.countOfVoteTransfer);
-        const countOfSupportGiving = WBuffer.uleb128(this.countOfSupportGiving);
-        const timeLiveOfUserAccount = WBuffer.uleb128(this.countOfSupportGiving);
-        const timeLiveOfIncognitoAccount = WBuffer.uleb128(this.countOfSupportGiving);
-        const timeBeforeAccountActivation = WBuffer.uleb128(this.countOfSupportGiving);
+        const genesisTime = WBuffer.uleb128(this.values.genesisTime);
+        const timeBetweenBlocks = WBuffer.uleb128(this.values.timeBetweenBlocks);
+        const spaceBetweenDBSnapshot = WBuffer.uleb128(this.values.spaceBetweenDBSnapshot);
+        const countOfVoteTransfer = WBuffer.uleb128(this.values.countOfVoteTransfer);
+        const countOfSupportGiving = WBuffer.uleb128(this.values.countOfSupportGiving);
+        const timeLiveOfUserAccount = WBuffer.uleb128(this.values.countOfSupportGiving);
+        const timeLiveOfIncognitoAccount = WBuffer.uleb128(this.values.countOfSupportGiving);
+        const timeBeforeAccountActivation = WBuffer.uleb128(this.values.countOfSupportGiving);
     
         return WBuffer.concat([
             genesisTime,

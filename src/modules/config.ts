@@ -2,6 +2,7 @@ import { Node } from '@/main';
 
 export function createConfig(refToNode: unknown) {
     const node = refToNode as Node;
+
     const module = {
         genesisTime: 0,
         timeBetweenBlocks: 0,

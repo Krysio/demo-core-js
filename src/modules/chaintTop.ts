@@ -23,21 +23,21 @@ export function createChainTop(refToNode: unknown) {
         addBlock(block: Block) {
             const index = block.index;
             let existList = this.blockCache.get(index);
-    
+
             if (existList) {
                 existList.push(block);
                 existList.sort(sortBlocksByValues);
             } else {
                 module.blockCache.set(index, [block]);
             }
-    
+
             if (module.currentHeight < index) {
                 module.currentHeight = index;
             }
         },
         cleanCache() {
             let toClean = module.getHeight() - 3;
-    
+
             while (module.blockCache.has(toClean)) {
                 module.blockCache.delete(toClean);
                 toClean--;
@@ -45,27 +45,31 @@ export function createChainTop(refToNode: unknown) {
         },
         getByIndex(index: number) {
             const list = module.blockCache.get(index);
-    
+
             if (!list) {
                 return null;
             }
-    
+
             return list;
         },
 
         getHeight() {
             const { genesisTime, timeBetweenBlocks } = node.config;
-    
+
             if (timeBetweenBlocks === 0) {
                 return 0;
             }
-    
+
             return Math.floor((Time.now() - genesisTime) / timeBetweenBlocks);
         },
         getIndexOfLastBlock() {
             return module.currentHeight;
         }
     };
+
+    node.events.on('init/genesis', (genesisBlock) => {
+        module.addBlock(genesisBlock);
+    });
 
     node.events.on('created/block', (block) => {
         module.addBlock(block);

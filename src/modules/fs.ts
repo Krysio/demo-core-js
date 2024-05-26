@@ -1,7 +1,6 @@
-
 import Time from '@/libs/Time';
+import WBuffer from '@/libs/WBuffer';
 import { Node } from '@/main';
-import { Block } from '@/objects/Block';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -37,14 +36,10 @@ export function createFs(refToNode: unknown) {
 
             node.events.emit('init/fs');
         },
-        getBlockPath(block: Block) {
-            return `${`0000000${block.index}`.substring(-8)}-${block.getHash().hex()}.bin`;
-        },
-        saveBlock(block: Block) {
-            fs.writeFile(
-                path.join(module.blockDir, module.getBlockPath(block)),
-                block.toBuffer('full')
-            );
+        saveBlock(blockName: string, data: WBuffer) {
+            const filePath = path.join(module.blockDir, blockName);
+
+            fs.writeFile(filePath, data);
         }
     };
 

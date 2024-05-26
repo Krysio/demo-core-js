@@ -8,11 +8,11 @@ export class Admin {
     metaData: string = '';
 
     constructor(
-        publicKey?: Key
+        publicKey?: Key,
+        metaData?: string
     ) {
-        if (publicKey) {
-            this.publicKey = publicKey;
-        }
+        if (publicKey) this.publicKey = publicKey;
+        if (metaData) this.metaData = metaData;
     }
 
     static parse(buffer: WBuffer) {
