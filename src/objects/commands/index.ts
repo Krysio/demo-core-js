@@ -23,6 +23,7 @@ export const TYPE_ANCHOR_HASH = 0 as AnchorTypeID;
 export const TYPE_ANCHOR_INDEX = 10 as AnchorTypeID;
 
 export interface ICommand {
+    typeID?: number;
     isInternal: boolean;
     isMultiAuthor: boolean;
     anchorTypeID: AnchorTypeID;

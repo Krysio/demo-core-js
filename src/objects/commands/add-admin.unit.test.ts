@@ -4,25 +4,25 @@ import { createCommandParser } from "@/modules/commandParser";
 import { Frame } from "../frame";
 import { AddAdminCommand } from "./add-admin";
 import { sha256 } from "@/libs/crypto/sha256";
-import { createAdmin } from "./test.helper";
+import { createKey, createAdmin } from "./test.helper";
 
 function createCommand({
     admin = createAdmin(),
-    author = createAdmin()
+    authorKey = createKey(),
 } = {}) {
     const command = new AddAdminCommand(admin.admin);
     const frame = new Frame(command);
 
     frame.authors.push({
-        publicKey: author.key,
+        publicKey: authorKey,
         signature: null
     });
 
-    frame.authors[0].signature = author.key.sign(
+    frame.authors[0].signature = authorKey.sign(
         sha256(frame.toBuffer('hash'))
     );
 
-    return { frame, command, author, admin };
+    return { frame, command, authorKey, admin };
 }
 
 test('To & from buffer', () => {

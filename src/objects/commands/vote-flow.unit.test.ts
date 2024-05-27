@@ -2,27 +2,29 @@ import { EventEmitter } from "node:stream";
 import { Node } from '@/main';
 import { createCommandParser } from "@/modules/commandParser";
 import { Frame } from "../frame";
-import { AddUserCommand } from "./add-user";
-import { sha256 } from "@/libs/crypto/sha256";
-import { createAdmin, createUser } from "./test.helper";
+import { FlowVoteCommand } from "./vote-flow";
+import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
+import { createKey } from "./test.helper";
 
 function createCommand({
-    user = createUser(),
-    author = createAdmin()
+    authorKey = createKey(),
+    vottingHash = EMPTY_HASH,
+    key = createKey(),
 } = {}) {
-    const command = new AddUserCommand(user.user);
+    const command = new FlowVoteCommand(vottingHash, key);
     const frame = new Frame(command);
 
+    frame.anchorHash = EMPTY_HASH;
     frame.authors.push({
-        publicKey: author.key,
+        publicKey: authorKey,
         signature: null
     });
 
-    frame.authors[0].signature = author.key.sign(
+    frame.authors[0].signature = authorKey.sign(
         sha256(frame.toBuffer('hash'))
     );
 
-    return { frame, command, author, user };
+    return { frame, command, authorKey };
 }
 
 test('To & from buffer', () => {
@@ -34,19 +36,15 @@ test('To & from buffer', () => {
     expect(bufferA.isEqual(bufferB)).toBe(true);
 });
 
-describe('Parsing', () => {
+test('Parsing', () => {
     const fakeNode = {
         events: new EventEmitter() as Node['events']
     };
     const parser = createCommandParser(fakeNode);
-    const user01 = createUser();
+    const { frame } = createCommand();
 
-    test('First add user', () => {
-        const { frame } = createCommand({ user: user01 });
+    const buffer = frame.toBuffer('net');
+    const parsingResult = parser.parseCommand(buffer);
 
-        const buffer = frame.toBuffer('net');
-        const parsingResult = parser.parseCommand(buffer);
-
-        expect(parsingResult.isValid).toBe(true);
-    });
+    expect(parsingResult.isValid).toBe(true);
 });
