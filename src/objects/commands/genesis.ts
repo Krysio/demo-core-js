@@ -11,7 +11,8 @@ export class GenesisCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = true;
     isMultiAuthor = false;
-    value = 0;
+    primaryValue = 0;
+    secondaryValue = 0;
 
     constructor(
         public rootPublicKey: Key,

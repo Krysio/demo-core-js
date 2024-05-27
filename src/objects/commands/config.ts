@@ -10,7 +10,8 @@ export class ConfigCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = true;
     isMultiAuthor = false;
-    value = 0;
+    primaryValue = 0;
+    secondaryValue = 0;
 
     public values = {
         genesisTime: 0,

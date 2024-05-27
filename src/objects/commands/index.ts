@@ -26,7 +26,8 @@ export interface ICommand {
     isInternal: boolean;
     isMultiAuthor: boolean;
     anchorTypeID: AnchorTypeID;
-    value: number;
+    primaryValue: number;
+    secondaryValue: number;
 
     parse(buffer: WBuffer): ICommand;
     toBuffer(): WBuffer;

@@ -10,7 +10,8 @@ export class Block {
     public index = 0;
     public hashOfPrevBlock: WBuffer = EMPTY_HASH;
     public merkleRootHash: WBuffer = EMPTY_HASH;
-    public value = 0;
+    public primaryValue = 0;
+    public secondaryValue = 0;
     public listOfCommands: Frame[] = [];
 
     //#region buffer
@@ -28,7 +29,8 @@ export class Block {
         this.index = buffer.readUleb128();
         this.hashOfPrevBlock = buffer.read(32);
         this.merkleRootHash = buffer.read(32);
-        this.value = buffer.readUleb128();
+        this.primaryValue = buffer.readUleb128();
+        this.secondaryValue = buffer.readUleb128();
         this.isDirtyMerkleRoot = false;
 
         const countOfCommands = buffer.readUleb128();
@@ -46,14 +48,16 @@ export class Block {
         const version = WBuffer.uleb128(this.version);
         const index = WBuffer.uleb128(this.index);
         const merkleRootHash = this.getMerkleRoot();
-        const value = WBuffer.uleb128(this.value);
+        const primaryValue = WBuffer.uleb128(this.primaryValue);
+        const secondaryValue = WBuffer.uleb128(this.secondaryValue);
 
         return WBuffer.concat([
             version,
             index,
             this.hashOfPrevBlock,
             merkleRootHash,
-            value,
+            primaryValue,
+            secondaryValue,
             this.toBufferCommands(target)
         ]);
     }
@@ -98,7 +102,8 @@ export class Block {
             a.toBuffer('block'),
             b.toBuffer('block')
         ));
-        this.value+= frame.data.value;
+        this.primaryValue+= frame.data.primaryValue;
+        this.secondaryValue+= frame.data.secondaryValue;
     }
 
     public getHash() {

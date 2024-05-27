@@ -4,14 +4,18 @@ import { Block } from "@/objects/Block";
 import { Node } from '@/main';
 
 const sortBlocksByValues = (a: Block, b: Block) => {
-    if (a.value == b.value) {
-        return WBuffer.compare(
-            a.getHash(),
-            b.getHash()
-        );
+    if (a.primaryValue == b.primaryValue) {
+        if (a.secondaryValue == b.secondaryValue) {
+            return WBuffer.compare(
+                a.getHash(),
+                b.getHash()
+            );
+        }
+        
+        return a.secondaryValue < b.secondaryValue ? 1 : -1;
     }
 
-    return a.value < b.value ? 1 : -1;
+    return a.primaryValue < b.primaryValue ? 1 : -1;
 };
 
 export function createChainTop(refToNode: unknown) {

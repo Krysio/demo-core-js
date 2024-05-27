@@ -10,7 +10,8 @@ export class AddAdminCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = false;
     isMultiAuthor = false;
-    value = 0;
+    primaryValue = 0;
+    secondaryValue = 1;
 
     public admin: Admin = null;
 
