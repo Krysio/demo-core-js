@@ -39,14 +39,10 @@ describe('Parsing', () => {
         events: new EventEmitter() as Node['events']
     };
     const parser = createCommandParser(fakeNode);
-    const user01 = createUser();
+    const { frame } = createCommand();
 
-    test('First add user', () => {
-        const { frame } = createCommand({ user: user01 });
+    const buffer = frame.toBuffer('net');
+    const parsingResult = parser.parseCommand(buffer);
 
-        const buffer = frame.toBuffer('net');
-        const parsingResult = parser.parseCommand(buffer);
-
-        expect(parsingResult.isValid).toBe(true);
-    });
+    expect(parsingResult.isValid).toBe(true);
 });

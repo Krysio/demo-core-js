@@ -34,19 +34,15 @@ test('To & from buffer', () => {
     expect(bufferA.isEqual(bufferB)).toBe(true);
 });
 
-describe('Parsing', () => {
+test('Parsing', () => {
     const fakeNode = {
         events: new EventEmitter() as Node['events']
     };
     const parser = createCommandParser(fakeNode);
-    const admin01 = createAdmin();
+    const { frame } = createCommand();
 
-    test('First add user', () => {
-        const { frame } = createCommand({ admin: admin01 });
+    const buffer = frame.toBuffer('net');
+    const parsingResult = parser.parseCommand(buffer);
 
-        const buffer = frame.toBuffer('net');
-        const parsingResult = parser.parseCommand(buffer);
-
-        expect(parsingResult.isValid).toBe(true);
-    });
+    expect(parsingResult.isValid).toBe(true);
 });
