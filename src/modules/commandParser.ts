@@ -10,21 +10,24 @@ export function createCommandParser(refToNode: unknown) {
     const node = refToNode as Node;
     const module = {
         receiveCommand(buffer: WBuffer): void {
-            const frame = new Frame();
+            const frame = module.parseCommand(buffer);
 
-            try {
-                module.parseCommand(buffer, frame);
-
+            if (frame.isValid === true) {
                 node.events.emit('commandParser/acceptCommand', frame);
-            } catch (error: unknown) {
-                frame.isValid = false;
-                frame.invalidMsg = (error as Error).message;
-                
+            } else {
                 node.events.emit('commandParser/rejectCommand', frame);
             }
         },
         parseCommand(buffer: WBuffer, frame = new Frame()) {
-            return frame.parse(buffer);
+            try {
+                frame.parse(buffer);
+                frame.isValid = true;
+            } catch (error: unknown) {
+                frame.isValid = false;
+                frame.invalidMsg = (error as Error).message;
+            }
+
+            return frame;
         }
     };
 
