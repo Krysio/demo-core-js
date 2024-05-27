@@ -1,0 +1,25 @@
+import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
+import { KeySecp256k1 } from "@/objects/key";
+import { User, Admin } from "@/objects/users";
+
+export function createKey() {
+    const [privateKey, publicKey] = getKeyPair();
+
+    return new KeySecp256k1(publicKey, privateKey);
+};
+
+export function createAdmin({
+    key = createKey()
+} = {}) {
+    const admin = new Admin(key);
+
+    return { key, admin };
+};
+
+export function createUser({
+    key = createKey()
+} = {}) {
+    const user = new User(key);
+
+    return { key, user };
+};

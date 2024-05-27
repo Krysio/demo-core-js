@@ -138,18 +138,18 @@ export class Frame {
         }
     }
 
-    public toBuffer(target: 'block' | 'net' = 'net') {
+    public toBuffer(target: 'block' | 'hash' | 'net' = 'net') {
         return WBuffer.concat([
             WBuffer.uleb128(1),
             WBuffer.uleb128(this.data.typeID),
             this.toBufferAnchor(target),
             this.toBufferAuthors(),
             this.data.toBuffer(),
-            this.toBufferSignatures(),
+            this.toBufferSignatures(target),
         ]);
     }
 
-    public toBufferAnchor(target: 'block' | 'net' = 'net') {
+    public toBufferAnchor(target: 'block' | 'hash' | 'net' = 'net') {
         if (target === 'block') {
             return EMPTY_BUFFER;
         }
@@ -179,7 +179,11 @@ export class Frame {
         ]);
     }
 
-    public toBufferSignatures() {
+    public toBufferSignatures(target: 'block' | 'hash' | 'net' = 'net') {
+        if (target === 'hash') {
+            return EMPTY_BUFFER;
+        }
+
         if (this.data.isInternal) {
             return EMPTY_BUFFER;
         }
