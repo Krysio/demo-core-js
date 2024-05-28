@@ -13,7 +13,7 @@ export function createCommandVerifier(refToNode: unknown) {
                 frame.data.verify(node, frame);
 
                 node.events.emit('commandVerifier/acceptCommand', frame);
-            } catch (error: unknown) {
+            } catch (error) {
                 frame.isValid = false;
                 frame.invalidMsg = (error as Error).message;
                 

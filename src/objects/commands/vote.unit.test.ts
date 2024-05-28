@@ -48,5 +48,5 @@ test('Parsing', () => {
     const parsingResult = parser.parseCommand(buffer);
 
     expect(parsingResult.isValid).toBe(true);
-    expect((parsingResult.data as unknown as VoteCommand).value.hex()).toBe('4455');
+    expect((parsingResult.data as VoteCommand).value.hex()).toBe('4455');
 });

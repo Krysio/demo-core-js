@@ -1,6 +1,6 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import Key from "@/objects/key";
-import { Command, ICommand, ICommandWithType, TYPE_ANCHOR_HASH, TYPE_ANCHOR_INDEX } from "@/objects/commands";
+import { Command, ICommand, TYPE_ANCHOR_HASH, TYPE_ANCHOR_INDEX } from "@/objects/commands";
 import { isValidCommandVersion } from "@/modules/commandParser";
 
 export type CommandAuthorData = {
@@ -17,7 +17,7 @@ export class Frame {
 
     public authors: CommandAuthorData[] = [];
 
-    public data: ICommandWithType = null;
+    public data: ICommand = null;
 
     public isValid: boolean = null;
     public invalidMsg: string = null;
@@ -28,7 +28,7 @@ export class Frame {
 
     constructor(data?: ICommand) {
         if (data) {
-            this.data = data as ICommandWithType;
+            this.data = data as ICommand;
             this.typeID = this.data.typeID;
         }
     }
@@ -70,7 +70,7 @@ export class Frame {
     public parseType(source: 'block' | 'net' = 'net'): void {
         const { buffer } = this;
 
-        this.data = Command.type(buffer.readUleb128()) as ICommandWithType;
+        this.data = Command.type(buffer.readUleb128()) as ICommand;
     
         if (this.data === null) {
             throw new Error('Frame parse: Unsupportet command type');
@@ -123,7 +123,7 @@ export class Frame {
     public parseData(): void {
         const { buffer } = this;
     
-        this.data = this.data.parse(buffer) as ICommandWithType;
+        this.data = this.data.parse(buffer) as ICommand;
     }
 
     public parseSignatures(): void {

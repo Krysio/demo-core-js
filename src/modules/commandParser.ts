@@ -22,7 +22,7 @@ export function createCommandParser(refToNode: unknown) {
             try {
                 frame.parse(buffer);
                 frame.isValid = true;
-            } catch (error: unknown) {
+            } catch (error) {
                 frame.isValid = false;
                 frame.invalidMsg = (error as Error).message;
             }

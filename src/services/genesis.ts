@@ -46,7 +46,7 @@ export function createGenesis (initialConfig: Config, {
 export function getConfig(genesisBlock: Block) {
     for (const command of genesisBlock.listOfCommands) {
         if (command.typeID === COMMAND_TYPE_CONFIG) {
-            return (command.data as unknown as ConfigCommand).values;
+            return (command.data as ConfigCommand).values;
         }
     }
 }

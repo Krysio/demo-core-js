@@ -19,7 +19,7 @@ export function createStoreAdmin(refToNode: unknown) {
     node.events.on('init/genesis', (genesisBlock) => {
         for (const command of genesisBlock.listOfCommands) {
             if (command.typeID === COMMAND_TYPE_GENESIS) {
-                const { listOfAdminAccounts } = (command.data as unknown as GenesisCommand);
+                const { listOfAdminAccounts } = (command.data as GenesisCommand);
 
                 for (const adminAccount of listOfAdminAccounts) {
                     const key = adminAccount.publicKey.toBuffer();

@@ -34,9 +34,6 @@ export interface ICommand {
     toBuffer(): WBuffer;
     verify(node: Node, frame: Frame): Promise<void>;
 }
-export interface ICommandWithType extends ICommand {
-    typeID: number;
-}
 
 export class Command {
     static type(typeID: number) {
