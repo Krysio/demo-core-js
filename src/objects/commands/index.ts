@@ -33,6 +33,7 @@ export interface ICommand {
     parse(buffer: WBuffer): ICommand;
     toBuffer(): WBuffer;
     verify(node: Node, frame: Frame): Promise<void>;
+    apply?: (node: Node, frame: Frame) => Promise<void>;
 }
 
 export class Command {

@@ -21,5 +21,8 @@ export function createUser({
 } = {}) {
     const user = new User(key);
 
+    user.timeStart = 100;
+    user.timeEnd = 10000;
+
     return { key, user };
 };

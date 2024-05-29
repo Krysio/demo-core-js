@@ -11,7 +11,7 @@ export function createConfig(refToNode: unknown) {
         countOfSupportGiving: 0,
         timeLiveOfUserAccount: 0,
         timeLiveOfIncognitoAccount: 0,
-        timeBeforeAccountActivation: 0
+        timeBeforeAccountActivation: 0,
     };
 
     node.events.on('init/config', (initialConfig) => {
