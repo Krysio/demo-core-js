@@ -1,5 +1,5 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
-import Key, { IKey, TYPE_KEY_Testing, Type } from ".";
+import { Key, IKey, TYPE_KEY_Testing, Type } from ".";
 
 export const keyTestingApi = {
     parseSignature: (key: KeyTesting, buffer: WBuffer) => {

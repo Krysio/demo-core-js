@@ -3,7 +3,7 @@ import { Node } from "@/main";
 import { COMMAND_TYPE_VOTE_FLOW } from "./types";
 import { Type, ICommand, TYPE_ANCHOR_HASH } from ".";
 import { Frame } from "@/objects/frame";
-import Key from "../key";
+import { Key } from "@/objects/key";
 
 @Type(COMMAND_TYPE_VOTE_FLOW)
 export class FlowVoteCommand implements ICommand {

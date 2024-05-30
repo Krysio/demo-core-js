@@ -1,5 +1,5 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
-import Key from "@/objects/key";
+import { Key } from "@/objects/key";
 
 export class Admin {
     publicKey: Key;

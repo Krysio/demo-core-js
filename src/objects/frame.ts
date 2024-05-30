@@ -1,5 +1,5 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
-import Key from "@/objects/key";
+import { Key } from "@/objects/key";
 import { Command, ICommand, TYPE_ANCHOR_HASH, TYPE_ANCHOR_INDEX } from "@/objects/commands";
 import { isValidCommandVersion } from "@/modules/commandParser";
 

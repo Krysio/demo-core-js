@@ -1,7 +1,7 @@
 import WBuffer from '@/libs/WBuffer';
 import { Node } from '@/main';
 import { User } from '@/objects/users';
-import Key from '@/objects/key';
+import { Key } from '@/objects/key';
 
 export function createStoreUser(refToNode: unknown) {
     const node = refToNode as Node;

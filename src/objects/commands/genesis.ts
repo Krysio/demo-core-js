@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { COMMAND_TYPE_GENESIS } from "./types";
 import { Type, ICommand, TYPE_ANCHOR_INDEX } from "@/objects/commands";
-import Key from "@/objects/key";
+import { Key } from "@/objects/key";
 import { Admin } from "@/objects/users/admin";
 import { Node } from '@/main';
 import { Frame } from "@/objects/frame";

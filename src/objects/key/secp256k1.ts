@@ -1,5 +1,5 @@
 import WBuffer from "@/libs/WBuffer";
-import Key, { IKey, TYPE_KEY_Secp256k1, Type } from ".";
+import { Key, IKey, TYPE_KEY_Secp256k1, Type } from ".";
 import {
     sign as signSecp256k1,
     verify as verifySecp256k1,

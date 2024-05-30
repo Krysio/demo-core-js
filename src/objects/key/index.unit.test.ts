@@ -1,4 +1,4 @@
-import Key, { TYPE_KEY_Secp256k1 } from "@/objects/key";
+import { Key, TYPE_KEY_Secp256k1 } from "@/objects/key";
 import { KeySecp256k1 } from "@/objects/key/secp256k1";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import WBuffer from "@/libs/WBuffer";

@@ -46,7 +46,7 @@ export interface IKey {
     decrypt(message: WBuffer, privateKey?: WBuffer): WBuffer;
 }
 
-export default class Key {
+export class Key {
     buffer: WBuffer;
     typeID: number;
     key: WBuffer;
