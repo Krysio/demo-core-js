@@ -30,8 +30,14 @@ export class AddUserCommand implements ICommand {
     }
 
     public async verify(node: Node, frame: Frame) {
-        const key = this.user.publicKey.toBuffer();
-        const result = await node.storeUser.get(key);
+        const { publicKey: authorPublicKey } = frame.authors[0];
+        const author = await node.storeAdmin.get(authorPublicKey);
+
+        if (!author) {
+            throw new Error('Cmd: Add User: Author does not exist');
+        }
+
+        const result = await node.storeUser.get(this.user.publicKey);
 
         if (result !== null) {
             throw new Error('Cmd: Add User: duplicate key');
@@ -56,9 +62,6 @@ export class AddUserCommand implements ICommand {
     public async apply(node: Node, frame: Frame) {
         this.user.parentPublicKey = frame.authors[0].publicKey;
 
-        const key = this.user.publicKey.toBuffer();
-        const value = this.user.toBuffer('db');
-
-        await node.storeUser.add(key, value);
+        await node.storeUser.add(this.user);
     }
 }

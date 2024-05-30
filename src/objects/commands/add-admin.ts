@@ -30,8 +30,27 @@ export class AddAdminCommand implements ICommand {
     }
 
     public async verify(node: Node, frame: Frame) {
-        // User-key doesn't exist
-        // Validate times
-        // Autorize author
+        const { publicKey: authorPublicKey } = frame.authors[0];
+        const author = await node.storeAdmin.get(authorPublicKey);
+
+        if (!author) {
+            throw new Error('Cmd: Add Admin: Author does not exist');
+        }
+
+        const result = await node.storeAdmin.get(this.admin.publicKey);
+
+        if (result !== null) {
+            throw new Error('Cmd: Add Admin: duplicate key');
+        }
+
+        if (this.admin.level <= author.level) {
+            throw new Error('Cmd: Add Admin: level too height');
+        }
+    }
+
+    public async apply(node: Node, frame: Frame) {
+        this.admin.parentPublicKey = frame.authors[0].publicKey;
+
+        await node.storeAdmin.add(this.admin);
     }
 }

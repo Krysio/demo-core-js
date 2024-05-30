@@ -2,17 +2,33 @@ import WBuffer from '@/libs/WBuffer';
 import { Node } from '@/main';
 import { GenesisCommand } from '@/objects/commands';
 import { COMMAND_TYPE_GENESIS } from '@/objects/commands/types';
+import { Admin } from '@/objects/users';
+import Key from '@/objects/key';
 
 export function createStoreAdmin(refToNode: unknown) {
     const node = refToNode as Node;
     const module = {
         store: new Map<string, WBuffer>(),
 
-        async add(key: WBuffer, data: WBuffer) {
-            return module.store.set(key.hex(), data);
+        async add(admin: Admin) {
+            const key = admin.publicKey.toBuffer().hex();
+            const data = admin.toBuffer('db');
+
+            return module.store.set(key, data);
         },
-        async get(publicKey: WBuffer) {
-            return module.store.get(publicKey.hex()) || null;
+        async get(publicKey: Key) {
+            const key = publicKey.toBuffer().hex();
+            const result = module.store.get(key);
+
+            if (result) {
+                const admin = Admin.parse(result.seek(0), 'db');
+
+                admin.publicKey = publicKey;
+
+                return admin;
+            }
+
+            return null;
         }
     };
 
@@ -22,10 +38,7 @@ export function createStoreAdmin(refToNode: unknown) {
                 const { listOfAdminAccounts } = (command.data as GenesisCommand);
 
                 for (const adminAccount of listOfAdminAccounts) {
-                    const key = adminAccount.publicKey.toBuffer();
-                    const data = adminAccount.toBuffer();
-
-                    module.add(key, data);
+                    module.add(adminAccount);
                 }
             }
         }

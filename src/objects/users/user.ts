@@ -16,11 +16,14 @@ export class User {
         }
     }
 
-    static parse(buffer: WBuffer) {
-        return new User().parse(buffer);
+    static parse(
+        buffer: WBuffer,
+        source: 'db' | 'net' = 'net'
+    ) {
+        return new User().parse(buffer, source);
     }
 
-    parse(
+    public parse(
         buffer: WBuffer,
         source: 'db' | 'net' = 'net'
     ) {
@@ -42,7 +45,7 @@ export class User {
         }
     }
 
-    toBuffer(target: 'db' | 'net' = 'net'): WBuffer {
+    public toBuffer(target: 'db' | 'net' = 'net'): WBuffer {
         try {
             const publicKey = target !== 'db'
                 ? this.publicKey.toBuffer()

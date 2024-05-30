@@ -15,11 +15,14 @@ export class Admin {
         if (metaData) this.metaData = metaData;
     }
 
-    static parse(buffer: WBuffer) {
-        return new Admin().parse(buffer);
+    static parse(
+        buffer: WBuffer,
+        source: 'db' | 'net' = 'net'
+    ) {
+        return new Admin().parse(buffer, source);
     }
 
-    parse(
+    public parse(
         buffer: WBuffer,
         source: 'db' | 'net' = 'net'
     ) {
@@ -40,7 +43,7 @@ export class Admin {
         }
     }
 
-    toBuffer(target: 'db' | 'net' = 'net'): WBuffer {
+    public toBuffer(target: 'db' | 'net' = 'net'): WBuffer {
         try {
             const publicKey = target !== 'db'
                 ? this.publicKey.toBuffer()
@@ -76,7 +79,7 @@ export class Admin {
     public toJSON() {
         return this.inspect();
     }
-    [Symbol.for('nodejs.util.inspect.custom')]() {
+    public [Symbol.for('nodejs.util.inspect.custom')]() {
         return this.inspect();
     }
 }

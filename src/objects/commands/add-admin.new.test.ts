@@ -2,22 +2,23 @@ import { EventEmitter } from "node:stream";
 import { Node } from '@/main';
 import { createCommandParser } from "@/modules/commandParser";
 import { Frame } from "../frame";
-import { AddUserCommand } from "./add-user";
+import { AddAdminCommand } from "./add-admin";
 import { sha256 } from "@/libs/crypto/sha256";
-import { createKey, createUser } from "./test.helper";
-import { createStoreUser } from "@/modules/storeUser";
+import { createKey, createAdmin } from "./test.helper";
 import { createStoreAdmin } from "@/modules/storeAdmin";
 import { Admin } from "../users";
 
 function createCommand({
-    user = createUser(),
+    admin = createAdmin(),
     authorKey = createKey(),
 } = {}) {
-    const command = new AddUserCommand(user.user);
+    const command = new AddAdminCommand(admin.admin);
     const frame = new Frame(command);
     const author = new Admin(authorKey);
 
-    frame.anchorIndex = 0;
+    author.level = 5;
+    command.admin.level = 10;
+
     frame.authors.push({
         publicKey: authorKey,
         signature: null
@@ -27,7 +28,7 @@ function createCommand({
         sha256(frame.toBuffer('hash'))
     );
 
-    return { frame, command, author, user };
+    return { frame, command, author, admin };
 }
 
 test('To & from buffer', () => {
@@ -52,35 +53,13 @@ test('Parsing', () => {
     expect(parsingResult.isValid).toBe(true);
 });
 
-test('Add to store', async () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events']
-    } as Node;
-
-    fakeNode.storeUser = createStoreUser(fakeNode);
-
-    const { command, frame, user } = createCommand();
-
-    await expect((async () => {
-        await command.apply(fakeNode, frame);
-    })()).resolves.not.toThrow();
-
-    const value = fakeNode.storeUser.get(user.key);
-
-    expect(value).not.toBe(null);
-});
-
 describe('Verify', () => {
     const fakeNode = {
         events: new EventEmitter() as Node['events'],
-        config: {
-            timeBeforeAccountActivation: 5,
-            timeLiveOfUserAccount: 10000
-        }
+        config: {}
     } as Node;
 
     fakeNode.storeAdmin = createStoreAdmin(fakeNode);
-    fakeNode.storeUser = createStoreUser(fakeNode);
 
     const authorKey = createKey();
 
@@ -89,7 +68,7 @@ describe('Verify', () => {
 
         await expect((async () => {
             await command.verify(fakeNode, frame);
-        })()).rejects.toThrow('Cmd: Add User: Author does not exist');
+        })()).rejects.toThrow('Cmd: Add Admin: Author does not exist');
 
         author.parentPublicKey = createKey();
         await fakeNode.storeAdmin.add(author);
@@ -110,40 +89,18 @@ describe('Verify', () => {
 
         await expect((async () => {
             await command.verify(fakeNode, frame);
-        })()).rejects.toThrow('Cmd: Add User: duplicate key');
+        })()).rejects.toThrow('Cmd: Add Admin: duplicate key');
     });
 
-    describe('Time values', () => {
-        test('Time start', async () => {
-            const { command, frame, user } = createCommand({ authorKey });
-    
-            user.user.timeStart = 5 + 2;
-    
-            await expect((async () => {
-                await command.verify(fakeNode, frame);
-            })()).rejects.toThrow('Cmd: Add User: timeStart too low');
-    
-            user.user.timeStart = 6 + 2;
-            
-            await expect((async () => {
-                await command.verify(fakeNode, frame);
-            })()).resolves.not.toThrow();
-        });
+    test('Level', async () => {
+        const { command, frame } = createCommand({ authorKey });
 
-        test('Time end', async () => {
-            const { command, frame, user } = createCommand({ authorKey });
-    
-            user.user.timeEnd = 6 + 2 + 10000;
-    
+        for (const level of [0, 4, 5]) {
+            command.admin.level = level;
+
             await expect((async () => {
                 await command.verify(fakeNode, frame);
-            })()).rejects.toThrow('Cmd: Add User: timeEnd too hight');
-    
-            user.user.timeEnd = 6 + 2 + 9999;
-            
-            await expect((async () => {
-                await command.verify(fakeNode, frame);
-            })()).resolves.not.toThrow();
-        });
+            })()).rejects.toThrow('Cmd: Add Admin: level too height');
+        }
     });
 });
