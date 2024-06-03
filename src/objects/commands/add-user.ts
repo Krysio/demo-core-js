@@ -10,6 +10,7 @@ export class AddUserCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = false;
     isMultiAuthor = false;
+    isValueHasKey = false;
     valueTypeID = TYPE_VALUE_SECONDARY;
 
     public user: User = null;

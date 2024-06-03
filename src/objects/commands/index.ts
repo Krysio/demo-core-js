@@ -32,6 +32,7 @@ export interface ICommand {
     isInternal: boolean;
     isMultiAuthor: boolean;
     anchorTypeID: AnchorTypeID;
+    isValueHasKey: boolean;
     valueTypeID: ValueTypeID;
 
     parse(buffer: WBuffer): ICommand;

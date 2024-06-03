@@ -10,6 +10,7 @@ export class ConfigCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = true;
     isMultiAuthor = false;
+    isValueHasKey = false;
     valueTypeID = TYPE_VALUE_PRIMARY;
 
     public values = {

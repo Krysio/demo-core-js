@@ -9,6 +9,7 @@ export class VoteCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_HASH;
     isInternal = false;
     isMultiAuthor = false;
+    isValueHasKey = true;
     valueTypeID = TYPE_VALUE_PRIMARY;
 
     public votingHash: WBuffer = null;

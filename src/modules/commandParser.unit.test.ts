@@ -13,6 +13,7 @@ describe('Testing parser', () => {
         isInternal = false;
         isMultiAuthor = false;
         anchorTypeID = TYPE_ANCHOR_HASH;
+        isValueHasKey = false;
         valueTypeID = TYPE_VALUE_PRIMARY;
 
         public foo: WBuffer = null;

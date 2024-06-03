@@ -127,15 +127,21 @@ export class Block {
 
         const mapOfKeys: {[key: string]: 1} = {};
 
+        this.primaryValue = 0;
+
         for (const frame of this.listOfCommands) {
             if (frame.data.valueTypeID === TYPE_VALUE_PRIMARY) {
-                const key = frame.getKeyOfValue().hex();
+                if (frame.data.isValueHasKey === false) {
+                    this.primaryValue++;
+                } else {
+                    const key = frame.getKeyOfValue().hex();
 
-                mapOfKeys[key] = 1;
+                    mapOfKeys[key] = 1;
+                }
             }
         }
 
-        this.primaryValue = Object.values(mapOfKeys).length;
+        this.primaryValue+= Object.values(mapOfKeys).length;
         this.isDirtyPrimaryValue = false;
 
         return this.primaryValue;
@@ -148,15 +154,21 @@ export class Block {
 
         const mapOfKeys: {[key: string]: 1} = {};
 
+        this.secondaryValue = 0;
+
         for (const frame of this.listOfCommands) {
             if (frame.data.valueTypeID === TYPE_VALUE_SECONDARY) {
-                const key = frame.getKeyOfValue().hex();
+                if (frame.data.isValueHasKey === false) {
+                    this.secondaryValue++;
+                } else {
+                    const key = frame.getKeyOfValue().hex();
 
-                mapOfKeys[key] = 1;
+                    mapOfKeys[key] = 1;
+                }
             }
         }
 
-        this.secondaryValue = Object.values(mapOfKeys).length;
+        this.secondaryValue+= Object.values(mapOfKeys).length;
         this.isDirtySecondaryValue = false;
 
         return this.secondaryValue;
