@@ -25,6 +25,8 @@ test('To & from buffer', () => {
     expect(block.index).toBe(0);
     expect(block.hashOfPrevBlock.isEqual(EMPTY_HASH)).toBe(true);
     expect(block.listOfCommands.length).toBe(1);
+    expect(block.getPrimaryValue()).toBe(1);
+    expect(block.getSecondaryValue()).toBe(0);
 
     const buffer2 = block.toBuffer();
     const hash2 = block.getHash();

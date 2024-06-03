@@ -20,20 +20,27 @@ export const Type = (typeID: number) => {
 type AnchorTypeID = number & { __TYPE__: 'AnchorTypeID' };
 
 export const TYPE_ANCHOR_HASH = 0 as AnchorTypeID;
-export const TYPE_ANCHOR_INDEX = 10 as AnchorTypeID;
+export const TYPE_ANCHOR_INDEX = 1 as AnchorTypeID;
+
+type ValueTypeID = number & { __TYPE__: 'ValueTypeID' };
+
+export const TYPE_VALUE_PRIMARY = 0 as ValueTypeID;
+export const TYPE_VALUE_SECONDARY = 1 as ValueTypeID;
 
 export interface ICommand {
     typeID?: number;
     isInternal: boolean;
     isMultiAuthor: boolean;
     anchorTypeID: AnchorTypeID;
-    primaryValue: number;
-    secondaryValue: number;
+    valueTypeID: ValueTypeID;
 
     parse(buffer: WBuffer): ICommand;
     toBuffer(): WBuffer;
+
     verify(node: Node, frame: Frame): Promise<void>;
     apply?: (node: Node, frame: Frame) => Promise<void>;
+
+    getKeyOfValue?: (frame: Frame) => WBuffer;
 }
 
 export class Command {

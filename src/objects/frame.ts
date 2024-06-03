@@ -197,4 +197,16 @@ export class Frame {
             ...this.authors.map((author) => author.signature)
         ]);
     }
+
+    public getKeyOfValue(): WBuffer {
+        if (this.data.getKeyOfValue) {
+            return this.data.getKeyOfValue(this);
+        }
+
+        if (this.data.isInternal === true) {
+            return WBuffer.uleb128(this.typeID);
+        }
+
+        return this.toBufferAuthors();
+    }
 }

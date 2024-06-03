@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { Node } from "@/main";
 import { COMMAND_TYPE_ADD_USER } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX } from ".";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
 import { Frame } from "@/objects/frame";
 import { User } from "@/objects/users";
 
@@ -10,8 +10,7 @@ export class AddUserCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = false;
     isMultiAuthor = false;
-    primaryValue = 0;
-    secondaryValue = 1;
+    valueTypeID = TYPE_VALUE_SECONDARY;
 
     public user: User = null;
 

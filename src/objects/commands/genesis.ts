@@ -1,6 +1,6 @@
 import WBuffer from "@/libs/WBuffer";
 import { COMMAND_TYPE_GENESIS } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX } from "@/objects/commands";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_PRIMARY } from "@/objects/commands";
 import { Key } from "@/objects/key";
 import { Admin } from "@/objects/users/admin";
 import { Node } from '@/main';
@@ -11,8 +11,7 @@ export class GenesisCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = true;
     isMultiAuthor = false;
-    primaryValue = 0;
-    secondaryValue = 0;
+    valueTypeID = TYPE_VALUE_PRIMARY;
 
     constructor(
         public rootPublicKey: Key,

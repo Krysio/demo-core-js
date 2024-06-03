@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { Node } from "@/main";
 import { COMMAND_TYPE_CONFIG } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX } from ".";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_PRIMARY } from ".";
 import { Config } from "@/modules/config";
 import { Frame } from "@/objects/frame";
 
@@ -10,8 +10,7 @@ export class ConfigCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = true;
     isMultiAuthor = false;
-    primaryValue = 0;
-    secondaryValue = 0;
+    valueTypeID = TYPE_VALUE_PRIMARY;
 
     public values = {
         genesisTime: 0,

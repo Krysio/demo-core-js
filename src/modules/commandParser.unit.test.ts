@@ -4,7 +4,7 @@ import { EMPTY_HASH, sha256 } from "@/libs/crypto/sha256";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { Node } from '@/main';
 import { Frame } from "@/objects/frame";
-import { ICommand, Type, TYPE_ANCHOR_HASH } from "@/objects/commands";
+import { ICommand, Type, TYPE_ANCHOR_HASH, TYPE_VALUE_PRIMARY } from "@/objects/commands";
 import { KeySecp256k1 } from "@/objects/key";
 import { createCommandParser } from "./commandParser";
 
@@ -13,8 +13,7 @@ describe('Testing parser', () => {
         isInternal = false;
         isMultiAuthor = false;
         anchorTypeID = TYPE_ANCHOR_HASH;
-        primaryValue = 0;
-        secondaryValue = 0;
+        valueTypeID = TYPE_VALUE_PRIMARY;
 
         public foo: WBuffer = null;
     

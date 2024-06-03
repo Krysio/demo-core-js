@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { Node } from "@/main";
 import { COMMAND_TYPE_VOTE_FLOW } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_HASH } from ".";
+import { Type, ICommand, TYPE_ANCHOR_HASH, TYPE_VALUE_PRIMARY } from ".";
 import { Frame } from "@/objects/frame";
 import { Key } from "@/objects/key";
 
@@ -10,8 +10,7 @@ export class FlowVoteCommand implements ICommand {
     anchorTypeID = TYPE_ANCHOR_HASH;
     isInternal = false;
     isMultiAuthor = false;
-    primaryValue = 1;
-    secondaryValue = 0;
+    valueTypeID = TYPE_VALUE_PRIMARY;
 
     public votingHash: WBuffer = null;
     public userPublicKey: Key = null;
@@ -41,5 +40,12 @@ export class FlowVoteCommand implements ICommand {
     public async verify(node: Node, frame: Frame) {
         // votingHash exist
         // Validate value
+    }
+
+    public getKeyOfValue(frame: Frame): WBuffer {
+        return WBuffer.concat([
+            frame.toBufferAuthors(),
+            this.votingHash
+        ]);
     }
 }
