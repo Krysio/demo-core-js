@@ -14,6 +14,7 @@ import { Frame } from "@/objects/frame";
 import { createFs } from "@/modules/fs";
 import { createStoreAdmin } from "@/modules/storeAdmin";
 import { getConfig } from "@/services/genesis";
+import { createStoreVoting } from "./modules/storeVoting";
 
 export function createNode(params: {
     genesisBlock: Block
@@ -43,6 +44,7 @@ export function createNode(params: {
         state: createState(protoScope),
         storeUser: createStoreUser(protoScope),
         storeAdmin: createStoreAdmin(protoScope),
+        storeVoting: createStoreVoting(protoScope),
         storeBlock: createStoreBlock(protoScope),
         chainTop: createChainTop(protoScope),
         blockGenerator: createBlockGenerator(protoScope),

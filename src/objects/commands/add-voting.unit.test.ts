@@ -1,19 +1,23 @@
+import { EventEmitter } from "node:stream";
+import { Node } from '@/main';
 import { createCommandParser } from "@/modules/commandParser";
 import { Frame } from "@/objects/frame";
-import { VoteCommand } from "./vote";
-import { createKey, createFakeNode } from "./test.helper";
-import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
-import WBuffer from "@/libs/WBuffer";
+import { AddVotingCommand } from "./add-voting";
+import { sha256 } from "@/libs/crypto/sha256";
+import { createKey } from "./test.helper";
+import { Admin } from "@/objects/users";
+import { VotingSimple } from "@/objects/voting";
 
 function createCommand({
     authorKey = createKey(),
-    vottingHash = EMPTY_HASH,
-    value = WBuffer.hex`00`,
+    meta = ''
 } = {}) {
-    const command = new VoteCommand(vottingHash, value);
+    const voting = new VotingSimple(10, 1000, meta);
+    const command = new AddVotingCommand(voting);
     const frame = new Frame(command);
+    const author = new Admin(authorKey);
 
-    frame.anchorHash = EMPTY_HASH;
+    frame.anchorIndex = 0;
     frame.authors.push({
         publicKey: authorKey,
         signature: null
@@ -23,10 +27,10 @@ function createCommand({
         sha256(frame.toBuffer('hash'))
     );
 
-    return { frame, command, authorKey };
+    return { frame, command, author };
 }
 
-test('To & from buffer should result the same data', () => {
+test('To & from buffer', () => {
     const { frame } = createCommand();
 
     const bufferA = frame.toBuffer();
@@ -35,14 +39,15 @@ test('To & from buffer should result the same data', () => {
     expect(bufferA.isEqual(bufferB)).toBe(true);
 });
 
-test('Parsing command', () => {
-    const fakeNode = createFakeNode();
+test('Parsing', () => {
+    const fakeNode = {
+        events: new EventEmitter() as Node['events']
+    };
     const parser = createCommandParser(fakeNode);
-    const { frame } = createCommand({ value: WBuffer.hex`4455` });
+    const { frame } = createCommand();
 
     const buffer = frame.toBuffer('net');
     const parsingResult = parser.parseCommand(buffer);
 
     expect(parsingResult.isValid).toBe(true);
-    expect((parsingResult.data as VoteCommand).value.hex()).toBe('4455');
 });

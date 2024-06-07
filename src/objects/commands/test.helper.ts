@@ -1,3 +1,4 @@
+import { Node } from '@/main';
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { KeySecp256k1 } from "@/objects/key";
 import { User, Admin } from "@/objects/users";
@@ -25,4 +26,15 @@ export function createUser({
     user.timeEnd = 10000;
 
     return { key, user };
+};
+
+export function createFakeNode({
+    events = {
+        on: () => null as () => void,
+        emit: () => null as () => void,
+    } as unknown as Node['events']
+} = {}) {
+    return {
+        events
+    };
 };
