@@ -1,6 +1,6 @@
 import WBuffer from '@/libs/WBuffer';
 import { Node } from '@/main';
-import { GenesisCommand } from '@/objects/commands';
+import { GenesisCommand } from '@/objects/commands/genesis';
 import { COMMAND_TYPE_GENESIS } from '@/objects/commands/types';
 import { Admin } from '@/objects/users';
 import { Key } from '@/objects/key';

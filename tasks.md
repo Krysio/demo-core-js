@@ -1,0 +1,2 @@
+ - Create module of flags
+  - create flag for extendig data in user storage, information eg `parent`, `metaData`

@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "test-ddd": "npx jest \".ddd.test.ts\"",
     "test-new": "npx jest \".new.test.ts\"",
     "test-unit": "npx jest \".unit.test.ts\"",
+    "test-int": "npx jest \".int.test.ts\"",
     "test-process": "npx jest \".process.test.ts\""
   },
   "dependencies": {
