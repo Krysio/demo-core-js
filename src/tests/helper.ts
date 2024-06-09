@@ -28,13 +28,11 @@ export function createUser({
     return { key, user };
 };
 
-export function createFakeNode({
-    events = {
-        on: () => null as () => void,
-        emit: () => null as () => void,
-    } as unknown as Node['events']
-} = {}) {
-    return {
-        events
-    };
+export function createFakeNode(override = {}) {
+    return Object.assign({
+        events: {
+            on: () => null as () => void,
+            emit: () => null as () => void,
+        }
+    }, override) as unknown as Node;
 };

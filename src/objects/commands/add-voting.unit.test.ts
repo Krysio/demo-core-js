@@ -1,12 +1,9 @@
-import { EventEmitter } from "node:stream";
-import { Node } from '@/main';
-import { createCommandParser } from "@/modules/commandParser";
+import { createFakeNode, createKey } from "@/tests/helper";
 import { Frame } from "@/objects/frame";
-import { AddVotingCommand } from "./add-voting";
-import { sha256 } from "@/libs/crypto/sha256";
-import { createKey } from "./test.helper";
 import { Admin } from "@/objects/users";
 import { VotingSimple } from "@/objects/voting";
+import { sha256 } from "@/libs/crypto/sha256";
+import { AddVotingCommand } from "./add-voting";
 
 function createCommand({
     authorKey = createKey(),
@@ -30,24 +27,76 @@ function createCommand({
     return { frame, command, author };
 }
 
-test('To & from buffer', () => {
-    const { frame } = createCommand();
+test('To & from buffer should result the same data', () => {
+    //#region Given
+    const { command } = createCommand();
+    //#enregion Given
 
-    const bufferA = frame.toBuffer();
-    const bufferB = Frame.parse(bufferA).toBuffer();
+    //#region When
+    const bufferA = command.toBuffer();
+    const bufferB = new AddVotingCommand().parse(bufferA).toBuffer();
+    //#enregion When
 
+    //#region Then
     expect(bufferA.isEqual(bufferB)).toBe(true);
+    //#enregion Then
 });
 
-test('Parsing', () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events']
-    };
-    const parser = createCommandParser(fakeNode);
-    const { frame } = createCommand();
+describe('Verifivation', () => {
+    test('When author is out of the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({ storeAdmin: { get: jest.fn(() => null) } });
+        //#enregion Given
 
-    const buffer = frame.toBuffer('net');
-    const parsingResult = parser.parseCommand(buffer);
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Add Voting: Author does not exist');
+        //#enregion Then
+    });
 
-    expect(parsingResult.isValid).toBe(true);
+    test('When author is in the store: should do not throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeAdmin: { get: jest.fn(() => ({})) },
+            storeVoting: { get: jest.fn(() => null) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .resolves.not.toThrow();
+        //#enregion Then
+    });
+
+    test('When voting hash is in the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeAdmin: { get: jest.fn(() => ({})) },
+            storeVoting: { get: jest.fn(() => ({})) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Add Voting: duplicate key');
+        //#enregion Then
+    });
 });

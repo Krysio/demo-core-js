@@ -1,20 +1,21 @@
+import WBuffer from "@/libs/WBuffer";
 import { EventEmitter, TypedEventEmitter } from "node:stream";
 import { createConfig, Config } from "@/modules/config";
 import { createState } from "@/modules/state";
 import { createBlockGenerator } from "@/modules/blockGenerator";
 import { createChainTop } from "@/modules/chaintTop";
 import { createStoreUser } from "@/modules/storeUser";
+import { createStoreAdmin } from "@/modules/storeAdmin";
+import { createStoreVoter } from "@/modules/storeVoter";
+import { createStoreVoting } from "@/modules/storeVoting";
 import { createStoreBlock } from "@/modules/storeBlock";
 import { createCommandParser } from "@/modules/commandParser";
 import { Block } from "@/objects/Block";
-import WBuffer from "@/libs/WBuffer";
 import { createCommandVerifier } from "@/modules/commandVerifier";
 import { createCommandPool } from "@/modules/commandPool";
 import { Frame } from "@/objects/frame";
 import { createFs } from "@/modules/fs";
-import { createStoreAdmin } from "@/modules/storeAdmin";
 import { getConfig } from "@/services/genesis";
-import { createStoreVoting } from "./modules/storeVoting";
 
 export function createNode(params: {
     genesisBlock: Block
@@ -44,6 +45,7 @@ export function createNode(params: {
         state: createState(protoScope),
         storeUser: createStoreUser(protoScope),
         storeAdmin: createStoreAdmin(protoScope),
+        storeVoter: createStoreVoter(protoScope),
         storeVoting: createStoreVoting(protoScope),
         storeBlock: createStoreBlock(protoScope),
         chainTop: createChainTop(protoScope),

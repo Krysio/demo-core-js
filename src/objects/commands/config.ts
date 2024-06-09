@@ -24,7 +24,7 @@ export class ConfigCommand implements ICommand {
         timeBeforeAccountActivation: 0,
     };
     
-    constructor(config: Config) {
+    constructor(config: Config = {}) {
         for (const key in config) {
             this.values[key as keyof typeof config] = config[key as keyof typeof config];
         }

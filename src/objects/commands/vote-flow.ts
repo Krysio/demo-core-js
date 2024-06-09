@@ -14,19 +14,19 @@ export class FlowVoteCommand implements ICommand {
     valueTypeID = TYPE_VALUE_PRIMARY;
 
     public votingHash: WBuffer = null;
-    public userPublicKey: Key = null;
+    public voterPublicKey: Key = null;
 
     constructor(
         votingHash?: WBuffer,
-        userPublicKey?: Key
+        voterPublicKey?: Key
     ) {
         if (votingHash) this.votingHash = votingHash;
-        if (userPublicKey) this.userPublicKey = userPublicKey;
+        if (voterPublicKey) this.voterPublicKey = voterPublicKey;
     }
 
     public parse(buffer: WBuffer) {
         this.votingHash = buffer.read(32);
-        this.userPublicKey = Key.parse(buffer);
+        this.voterPublicKey = Key.parse(buffer);
 
         return this;
     }
@@ -34,13 +34,29 @@ export class FlowVoteCommand implements ICommand {
     public toBuffer(): WBuffer {
         return WBuffer.concat([
             this.votingHash,
-            this.userPublicKey.toBuffer(),
+            this.voterPublicKey.toBuffer(),
         ]);
     }
 
     public async verify(node: Node, frame: Frame) {
-        // votingHash exist
-        // Validate value
+        const { publicKey: authorPublicKey } = frame.authors[0];
+        const isVoterExist = await node.storeVoter.has(authorPublicKey);
+
+        if (!isVoterExist) {
+            throw new Error('Cmd: Vote-flow: Author does not exist');
+        }
+
+        const voting = await node.storeVoting.get(this.votingHash);
+
+        if (!voting) {
+            throw new Error('Cmd: Vote-flow: Voting does not exist');
+        }
+
+        const isTargetVoterExist = node.storeVoter.has(this.voterPublicKey);
+
+        if (!isTargetVoterExist) {
+            throw new Error('Cmd: Vote-flow: Target voter account does not exist');
+        }
     }
 
     public getKeyOfValue(frame: Frame): WBuffer {

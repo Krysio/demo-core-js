@@ -1,12 +1,8 @@
-import { EventEmitter } from "node:stream";
-import { Node } from '@/main';
-import { createCommandParser } from "@/modules/commandParser";
-import { Frame } from "../frame";
-import { AddAdminCommand } from "./add-admin";
+import { createKey, createAdmin, createFakeNode } from "@/tests/helper";
+import { Frame } from "@/objects/frame";
+import { Admin } from "@/objects/users";
 import { sha256 } from "@/libs/crypto/sha256";
-import { createKey, createAdmin } from "./test.helper";
-import { createStoreAdmin } from "@/modules/storeAdmin";
-import { Admin } from "../users";
+import { AddAdminCommand } from "./add-admin";
 
 function createCommand({
     admin = createAdmin(),
@@ -31,76 +27,106 @@ function createCommand({
     return { frame, command, author, admin };
 }
 
-test('To & from buffer', () => {
-    const { frame } = createCommand();
+test('To & from buffer should result the same data', () => {
+    //#region Given
+    const { command } = createCommand();
+    //#enregion Given
 
-    const bufferA = frame.toBuffer();
-    const bufferB = Frame.parse(bufferA).toBuffer();
+    //#region When
+    const bufferA = command.toBuffer();
+    const bufferB = new AddAdminCommand().parse(bufferA).toBuffer();
+    //#enregion When
 
+    //#region Then
     expect(bufferA.isEqual(bufferB)).toBe(true);
+    //#enregion Then
 });
 
-test('Parsing', () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events']
-    };
-    const parser = createCommandParser(fakeNode);
-    const { frame } = createCommand();
+describe('Verifivation', () => {
+    test('When author is out of the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({ storeAdmin: { get: jest.fn(() => null) }});
+        //#enregion Given
 
-    const buffer = frame.toBuffer('net');
-    const parsingResult = parser.parseCommand(buffer);
-
-    expect(parsingResult.isValid).toBe(true);
-});
-
-describe('Verify', () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events'],
-        config: {}
-    } as Node;
-
-    fakeNode.storeAdmin = createStoreAdmin(fakeNode);
-
-    const authorKey = createKey();
-
-    test('Author', async () => {
-        const { command, frame, author } = createCommand({ authorKey });
-
-        await expect((async () => {
+        //#region When
+        const result = await expect((async () => {
             await command.verify(fakeNode, frame);
-        })()).rejects.toThrow('Cmd: Add Admin: Author does not exist');
-
-        author.parentPublicKey = createKey();
-        await fakeNode.storeAdmin.add(author);
-
-        await expect((async () => {
-            await command.verify(fakeNode, frame);
-        })()).resolves.not.toThrow();
+        })());
+        //#enregion When
+    
+        //#region Then
+        result.rejects.toThrow('Cmd: Add Admin: Author does not exist');
+        //#enregion Then
     });
 
-    test('Duplicate key', async () => {
-        const { command, frame } = createCommand({ authorKey });
+    test('When author is in the store: should do not throw error', async () => {
+        //#region Given
+        const { command, frame, author } = createCommand();
+        const fakeNode = createFakeNode({ storeAdmin: {
+            get: jest.fn((key) => {
+                if (author.publicKey.isEqual(key)) return author;
+                return null;
+            })
+        }});
+        //#enregion Given
 
-        await expect((async () => {
+        //#region When
+        const result = await expect((async () => {
             await command.verify(fakeNode, frame);
-        })()).resolves.not.toThrow();
-        
-        await command.apply(fakeNode, frame);
-
-        await expect((async () => {
-            await command.verify(fakeNode, frame);
-        })()).rejects.toThrow('Cmd: Add Admin: duplicate key');
+        })());
+        //#enregion When
+    
+        //#region Then
+        result.resolves.not.toThrow();
+        //#enregion Then
     });
 
-    test('Level', async () => {
-        const { command, frame } = createCommand({ authorKey });
+    test('When inserting key is in the store: should throw error', async () => {
+        //#region Given
+        const { command, frame, admin, author } = createCommand();
+        const fakeNode = createFakeNode({ storeAdmin: {
+            get: jest.fn((key) => {
+                if (author.publicKey.isEqual(key)) return author;
+                if (admin.key.isEqual(key)) return admin;
+                return null;
+            })
+        }});
+        //#enregion Given
+
+        //#region When
+        const result = await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })());
+        //#enregion When
+    
+        //#region Then
+        result.rejects.toThrow('Cmd: Add Admin: duplicate key');
+        //#enregion Then
+    });
+
+    test('When level of inserting admin is to hight: should throw error', async () => {
+        //#region Given
+        const { command, frame, author } = createCommand();
+        const fakeNode = createFakeNode({ storeAdmin: {
+            get: jest.fn((key) => {
+                if (author.publicKey.isEqual(key)) return author;
+                return null;
+            })
+        }});
 
         for (const level of [0, 4, 5]) {
             command.admin.level = level;
-
-            await expect((async () => {
+            //#enregion Given
+    
+            //#region When
+            const result = await expect((async () => {
                 await command.verify(fakeNode, frame);
-            })()).rejects.toThrow('Cmd: Add Admin: level too height');
+            })());
+    
+            //#region Then
+            result.rejects.toThrow('Cmd: Add Admin: level too height');
+            //#enregion Then
         }
     });
 });

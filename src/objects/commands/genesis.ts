@@ -15,7 +15,7 @@ export class GenesisCommand implements ICommand {
     valueTypeID = TYPE_VALUE_PRIMARY;
 
     constructor(
-        public rootPublicKey: Key,
+        public rootPublicKey: Key = null,
         public listOfAdminAccounts: Admin[] = [],
         public manifest: string = '',
     ) {}

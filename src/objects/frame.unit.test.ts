@@ -1,9 +1,9 @@
+import { createKey } from "@/tests/helper";
 import WBuffer from "@/libs/WBuffer";
 import { Node } from "@/main";
 import { Frame } from "@/objects/frame";
-import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from "./commands";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from "@/objects/commands";
 import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
-import { createKey } from "./commands/test.helper";
 
 @Type(0)
 class TestCommand implements ICommand {
@@ -44,10 +44,16 @@ function createFrame({
 }
 
 test('To & from buffer should result the same data', () => {
+    //#region Given
     const { frame } = createFrame();
+    //#enregion Given
 
+    //#region When
     const bufferA = frame.toBuffer();
     const bufferB = Frame.parse(bufferA).toBuffer();
+    //#enregion When
 
+    //#region Then
     expect(bufferA.isEqual(bufferB)).toBe(true);
+    //#enregion Then
 });

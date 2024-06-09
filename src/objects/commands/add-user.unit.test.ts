@@ -1,13 +1,8 @@
-import { EventEmitter } from "node:stream";
-import { Node } from '@/main';
-import { createCommandParser } from "@/modules/commandParser";
-import { Frame } from "../frame";
-import { AddUserCommand } from "./add-user";
+import { createFakeNode, createKey, createUser } from "@/tests/helper";
+import { Frame } from "@/objects/frame";
+import { Admin } from "@/objects/users";
 import { sha256 } from "@/libs/crypto/sha256";
-import { createKey, createUser } from "./test.helper";
-import { createStoreUser } from "@/modules/storeUser";
-import { createStoreAdmin } from "@/modules/storeAdmin";
-import { Admin } from "../users";
+import { AddUserCommand } from "./add-user";
 
 function createCommand({
     user = createUser(),
@@ -30,120 +25,167 @@ function createCommand({
     return { frame, command, author, user };
 }
 
-test('To & from buffer', () => {
-    const { frame } = createCommand();
+const storeAdminWithNoAdmin = { get: jest.fn(() => null)};
+const storeAdminWithAdmin = { get: jest.fn(() => ({}))};
+const storeUserWithNoUser = { get: jest.fn(() => null)};
+const storeUserWithUser = { get: jest.fn(() => ({}))};
+const fakeNodeDefaults = {
+    storeAdmin: storeAdminWithAdmin,
+    storeUser: storeUserWithNoUser,
+    config: {
+        timeBeforeAccountActivation: 5,
+        timeLiveOfUserAccount: 10000,
+    },
+};
 
-    const bufferA = frame.toBuffer();
-    const bufferB = Frame.parse(bufferA).toBuffer();
+test('To & from buffer should result the same data', () => {
+    //#region Given
+    const { command } = createCommand();
+    //#enregion Given
 
+    //#region When
+    const bufferA = command.toBuffer();
+    const bufferB = new AddUserCommand().parse(bufferA).toBuffer();
+    //#enregion When
+
+    //#region Then
     expect(bufferA.isEqual(bufferB)).toBe(true);
+    //#enregion Then
 });
 
-test('Parsing', () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events']
-    };
-    const parser = createCommandParser(fakeNode);
-    const { frame } = createCommand();
+describe('Verifivation', () => {
+    test('When author is out of the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            ...fakeNodeDefaults,
+            storeAdmin: storeAdminWithNoAdmin
+        });
+        //#enregion Given
 
-    const buffer = frame.toBuffer('net');
-    const parsingResult = parser.parseCommand(buffer);
-
-    expect(parsingResult.isValid).toBe(true);
-});
-
-test('Add to store', async () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events']
-    } as Node;
-
-    fakeNode.storeUser = createStoreUser(fakeNode);
-
-    const { command, frame, user } = createCommand();
-
-    await expect((async () => {
-        await command.apply(fakeNode, frame);
-    })()).resolves.not.toThrow();
-
-    const value = fakeNode.storeUser.get(user.key);
-
-    expect(value).not.toBe(null);
-});
-
-describe('Verify', () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events'],
-        config: {
-            timeBeforeAccountActivation: 5,
-            timeLiveOfUserAccount: 10000
-        }
-    } as Node;
-
-    fakeNode.storeAdmin = createStoreAdmin(fakeNode);
-    fakeNode.storeUser = createStoreUser(fakeNode);
-
-    const authorKey = createKey();
-
-    test('Author', async () => {
-        const { command, frame, author } = createCommand({ authorKey });
-
+        //#region When
         await expect((async () => {
             await command.verify(fakeNode, frame);
-        })()).rejects.toThrow('Cmd: Add User: Author does not exist');
-
-        author.parentPublicKey = createKey();
-        await fakeNode.storeAdmin.add(author);
-
-        await expect((async () => {
-            await command.verify(fakeNode, frame);
-        })()).resolves.not.toThrow();
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Add User: Author does not exist');
+        //#enregion Then
     });
 
-    test('Duplicate key', async () => {
-        const { command, frame } = createCommand({ authorKey });
+    test('When author is in the store: should do not throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode(fakeNodeDefaults);
+        //#enregion Given
 
+        //#region When
         await expect((async () => {
             await command.verify(fakeNode, frame);
-        })()).resolves.not.toThrow();
-        
-        await command.apply(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .resolves.not.toThrow();
+        //#enregion Then
+    });
 
+    test('When inserting key is in the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            ...fakeNodeDefaults,
+            storeUser: storeUserWithUser
+        });
+        //#enregion Given
+
+        //#region When
         await expect((async () => {
             await command.verify(fakeNode, frame);
-        })()).rejects.toThrow('Cmd: Add User: duplicate key');
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Add User: duplicate key');
+        //#enregion Then
     });
 
     describe('Time values', () => {
-        test('Time start', async () => {
-            const { command, frame, user } = createCommand({ authorKey });
+        test('When the field timeStart is too low: should throw error', async () => {
+            //#region Given
+            const { command, frame, user } = createCommand();
+            const fakeNode = createFakeNode(fakeNodeDefaults);
     
             user.user.timeStart = 5 + 2;
-    
+            //#enregion Given
+
+            //#region When
             await expect((async () => {
                 await command.verify(fakeNode, frame);
-            })()).rejects.toThrow('Cmd: Add User: timeStart too low');
+            })())
+            //#enregion When
     
-            user.user.timeStart = 6 + 2;
-            
-            await expect((async () => {
-                await command.verify(fakeNode, frame);
-            })()).resolves.not.toThrow();
+            //#region Then
+            .rejects.toThrow('Cmd: Add User: timeStart too low');
+            //#enregion Then
         });
 
-        test('Time end', async () => {
-            const { command, frame, user } = createCommand({ authorKey });
+        test('When the field timeStart is enaught: should do not throw error', async () => {
+            //#region Given
+            const { command, frame, user } = createCommand();
+            const fakeNode = createFakeNode(fakeNodeDefaults);
+    
+            user.user.timeStart = 6 + 2;
+            //#enregion Given
+
+            //#region When
+            await expect((async () => {
+                await command.verify(fakeNode, frame);
+            })())
+            //#enregion When
+    
+            //#region Then
+            .resolves.not.toThrow();
+            //#enregion Then
+        });
+
+        test('When the field timeEnd is too hight: should throw error', async () => {
+            //#region Given
+            const { command, frame, user } = createCommand();
+            const fakeNode = createFakeNode(fakeNodeDefaults);
     
             user.user.timeEnd = 6 + 2 + 10000;
-    
+            //#enregion Given
+
+            //#region When
             await expect((async () => {
                 await command.verify(fakeNode, frame);
-            })()).rejects.toThrow('Cmd: Add User: timeEnd too hight');
+            })())
+            //#enregion When
+    
+            //#region Then
+            .rejects.toThrow('Cmd: Add User: timeEnd too hight');
+            //#enregion Then
+        });
+
+        test('When the field timeEnd is enaught: should do not throw error', async () => {
+            //#region Given
+            const { command, frame, user } = createCommand();
+            const fakeNode = createFakeNode(fakeNodeDefaults);
     
             user.user.timeEnd = 6 + 2 + 9999;
-            
+            //#enregion Given
+
+            //#region When
             await expect((async () => {
                 await command.verify(fakeNode, frame);
-            })()).resolves.not.toThrow();
+            })())
+            //#enregion When
+    
+            //#region Then
+            .resolves.not.toThrow();
+            //#enregion Then
         });
     });
 });

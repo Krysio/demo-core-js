@@ -1,23 +1,27 @@
-import { Node } from "@/main";
+import { createUser, createKey, createFakeNode } from "@/tests/helper";
 import { createStoreUser } from "./storeUser";
-import { EventEmitter } from "stream";
-import { createUser, createKey } from "@/objects/commands/test.helper";
 
 test('Set & Get', async () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events'],
-    } as Node;
+    //#region Given
+    const fakeNode = createFakeNode();
     const store = createStoreUser(fakeNode);
     const { user } = createUser();
     const parentPublicKey = createKey();
 
     user.parentPublicKey = parentPublicKey;
+    //#enregion Given
+
+    //#region When
     await store.add(user);
 
     const resultA = await store.get(user.publicKey);
     const resultB = await store.get(user.publicKey);
+    //#enregion When
+
+    //#region Then
     const adminBuffer = user.toBuffer();
 
     expect(adminBuffer.isEqual(resultA.toBuffer())).toBe(true);
     expect(adminBuffer.isEqual(resultB.toBuffer())).toBe(true);
+    //#enregion Then
 });

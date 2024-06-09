@@ -1,9 +1,8 @@
-import { createCommandParser } from "@/modules/commandParser";
-import { Frame } from "@/objects/frame";
-import { VoteCommand } from "./vote";
-import { createKey, createFakeNode } from "./test.helper";
-import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
 import WBuffer from "@/libs/WBuffer";
+import { createKey, createFakeNode } from "@/tests/helper";
+import { Frame } from "@/objects/frame";
+import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
+import { VoteCommand } from "./vote";
 
 function createCommand({
     authorKey = createKey(),
@@ -27,22 +26,77 @@ function createCommand({
 }
 
 test('To & from buffer should result the same data', () => {
-    const { frame } = createCommand();
+    //#region Given
+    const { command } = createCommand();
+    //#enregion Given
 
-    const bufferA = frame.toBuffer();
-    const bufferB = Frame.parse(bufferA).toBuffer();
+    //#region When
+    const bufferA = command.toBuffer();
+    const bufferB = new VoteCommand().parse(bufferA).toBuffer();
+    //#enregion When
 
+    //#region Then
     expect(bufferA.isEqual(bufferB)).toBe(true);
+    //#enregion Then
 });
 
-test('Parsing command', () => {
-    const fakeNode = createFakeNode();
-    const parser = createCommandParser(fakeNode);
-    const { frame } = createCommand({ value: WBuffer.hex`4455` });
+describe('Verifivation', () => {
+    test('When author is out of the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeVoter: { has: jest.fn(() => null) }
+        });
+        //#enregion Given
 
-    const buffer = frame.toBuffer('net');
-    const parsingResult = parser.parseCommand(buffer);
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Vote: Author does not exist');
+        //#enregion Then
+    });
 
-    expect(parsingResult.isValid).toBe(true);
-    expect((parsingResult.data as VoteCommand).value.hex()).toBe('4455');
+    test('When voting hash is out of the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeVoter: { has: jest.fn(() => ({})) },
+            storeVoting: { get: jest.fn(() => null) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Vote: Voting does not exist');
+        //#enregion Then
+    });
+
+    test('When everything is ok: should be ok', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeVoter: { has: jest.fn(() => ({})) },
+            storeVoting: { get: jest.fn(() => ({})) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .resolves.not.toThrow();
+        //#enregion Then
+    });
 });

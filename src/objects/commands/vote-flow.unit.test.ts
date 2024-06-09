@@ -1,10 +1,7 @@
-import { EventEmitter } from "node:stream";
-import { Node } from '@/main';
-import { createCommandParser } from "@/modules/commandParser";
-import { Frame } from "../frame";
-import { FlowVoteCommand } from "./vote-flow";
+import { createFakeNode, createKey } from "@/tests/helper";
+import { Frame } from "@/objects/frame";
 import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
-import { createKey } from "./test.helper";
+import { FlowVoteCommand } from "./vote-flow";
 
 function createCommand({
     authorKey = createKey(),
@@ -27,24 +24,103 @@ function createCommand({
     return { frame, command, authorKey };
 }
 
-test('To & from buffer', () => {
+test('To & from buffer should result the same data', () => {
+    //#region Given
     const { frame } = createCommand();
+    //#enregion Given
 
+    //#region When
     const bufferA = frame.toBuffer();
     const bufferB = Frame.parse(bufferA).toBuffer();
+    //#enregion When
 
+    //#region Then
     expect(bufferA.isEqual(bufferB)).toBe(true);
+    //#enregion Then
 });
 
-test('Parsing', () => {
-    const fakeNode = {
-        events: new EventEmitter() as Node['events']
-    };
-    const parser = createCommandParser(fakeNode);
-    const { frame } = createCommand();
+describe('Verifivation', () => {
+    test('When author is out of the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeVoter: { has: jest.fn(() => null) }
+        });
+        //#enregion Given
 
-    const buffer = frame.toBuffer('net');
-    const parsingResult = parser.parseCommand(buffer);
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Vote-flow: Author does not exist');
+        //#enregion Then
+    });
 
-    expect(parsingResult.isValid).toBe(true);
+    test('When voting hash is out of the store: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeVoter: { has: jest.fn(() => ({})) },
+            storeVoting: { get: jest.fn(() => null) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Vote-flow: Voting does not exist');
+        //#enregion Then
+    });
+
+    test('When target key is out of the store: should throw error', async () => {
+        //#region Given
+        const { command, frame, authorKey } = createCommand();
+        const fakeNode = createFakeNode({
+            storeVoter: {
+                has: jest.fn((key) => {
+                    if (authorKey.toBuffer().isEqual(key.toBuffer())) return {};
+                    return null;
+                }),
+            },
+            storeVoting: { get: jest.fn(() => ({})) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Vote-flow: Target voter account does not exist');
+        //#enregion Then
+    });
+
+    test('When everything is ok: should be ok', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeVoter: { has: jest.fn(() => ({})) },
+            storeVoting: { get: jest.fn(() => ({})) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .resolves.not.toThrow();
+        //#enregion Then
+    });
 });

@@ -39,8 +39,18 @@ export class VoteCommand implements ICommand {
     }
 
     public async verify(node: Node, frame: Frame) {
-        // votingHash exist
-        // Validate value
+        const { publicKey: authorPublicKey } = frame.authors[0];
+        const isVoterExist = await node.storeVoter.has(authorPublicKey);
+
+        if (!isVoterExist) {
+            throw new Error('Cmd: Vote: Author does not exist');
+        }
+
+        const voting = await node.storeVoting.get(this.votingHash);
+
+        if (!voting) {
+            throw new Error('Cmd: Vote: Voting does not exist');
+        }
     }
 
     public getKeyOfValue(frame: Frame): WBuffer {

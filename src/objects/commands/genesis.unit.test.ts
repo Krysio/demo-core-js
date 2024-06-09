@@ -2,20 +2,22 @@ import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { GenesisCommand } from "./genesis";
 import { KeySecp256k1 } from "@/objects/key";
 
-const [privateKey, publicKey] = getKeyPair();
-const key = new KeySecp256k1(publicKey);
-const manifest = 'Content of manifest 😁';
-const command = new GenesisCommand(key, [], manifest);
+test('To & from buffer should result the same data', () => {
+    //#region Given
+    const [privateKey, publicKey] = getKeyPair();
+    const key = new KeySecp256k1(publicKey);
+    const manifest = 'Content of manifest 😁';
+    const command = new GenesisCommand(key, [], manifest);
+    //#enregion Given
 
-test('To & from buffer', () => {
+    //#region When
     const buffer1 = command.toBuffer();
+    const buffer2 = new GenesisCommand().parse(buffer1).toBuffer();
+    //#enregion When
 
-    command.parse(buffer1);
-
+    //#region Then
     expect(command.manifest).toBe(manifest);
     expect(command.rootPublicKey.isEqual(key)).toBe(true);
-
-    const buffer2 = command.toBuffer();
-    
     expect(buffer1.isEqual(buffer2)).toBe(true);
+    //#enregion Then
 });
