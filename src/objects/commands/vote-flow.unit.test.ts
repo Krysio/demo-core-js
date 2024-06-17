@@ -44,7 +44,7 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { has: jest.fn(() => null) }
+            storeVoter: { get: jest.fn(() => Promise.resolve(null)) }
         });
         //#enregion Given
 
@@ -63,8 +63,8 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { has: jest.fn(() => ({})) },
-            storeVoting: { get: jest.fn(() => null) },
+            storeVoter: { get: jest.fn(() => Promise.resolve({})) },
+            storeVoting: { get: jest.fn(() => Promise.resolve(null)) },
         });
         //#enregion Given
 
@@ -84,12 +84,12 @@ describe('Verifivation', () => {
         const { command, frame, authorKey } = createCommand();
         const fakeNode = createFakeNode({
             storeVoter: {
-                has: jest.fn((key) => {
-                    if (authorKey.toBuffer().isEqual(key.toBuffer())) return {};
-                    return null;
+                get: jest.fn((key) => {
+                    if (authorKey.toBuffer().isEqual(key.toBuffer())) return Promise.resolve({});
+                    return Promise.resolve(null);
                 }),
             },
-            storeVoting: { get: jest.fn(() => ({})) },
+            storeVoting: { get: jest.fn(() => Promise.resolve({})) },
         });
         //#enregion Given
 
@@ -108,8 +108,8 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { has: jest.fn(() => ({})) },
-            storeVoting: { get: jest.fn(() => ({})) },
+            storeVoter: { get: jest.fn(() => Promise.resolve({})) },
+            storeVoting: { get: jest.fn(() => Promise.resolve({})) },
         });
         //#enregion Given
 

@@ -40,9 +40,9 @@ export class VoteCommand implements ICommand {
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];
-        const isVoterExist = await node.storeVoter.has(authorPublicKey);
+        const isVoterExist = await node.storeVoter.get(authorPublicKey);
 
-        if (!isVoterExist) {
+        if (isVoterExist === null) {
             throw new Error('Cmd: Vote: Author does not exist');
         }
 

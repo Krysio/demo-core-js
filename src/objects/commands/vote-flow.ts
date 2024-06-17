@@ -40,9 +40,9 @@ export class FlowVoteCommand implements ICommand {
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];
-        const isVoterExist = await node.storeVoter.has(authorPublicKey);
+        const isVoterExist = await node.storeVoter.get(authorPublicKey);
 
-        if (!isVoterExist) {
+        if (isVoterExist === null) {
             throw new Error('Cmd: Vote-flow: Author does not exist');
         }
 
@@ -52,9 +52,9 @@ export class FlowVoteCommand implements ICommand {
             throw new Error('Cmd: Vote-flow: Voting does not exist');
         }
 
-        const isTargetVoterExist = node.storeVoter.has(this.voterPublicKey);
+        const isTargetVoterExist = await node.storeVoter.get(this.voterPublicKey);
 
-        if (!isTargetVoterExist) {
+        if (isTargetVoterExist === null) {
             throw new Error('Cmd: Vote-flow: Target voter account does not exist');
         }
     }

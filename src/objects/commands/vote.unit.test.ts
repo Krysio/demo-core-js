@@ -45,7 +45,7 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { has: jest.fn(() => null) }
+            storeVoter: { get: jest.fn(() => Promise.resolve(null)) }
         });
         //#enregion Given
 
@@ -64,8 +64,8 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { has: jest.fn(() => ({})) },
-            storeVoting: { get: jest.fn(() => null) },
+            storeVoter: { get: jest.fn(() => Promise.resolve({})) },
+            storeVoting: { get: jest.fn(() => Promise.resolve(null)) },
         });
         //#enregion Given
 
@@ -84,8 +84,8 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { has: jest.fn(() => ({})) },
-            storeVoting: { get: jest.fn(() => ({})) },
+            storeVoter: { get: jest.fn(() => Promise.resolve({})) },
+            storeVoting: { get: jest.fn(() => Promise.resolve({})) },
         });
         //#enregion Given
 
