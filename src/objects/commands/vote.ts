@@ -40,9 +40,9 @@ export class VoteCommand implements ICommand {
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];
-        const isVoterExist = await node.storeVoter.get(authorPublicKey);
+        const timeOfAuhorAdd = await node.storeVoter.get(authorPublicKey);
 
-        if (isVoterExist === null) {
+        if (timeOfAuhorAdd === null) {
             throw new Error('Cmd: Vote: Author does not exist');
         }
 
@@ -50,6 +50,20 @@ export class VoteCommand implements ICommand {
 
         if (!voting) {
             throw new Error('Cmd: Vote: Voting does not exist');
+        }
+
+        if (timeOfAuhorAdd >= voting.timeStart) {
+            throw new Error('Cmd: Vote: Author\'s key is too young');
+        }
+
+        const currentTime = node.chainTop.getHeight();
+
+        if (currentTime < voting.timeStart) {
+            throw new Error('Cmd: Vote: Voting has not started');
+        }
+
+        if (currentTime > voting.timeEnd) {
+            throw new Error('Cmd: Vote: Voting is over');
         }
     }
 

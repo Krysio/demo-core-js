@@ -1,8 +1,8 @@
  - Create module of flags
   - [ ] create flag for extendig data in the user storage, information eg `parent`, `metaData`
  - Improve tests of voting
-  - [ ] checking voting timeout
-    - [ ] cmd vote
-    - [ ] cmd vote-flow
+  - [x] checking voting timeout
+    - [x] cmd vote
+    - [x] cmd vote-flow
   - [ ] checking voting value in cmd vote
   - [ ] checking if voting allows for vote-flow

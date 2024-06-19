@@ -45,7 +45,7 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { get: jest.fn(() => Promise.resolve(null)) }
+            storeVoter: { get: () => Promise.resolve(null) }
         });
         //#enregion Given
 
@@ -64,8 +64,8 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { get: jest.fn(() => Promise.resolve({})) },
-            storeVoting: { get: jest.fn(() => Promise.resolve(null)) },
+            storeVoter: { get: () => Promise.resolve(10) },
+            storeVoting: { get: () => Promise.resolve(null) },
         });
         //#enregion Given
 
@@ -80,12 +80,77 @@ describe('Verifivation', () => {
         //#enregion Then
     });
 
+    describe('Time', () => {
+        test('When voting timeStart is earlier than time of author add: should throw error', async () => {
+            //#region Given
+            const { command, frame } = createCommand();
+            const fakeNode = createFakeNode({
+                storeVoter: { get: () => Promise.resolve(10) },
+                storeVoting: { get: () => Promise.resolve({ timeStart: 5 }) },
+            });
+            //#enregion Given
+
+            //#region When
+            await expect((async () => {
+                await command.verify(fakeNode, frame);
+            })())
+            //#enregion When
+        
+            //#region Then
+            .rejects.toThrow('Cmd: Vote: Author\'s key is too young');
+            //#enregion Then
+        });
+
+        test('When voting has not started: should throw error', async () => {
+            //#region Given
+            const { command, frame } = createCommand();
+            const fakeNode = createFakeNode({
+                storeVoter: { get: () => Promise.resolve(10) },
+                storeVoting: { get: () => Promise.resolve({ timeStart: 25 }) },
+                chainTop: { getHeight: () => 20 },
+            });
+            //#enregion Given
+
+            //#region When
+            await expect((async () => {
+                await command.verify(fakeNode, frame);
+            })())
+            //#enregion When
+        
+            //#region Then
+            .rejects.toThrow('Cmd: Vote: Voting has not started');
+            //#enregion Then
+        });
+
+        test('When voting is over: should throw error', async () => {
+            //#region Given
+            const { command, frame } = createCommand();
+            const fakeNode = createFakeNode({
+                storeVoter: { get: () => Promise.resolve(10) },
+                storeVoting: { get: () => Promise.resolve({ timeStart: 25, timeEnd: 35 }) },
+                chainTop: { getHeight: () => 40 },
+            });
+            //#enregion Given
+
+            //#region When
+            await expect((async () => {
+                await command.verify(fakeNode, frame);
+            })())
+            //#enregion When
+        
+            //#region Then
+            .rejects.toThrow('Cmd: Vote: Voting is over');
+            //#enregion Then
+        });
+    });
+
     test('When everything is ok: should be ok', async () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeVoter: { get: jest.fn(() => Promise.resolve({})) },
-            storeVoting: { get: jest.fn(() => Promise.resolve({})) },
+            storeVoter: { get: () => Promise.resolve(10) },
+            storeVoting: { get: () => Promise.resolve({ timeStart: 15, timeEnd: 25 }) },
+            chainTop: { getHeight: () => 20 },
         });
         //#enregion Given
 

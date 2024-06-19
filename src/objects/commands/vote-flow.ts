@@ -40,9 +40,9 @@ export class FlowVoteCommand implements ICommand {
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];
-        const isVoterExist = await node.storeVoter.get(authorPublicKey);
+        const timeOfAuhorAdd = await node.storeVoter.get(authorPublicKey);
 
-        if (isVoterExist === null) {
+        if (timeOfAuhorAdd === null) {
             throw new Error('Cmd: Vote-flow: Author does not exist');
         }
 
@@ -52,10 +52,24 @@ export class FlowVoteCommand implements ICommand {
             throw new Error('Cmd: Vote-flow: Voting does not exist');
         }
 
+        if (timeOfAuhorAdd >= voting.timeStart) {
+            throw new Error('Cmd: Vote-flow: Author\'s key is too young');
+        }
+
         const isTargetVoterExist = await node.storeVoter.get(this.voterPublicKey);
 
         if (isTargetVoterExist === null) {
             throw new Error('Cmd: Vote-flow: Target voter account does not exist');
+        }
+
+        const currentTime = node.chainTop.getHeight();
+
+        if (currentTime < voting.timeStart) {
+            throw new Error('Cmd: Vote-flow: Voting has not started');
+        }
+
+        if (currentTime > voting.timeEnd) {
+            throw new Error('Cmd: Vote-flow: Voting is over');
         }
     }
 
