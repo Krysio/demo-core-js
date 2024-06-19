@@ -5,4 +5,4 @@
     - [x] cmd vote
     - [x] cmd vote-flow
   - [ ] checking voting value in cmd vote
-  - [ ] checking if voting allows for vote-flow
+  - [x] checking if voting allows for vote-flow

@@ -52,6 +52,10 @@ export class FlowVoteCommand implements ICommand {
             throw new Error('Cmd: Vote-flow: Voting does not exist');
         }
 
+        if (voting.isAllowFlow === false) {
+            throw new Error('Cmd: Vote-flow: Voting do not allow for flow-votes');
+        }
+
         if (timeOfAuhorAdd >= voting.timeStart) {
             throw new Error('Cmd: Vote-flow: Author\'s key is too young');
         }

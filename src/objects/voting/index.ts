@@ -27,6 +27,7 @@ export interface IVoting {
 }
 
 export class Voting {
+    public isAllowFlow: boolean = true;
     public buffer: WBuffer;
     public typeID: number;
     public timeStart: number = 0;

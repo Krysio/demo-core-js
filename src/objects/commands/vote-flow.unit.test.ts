@@ -79,13 +79,38 @@ describe('Verifivation', () => {
         //#enregion Then
     });
 
+    test('When voting do not allow for flow: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeVoter: { get: () => Promise.resolve(10) },
+            storeVoting: { get: () => Promise.resolve({
+                isAllowFlow: false
+            }) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Vote-flow: Voting do not allow for flow-votes');
+        //#enregion Then
+    });
+
     describe('Time', () => {
         test('When voting timeStart is earlier than time of author add: should throw error', async () => {
             //#region Given
             const { command, frame } = createCommand();
             const fakeNode = createFakeNode({
                 storeVoter: { get: () => Promise.resolve(10) },
-                storeVoting: { get: () => Promise.resolve({ timeStart: 5 }) },
+                storeVoting: { get: () => Promise.resolve({
+                    isAllowFlow: true,
+                    timeStart: 5,
+                }) },
             });
             //#enregion Given
 
@@ -105,7 +130,10 @@ describe('Verifivation', () => {
             const { command, frame } = createCommand();
             const fakeNode = createFakeNode({
                 storeVoter: { get: () => Promise.resolve(10) },
-                storeVoting: { get: () => Promise.resolve({ timeStart: 25 }) },
+                storeVoting: { get: () => Promise.resolve({
+                    isAllowFlow: true,
+                    timeStart: 25,
+                }) },
                 chainTop: { getHeight: () => 20 },
             });
             //#enregion Given
@@ -126,7 +154,11 @@ describe('Verifivation', () => {
             const { command, frame } = createCommand();
             const fakeNode = createFakeNode({
                 storeVoter: { get: () => Promise.resolve(10) },
-                storeVoting: { get: () => Promise.resolve({ timeStart: 25, timeEnd: 35 }) },
+                storeVoting: { get: () => Promise.resolve({
+                    isAllowFlow: true,
+                    timeStart: 25,
+                    timeEnd: 35,
+                }) },
                 chainTop: { getHeight: () => 40 },
             });
             //#enregion Given
@@ -153,7 +185,10 @@ describe('Verifivation', () => {
                     return Promise.resolve(null);
                 }),
             },
-            storeVoting: { get: jest.fn(() => Promise.resolve({ timeStart: 15 })) },
+            storeVoting: { get: jest.fn(() => Promise.resolve({
+                isAllowFlow: true,
+                timeStart: 15,
+            })) },
         });
         //#enregion Given
 
@@ -173,7 +208,11 @@ describe('Verifivation', () => {
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
             storeVoter: { get: () => Promise.resolve(10) },
-            storeVoting: { get: () => Promise.resolve({ timeStart: 25, timeEnd: 35 }) },
+            storeVoting: { get: () => Promise.resolve({
+                isAllowFlow: true,
+                timeStart: 25,
+                timeEnd: 35,
+            }) },
             chainTop: { getHeight: () => 30 },
         });
         //#enregion Given
