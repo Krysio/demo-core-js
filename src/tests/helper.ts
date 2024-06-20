@@ -2,11 +2,18 @@ import { Node } from '@/main';
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { KeySecp256k1 } from "@/objects/key";
 import { User, Admin } from "@/objects/users";
+import { sha256 } from '@/libs/crypto/sha256';
 
 export function createKey() {
     const [privateKey, publicKey] = getKeyPair();
 
     return new KeySecp256k1(publicKey, privateKey);
+};
+
+export function createRandomHash() {
+    const [privateKey] = getKeyPair();
+
+    return sha256(privateKey);
 };
 
 export function createAdmin({

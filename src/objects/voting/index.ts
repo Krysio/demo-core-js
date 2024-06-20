@@ -1,4 +1,5 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
+import { sha256 } from "@/libs/crypto/sha256";
 import { Key } from "@/objects/key";
 
 /******************************/
@@ -148,6 +149,10 @@ export class Voting {
 
         return true;
     };
+
+    getHash(): WBuffer {
+        return sha256(this.toBuffer());
+    }
 
     public toString() { return this.toBuffer().hex(); }
     public inspect() { return `<${this.constructor.name}{time:[${this.timeStart},${this.timeEnd}],secret:${this.isSecret},flow:${this.isAllowFlow}}>`; }

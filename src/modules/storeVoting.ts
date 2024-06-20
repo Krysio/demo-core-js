@@ -5,27 +5,42 @@ import { Voting } from '@/objects/voting';
 
 export function createStoreVoting(refToNode: unknown) {
     const node = refToNode as Node;
-    const module = {
-        store: new Map<string, WBuffer>(),
 
-        async add(voting: Voting) {
+    const createStore = () => new Map<string, WBuffer>();
+
+    const module = {
+        storeCurrent: createStore(),
+        storeNext: createStore(),
+
+        async add(voting: Voting, intoNext = false) {
             const data = voting.toBuffer();
             const key = sha256(data).hex();
 
-            return module.store.set(key, data);
+            if (intoNext) {
+                return module.storeNext.set(key, data);
+            }
+
+            return module.storeCurrent.set(key, data);
+        },
+        async addNext(voting: Voting) {
+            module.add(voting, true);
         },
         async get(hash: WBuffer) {
-            const key = sha256(hash).hex();
-            const result = module.store.get(key);
+            const key = hash.hex();
+            const result = module.storeCurrent.get(key);
 
             if (result) {
-                const admin = Voting.parse(result.seek(0));
+                const voting = Voting.parse(result.seek(0));
 
-                return admin;
+                return voting;
             }
 
             return null;
-        }
+        },
+        swip() {
+            module.storeCurrent = module.storeNext;
+            module.storeNext = createStore();
+        },
     };
 
     return module;

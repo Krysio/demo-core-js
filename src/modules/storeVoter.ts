@@ -13,25 +13,38 @@ export function createStoreVoter(refToNode: unknown) {
     const node = refToNode as Node;
 
     const dbKey = (publicKey: Key | WBuffer) => (publicKey instanceof Key ? publicKey.toBuffer() : publicKey).hex();
+    const createStore = () => new Map<string, number>();
 
     const module = {
-        store: new Map<string, number>(),
+        storeCurrent: createStore(),
+        storeNext: createStore(),
 
-        async add(publicKey: Key | WBuffer, value: number) {
+        async add(publicKey: Key | WBuffer, value: number, intoNext = false) {
             const key = dbKey(publicKey);
 
-            return module.store.set(key, value);
+            if (intoNext) {
+                return module.storeNext.set(key, value);
+            }
+
+            return module.storeCurrent.set(key, value);
+        },
+        async addNext(publicKey: Key | WBuffer, value: number) {
+            module.add(publicKey, value, true);
         },
         async get(publicKey: Key | WBuffer) {
             const key = dbKey(publicKey);
-            const result = module.store.get(key);
+            const result = module.storeCurrent.get(key);
 
             if (!result) {
                 return null;
             }
 
             return result;
-        }
+        },
+        swip() {
+            module.storeCurrent = module.storeNext;
+            module.storeNext = createStore();
+        },
     };
 
     return module;
