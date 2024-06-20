@@ -4,5 +4,5 @@
   - [x] checking voting timeout
     - [x] cmd vote
     - [x] cmd vote-flow
-  - [ ] checking voting value in cmd vote
+  - [x] checking voting value in cmd vote
   - [x] checking if voting allows for vote-flow
