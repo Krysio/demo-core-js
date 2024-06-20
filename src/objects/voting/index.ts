@@ -1,4 +1,5 @@
-import WBuffer from "@/libs/WBuffer";
+import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
+import { Key } from "@/objects/key";
 
 /******************************/
 
@@ -22,17 +23,19 @@ export const Type = (typeID: number) => {
 /******************************/
 
 export interface IVoting {
-    parse(buffer: WBuffer): void;
-    toBuffer(): WBuffer;
+    parseValue(buffer: WBuffer): any;
+    toBufferValue(value: any): WBuffer;
 }
 
 export class Voting {
-    public isAllowFlow: boolean = true;
     public buffer: WBuffer;
     public typeID: number;
     public timeStart: number = 0;
     public timeEnd: number = 0;
     public meta: string = '';
+    public isAllowFlow: boolean = true;
+    public isSecret: boolean = false;
+    public publicKey: Key = null;
 
     constructor(
         timeStart?: number,
@@ -83,6 +86,15 @@ export class Voting {
             this.meta = buffer.read(buffer.readUleb128()).utf8();
             this.buffer = buffer.subarray(cursor, buffer.cursor);
 
+            const flags = buffer.readUleb128();
+
+            this.isAllowFlow = !!(flags & 1);
+            this.isSecret = !!(flags & 2);
+
+            if (this.isSecret) {
+                this.publicKey = Key.parse(buffer);
+            }
+
             return this;
         } catch (error) {
             return null;
@@ -91,11 +103,20 @@ export class Voting {
 
     public toBuffer(): WBuffer {
         try {
+            let flags = 0;
+    
+            if (this.isAllowFlow) flags|= 1;
+            if (this.isSecret) flags|= 2;
+
             return this.buffer = WBuffer.concat([
                 WBuffer.uleb128(this.typeID),
                 WBuffer.uleb128(this.timeStart),
                 WBuffer.uleb128(this.timeEnd),
                 this.toBufferMeta(),
+                WBuffer.uleb128(flags),
+                this.isSecret
+                    ? this.publicKey.toBuffer()
+                    : EMPTY_BUFFER
             ]);
         } catch (error) {
             return null;
@@ -118,8 +139,18 @@ export class Voting {
 
     //#endregion buffer
 
+    isValidValue(buffer: WBuffer): boolean {
+        try {
+            (this as unknown as IVoting).parseValue(buffer);
+        } catch (error) {
+            return false
+        }
+
+        return true;
+    };
+
     public toString() { return this.toBuffer().hex(); }
-    public inspect() { return `<${this.constructor.name}}>`; }
+    public inspect() { return `<${this.constructor.name}{time:[${this.timeStart},${this.timeEnd}],secret:${this.isSecret},flow:${this.isAllowFlow}}>`; }
     public toJSON() { return this.inspect(); }
     [Symbol.for('nodejs.util.inspect.custom')]() { return this.inspect(); }
 }

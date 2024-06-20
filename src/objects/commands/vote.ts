@@ -65,6 +65,10 @@ export class VoteCommand implements ICommand {
         if (currentTime > voting.timeEnd) {
             throw new Error('Cmd: Vote: Voting is over');
         }
+
+        if (voting.isValidValue(this.value) === false) {
+            throw new Error('Cmd: Vote: Invalid value');
+        }
     }
 
     public getKeyOfValue(frame: Frame): WBuffer {

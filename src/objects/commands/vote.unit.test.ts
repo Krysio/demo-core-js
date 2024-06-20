@@ -144,12 +144,41 @@ describe('Verifivation', () => {
         });
     });
 
+    test('When vote value is invalid: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand({ value: WBuffer.hex`03` });
+        const fakeNode = createFakeNode({
+            storeVoter: { get: () => Promise.resolve(10) },
+            storeVoting: { get: () => Promise.resolve({
+                isValidValue: () => false,
+                timeStart: 15,
+                timeEnd: 25,
+            }) },
+            chainTop: { getHeight: () => 20 },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Vote: Invalid value');
+        //#enregion Then
+    });
+
     test('When everything is ok: should be ok', async () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
             storeVoter: { get: () => Promise.resolve(10) },
-            storeVoting: { get: () => Promise.resolve({ timeStart: 15, timeEnd: 25 }) },
+            storeVoting: { get: () => Promise.resolve({
+                isValidValue: () => true,
+                timeStart: 15,
+                timeEnd: 25,
+            }) },
             chainTop: { getHeight: () => 20 },
         });
         //#enregion Given

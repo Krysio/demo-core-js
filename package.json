@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test-new": "npx jest --verbose --silent \".new.test.ts\"",
+    "test-new": "npx jest --verbose \".new.test.ts\"",
     "test-unit": "npx jest --verbose --silent \".unit.test.ts\"",
     "test-int": "npx jest --verbose --silent \".int.test.ts\"",
     "test-process": "npx jest --verbose --silent \".process.test.ts\""
