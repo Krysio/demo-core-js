@@ -10,9 +10,10 @@ import { createStoreVoter } from "@/modules/storeVoter";
 import { createStoreVoting } from "@/modules/storeVoting";
 import { createStoreBlock } from "@/modules/storeBlock";
 import { createCommandParser } from "@/modules/commandParser";
-import { Block } from "@/objects/Block";
 import { createCommandVerifier } from "@/modules/commandVerifier";
 import { createCommandPool } from "@/modules/commandPool";
+import { createCadency } from "@/modules/cadency";
+import { Block } from "@/objects/Block";
 import { Frame } from "@/objects/frame";
 import { createFs } from "@/modules/fs";
 import { getConfig } from "@/services/genesis";
@@ -27,10 +28,14 @@ export function createNode(params: {
             'init/genesis': [Block];
             'init/fs': [];
             'init/end': [];
+
             'start': [];
             'stop': [];
+
             'created/block': [Block];
             'created/snapshot/user': [{ path: string, hash: WBuffer }];
+
+            'cadency/changed': [{ oldValue: number, newValue: number }],
 
             'network/receiveCommand': [WBuffer];
             'commandParser/acceptCommand': [Frame];
@@ -51,6 +56,7 @@ export function createNode(params: {
         chainTop: createChainTop(protoScope),
         blockGenerator: createBlockGenerator(protoScope),
         fs: createFs(protoScope),
+        cadency: createCadency(protoScope),
 
         commandParser: createCommandParser(protoScope),
         commandVerifier: createCommandVerifier(protoScope),

@@ -6,11 +6,12 @@ export function createConfig(refToNode: unknown) {
     const module = {
         genesisTime: 0,
         timeBetweenBlocks: 0,
-        spaceBetweenDBSnapshot: 0,
+        cadencySize: 0,
+
         countOfVoteTransfer: 0,
         countOfSupportGiving: 0,
+
         timeLiveOfUserAccount: 0,
-        timeLiveOfIncognitoAccount: 0,
         timeBeforeAccountActivation: 0,
     };
 
@@ -21,4 +22,4 @@ export function createConfig(refToNode: unknown) {
     return module;
 }
 
-export type Config = Partial<ReturnType<typeof createConfig>>;
+export type Config = ReturnType<typeof createConfig>;

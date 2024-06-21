@@ -4,6 +4,10 @@ import { KeySecp256k1 } from "@/objects/key";
 import { User, Admin } from "@/objects/users";
 import { sha256 } from '@/libs/crypto/sha256';
 
+type DeepPartial<T> = {
+	[P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
 export function createKey() {
     const [privateKey, publicKey] = getKeyPair();
 
@@ -35,11 +39,11 @@ export function createUser({
     return { key, user };
 };
 
-export function createFakeNode(override = {}) {
+export function createFakeNode(override: DeepPartial<Node> = {}) {
     return Object.assign({
         events: {
             on: () => null as () => void,
             emit: () => null as () => void,
-        }
+        },
     }, override) as unknown as Node;
 };
