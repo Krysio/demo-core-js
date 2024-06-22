@@ -43,10 +43,12 @@ test('To & from buffer should result the same data', () => {
 });
 
 describe('Verifivation', () => {
-    test('When author is out of the store: should throw error', async () => {
+    test('When command author is out of the store: should throw error', async () => {
         //#region Given
         const { command, frame } = createCommand();
-        const fakeNode = createFakeNode({ storeAdmin: { get: jest.fn(() => null) } });
+        const fakeNode = createFakeNode({
+            storeAdmin: { get: jest.fn(() => Promise.resolve(null)) },
+        });
         //#enregion Given
 
         //#region When
@@ -60,12 +62,13 @@ describe('Verifivation', () => {
         //#enregion Then
     });
 
-    test('When author is in the store: should do not throw error', async () => {
+    test('When command author is in the store: should do not throw error', async () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeAdmin: { get: jest.fn(() => ({})) },
-            storeVoting: { get: jest.fn(() => null) },
+            storeAdmin: { get: jest.fn(() => Promise.resolve({})) },
+            storeVoting: { get: jest.fn(() => Promise.resolve(null)) },
+            cadency: { isPeriodBreak: () => false },
         });
         //#enregion Given
 
@@ -80,12 +83,13 @@ describe('Verifivation', () => {
         //#enregion Then
     });
 
-    test('When voting hash is in the store: should throw error', async () => {
+    test('When the voting hash is in the store: should throw error', async () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeAdmin: { get: jest.fn(() => ({})) },
-            storeVoting: { get: jest.fn(() => ({})) },
+            storeAdmin: { get: jest.fn(() => Promise.resolve({})) },
+            storeVoting: { get: jest.fn(() => Promise.resolve({})) },
+            cadency: { isPeriodBreak: () => false },
         });
         //#enregion Given
 
@@ -96,7 +100,28 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        .rejects.toThrow('Cmd: Add Voting: duplicate key');
+        .rejects.toThrow('Cmd: Add Voting: Duplicate voting hash');
+        //#enregion Then
+    });
+
+    test('When the voting period does not within a single cadency: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeAdmin: { get: jest.fn(() => Promise.resolve({})) },
+            storeVoting: { get: jest.fn(() => Promise.resolve(null)) },
+            cadency: { isPeriodBreak: () => true },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Add Voting: Invalid voting period');
         //#enregion Then
     });
 });

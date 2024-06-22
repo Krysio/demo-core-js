@@ -40,11 +40,17 @@ export class AddVotingCommand implements ICommand {
             throw new Error('Cmd: Add Voting: Author does not exist');
         }
 
+        const { timeStart, timeEnd } = (frame.data as AddVotingCommand).voting;
+
+        if (node.cadency.isPeriodBreak(timeStart, timeEnd)) {
+            throw new Error('Cmd: Add Voting: Invalid voting period');
+        }
+
         const key = doubleSha256(this.toBuffer());
         const result = await node.storeVoting.get(key);
 
         if (result !== null) {
-            throw new Error('Cmd: Add Voting: duplicate key');
+            throw new Error('Cmd: Add Voting: Duplicate voting hash');
         }
     }
 
