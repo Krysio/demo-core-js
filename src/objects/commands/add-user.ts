@@ -40,7 +40,7 @@ export class AddUserCommand implements ICommand {
         const result = await node.storeUser.get(this.user.publicKey);
 
         if (result !== null) {
-            throw new Error('Cmd: Add User: duplicate key');
+            throw new Error('Cmd: Add User: Duplicate key');
         }
 
         const { timeBeforeAccountActivation, timeLiveOfUserAccount } = node.config;
@@ -49,13 +49,13 @@ export class AddUserCommand implements ICommand {
         const minTimeStart = timeNow + timeBeforeAccountActivation;
         
         if (minTimeStart >= timeStart) {
-            throw new Error('Cmd: Add User: timeStart too low');
+            throw new Error('Cmd: Add User: TimeStart too low');
         }
 
         const maxTimeEnd = timeNow + timeBeforeAccountActivation + timeLiveOfUserAccount;
 
         if (maxTimeEnd < timeEnd) {
-            throw new Error('Cmd: Add User: timeEnd too hight');
+            throw new Error('Cmd: Add User: TimeEnd too hight');
         }
     }
 

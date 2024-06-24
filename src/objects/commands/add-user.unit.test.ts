@@ -25,10 +25,10 @@ function createCommand({
     return { frame, command, author, user };
 }
 
-const storeAdminWithNoAdmin = { get: jest.fn(() => null)};
-const storeAdminWithAdmin = { get: jest.fn(() => ({}))};
-const storeUserWithNoUser = { get: jest.fn(() => null)};
-const storeUserWithUser = { get: jest.fn(() => ({}))};
+const storeAdminWithNoAdmin = { get: () => Promise.resolve(null)};
+const storeAdminWithAdmin = { get: () => Promise.resolve({})};
+const storeUserWithNoUser = { get: () => Promise.resolve(null)};
+const storeUserWithUser = { get: () => Promise.resolve({})};
 const fakeNodeDefaults = {
     storeAdmin: storeAdminWithAdmin,
     storeUser: storeUserWithNoUser,
@@ -107,7 +107,7 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        .rejects.toThrow('Cmd: Add User: duplicate key');
+        .rejects.toThrow('Cmd: Add User: Duplicate key');
         //#enregion Then
     });
 
@@ -127,7 +127,7 @@ describe('Verifivation', () => {
             //#enregion When
     
             //#region Then
-            .rejects.toThrow('Cmd: Add User: timeStart too low');
+            .rejects.toThrow('Cmd: Add User: TimeStart too low');
             //#enregion Then
         });
 
@@ -165,7 +165,7 @@ describe('Verifivation', () => {
             //#enregion When
     
             //#region Then
-            .rejects.toThrow('Cmd: Add User: timeEnd too hight');
+            .rejects.toThrow('Cmd: Add User: TimeEnd too hight');
             //#enregion Then
         });
 
