@@ -1,5 +1,5 @@
 import { Node } from '@/main';
-import { sha256 } from '@/libs/crypto/sha256';
+import { doubleSha256 } from '@/libs/crypto/sha256';
 import { Frame } from "@/objects/frame";
 
 export function createCommandVerifier(refToNode: unknown) {
@@ -26,7 +26,7 @@ export function createCommandVerifier(refToNode: unknown) {
             // Sprawdzamy czy kotwica odwołuje się do istniejącego miejsca
         },
         verifySignatures(frame: Frame) {
-            const hash = sha256(frame.bufferForHash);
+            const hash = doubleSha256(frame.bufferForHash);
 
             for (let i = 0; i < frame.authors.length; i++) {
                 const { publicKey, signature } = frame.authors[i];

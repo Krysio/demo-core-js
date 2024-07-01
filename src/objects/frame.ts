@@ -209,4 +209,8 @@ export class Frame {
 
         return this.toBufferAuthors();
     }
+
+    public getHash() {
+        return doubleSha256(this.toBuffer('hash'));
+    }
 }
