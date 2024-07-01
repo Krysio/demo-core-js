@@ -44,6 +44,11 @@ export class Admin {
     }
 
     public toBuffer(target: 'db' | 'net' = 'net'): WBuffer {
+        // Helper
+        if (target === 'db' && !this.parentPublicKey) {
+            throw new Error('Admin: parentPublicKey is null');
+        }
+
         try {
             const publicKey = target !== 'db'
                 ? this.publicKey.toBuffer()

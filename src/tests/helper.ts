@@ -21,18 +21,23 @@ export function createRandomHash() {
 };
 
 export function createAdmin({
-    key = createKey()
+    key = createKey(),
+    parentKey = createKey()
 } = {}) {
     const admin = new Admin(key);
+
+    admin.parentPublicKey = parentKey;
 
     return { key, admin };
 };
 
 export function createUser({
-    key = createKey()
+    key = createKey(),
+    parentKey = createKey()
 } = {}) {
     const user = new User(key);
 
+    user.parentPublicKey = parentKey;
     user.timeStart = 100;
     user.timeEnd = 10000;
 

@@ -9,11 +9,11 @@ export class User {
     metaData: string = '';
 
     constructor(
-        publicKey?: Key
+        publicKey?: Key,
+        metaData?: string
     ) {
-        if (publicKey) {
-            this.publicKey = publicKey;
-        }
+        if (publicKey) this.publicKey = publicKey;
+        if (metaData) this.metaData = metaData;
     }
 
     static parse(
@@ -46,6 +46,11 @@ export class User {
     }
 
     public toBuffer(target: 'db' | 'net' = 'net'): WBuffer {
+        // Helper
+        if (target === 'db' && !this.parentPublicKey) {
+            throw new Error('User: parentPublicKey is null');
+        }
+
         try {
             const publicKey = target !== 'db'
                 ? this.publicKey.toBuffer()
