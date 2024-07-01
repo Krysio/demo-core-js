@@ -9,14 +9,16 @@ export function isValidCommandVersion(version: number): boolean {
 export function createCommandParser(refToNode: unknown) {
     const node = refToNode as Node;
     const module = {
-        receiveCommand(buffer: WBuffer): void {
-            const frame = module.parseCommand(buffer);
+        receiveCommand(buffer: WBuffer, frame = new Frame()) {
+            module.parseCommand(buffer, frame);
 
             if (frame.isValid === true) {
                 node.events.emit('commandParser/acceptCommand', frame);
             } else {
                 node.events.emit('commandParser/rejectCommand', frame);
             }
+
+            return frame;
         },
         parseCommand(buffer: WBuffer, frame = new Frame()) {
             try {
