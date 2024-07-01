@@ -3,6 +3,7 @@ import { Frame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
 import { sha256 } from "@/libs/crypto/sha256";
 import { AddAdminCommand } from "./add-admin";
+import WBuffer from "@/libs/WBuffer";
 
 function createCommand({
     admin = createAdmin(),
@@ -46,7 +47,10 @@ describe('Verifivation', () => {
     test('When author is out of the store: should throw error', async () => {
         //#region Given
         const { command, frame } = createCommand();
-        const fakeNode = createFakeNode({ storeAdmin: { get: jest.fn(() => null) }});
+        const fakeNode = createFakeNode({
+            storeAdmin: { get: jest.fn(() => null) },
+            rootKey: createKey(),
+        });
         //#enregion Given
 
         //#region When
@@ -63,12 +67,38 @@ describe('Verifivation', () => {
     test('When author is in the store: should do not throw error', async () => {
         //#region Given
         const { command, frame, author } = createCommand();
-        const fakeNode = createFakeNode({ storeAdmin: {
-            get: jest.fn((key) => {
-                if (author.publicKey.isEqual(key)) return author;
-                return null;
-            })
-        }});
+        const fakeNode = createFakeNode({
+            storeAdmin: {
+                get: jest.fn((key) => {
+                    if (author.publicKey.isEqual(key)) return author;
+                    return null;
+                })
+            },
+            rootKey: createKey(),
+        });
+        //#enregion Given
+
+        //#region When
+        const result = await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })());
+        //#enregion When
+    
+        //#region Then
+        result.resolves.not.toThrow();
+        //#enregion Then
+    });
+
+    test('When author is the root: should do not throw error', async () => {
+        //#region Given
+        const rootKey = createKey();
+        const { command, frame, author } = createCommand({ authorKey: rootKey });
+        const fakeNode = createFakeNode({
+            storeAdmin: {
+                get: (key: WBuffer) => Promise.resolve(null),
+            },
+            rootKey,
+        });
         //#enregion Given
 
         //#region When
@@ -85,13 +115,16 @@ describe('Verifivation', () => {
     test('When inserting key is in the store: should throw error', async () => {
         //#region Given
         const { command, frame, admin, author } = createCommand();
-        const fakeNode = createFakeNode({ storeAdmin: {
-            get: jest.fn((key) => {
-                if (author.publicKey.isEqual(key)) return author;
-                if (admin.key.isEqual(key)) return admin;
-                return null;
-            })
-        }});
+        const fakeNode = createFakeNode({
+            storeAdmin: {
+                get: jest.fn((key) => {
+                    if (author.publicKey.isEqual(key)) return author;
+                    if (admin.key.isEqual(key)) return admin;
+                    return null;
+                })
+            },
+            rootKey: createKey(),
+        });
         //#enregion Given
 
         //#region When
@@ -108,12 +141,15 @@ describe('Verifivation', () => {
     test('When level of inserting admin is to hight: should throw error', async () => {
         //#region Given
         const { command, frame, author } = createCommand();
-        const fakeNode = createFakeNode({ storeAdmin: {
-            get: jest.fn((key) => {
-                if (author.publicKey.isEqual(key)) return author;
-                return null;
-            })
-        }});
+        const fakeNode = createFakeNode({
+            storeAdmin: {
+                get: jest.fn((key) => {
+                    if (author.publicKey.isEqual(key)) return author;
+                    return null;
+                })
+            },
+            rootKey: createKey(),
+        });
 
         for (const level of [0, 4, 5]) {
             command.admin.level = level;

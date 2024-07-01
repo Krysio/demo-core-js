@@ -28,10 +28,10 @@ export function createCommandPool(refToNode: unknown) {
         byIndex: new Map() as Map<number, Frame[]>,
         byHash: new Map() as Map<string, Frame[]>,
 
-        getByPrevIndex(index: number): Frame[] {
+        getByIndex(index: number): Frame[] {
             return module.byIndex.get(index) || [];
         },
-        getByPrevHash(hash: WBuffer): Frame[] {
+        getByHash(hash: WBuffer): Frame[] {
             return module.byHash.get(hash.hex()) || [];
         },
         cleanByIndex(index: number): void {

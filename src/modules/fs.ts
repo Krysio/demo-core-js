@@ -1,3 +1,4 @@
+import { isProduction } from '@/helper';
 import Time from '@/libs/Time';
 import WBuffer from '@/libs/WBuffer';
 import { Node } from '@/main';
@@ -12,6 +13,11 @@ export function createFs(refToNode: unknown) {
         mainDir: DIR_RUN,
         blockDir: DIR_RUN,
         async createRunFolder() {
+            if (!isProduction()) {
+                node.events.emit('init/fs');
+                return;
+            }
+
             try {
                 await fs.lstat(DIR_RUN);
             } catch (error) {
@@ -43,7 +49,7 @@ export function createFs(refToNode: unknown) {
         }
     };
 
-    node.events.on('init/config', () => {
+    node.events.on('init/start', () => {
         module.createRunFolder();
     });
 

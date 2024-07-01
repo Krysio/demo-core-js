@@ -68,7 +68,7 @@ describe('Verifivation', () => {
         const fakeNode = createFakeNode({
             storeAdmin: { get: jest.fn(() => Promise.resolve({})) },
             storeVoting: { get: jest.fn(() => Promise.resolve(null)) },
-            cadency: { isPeriodBreak: () => false },
+            time: { isPeriodBreak: () => false },
         });
         //#enregion Given
 
@@ -89,7 +89,7 @@ describe('Verifivation', () => {
         const fakeNode = createFakeNode({
             storeAdmin: { get: jest.fn(() => Promise.resolve({})) },
             storeVoting: { get: jest.fn(() => Promise.resolve({})) },
-            cadency: { isPeriodBreak: () => false },
+            time: { isPeriodBreak: () => false },
         });
         //#enregion Given
 
@@ -110,7 +110,7 @@ describe('Verifivation', () => {
         const fakeNode = createFakeNode({
             storeAdmin: { get: jest.fn(() => Promise.resolve({})) },
             storeVoting: { get: jest.fn(() => Promise.resolve(null)) },
-            cadency: { isPeriodBreak: () => true },
+            time: { isPeriodBreak: () => true },
         });
         //#enregion Given
 

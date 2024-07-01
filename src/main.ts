@@ -16,37 +16,66 @@ import { createTime } from "@/modules/time";
 import { Block } from "@/objects/block";
 import { Frame } from "@/objects/frame";
 import { createFs } from "@/modules/fs";
-import { getConfig } from "@/services/genesis";
+import getLazyPromise from "@/libs/lazyPromise";
+import { COMMAND_TYPE_CONFIG, COMMAND_TYPE_GENESIS } from "@/objects/commands/types";
+import { ConfigCommand } from "@/objects/commands/config";
+import { GenesisCommand } from "./objects/commands/genesis";
+import { isProduction } from "./helper";
+
+function extractConfig(genesisBlock: Block) {
+    for (const command of genesisBlock.listOfCommands) {
+        if (command.typeID === COMMAND_TYPE_CONFIG) {
+            return (command.data as ConfigCommand).values;
+        }
+    }
+}
+
+function extractRootKey(genesisBlock: Block) {
+    for (const command of genesisBlock.listOfCommands) {
+        if (command.typeID === COMMAND_TYPE_GENESIS) {
+            return (command.data as GenesisCommand).rootPublicKey;
+        }
+    }
+}
 
 export function createNode(params: {
     genesisBlock: Block
 }) {
-    const { genesisBlock } = params;
+    const { genesisBlock: genesis } = params;
+    const events = new EventEmitter() as TypedEventEmitter<{
+        'init/start': [];
+        'init/genesis': [Block];
+        'init/fs': [];
+        'init/end': [];
+
+        'start': [];
+        'stop': [];
+
+        'created/block': [Block];
+        'created/snapshot/user': [{ path: string, hash: WBuffer }];
+
+        'cadency/changed': [{ oldValue: number, newValue: number }],
+
+        'network/receiveCommand': [WBuffer];
+        'commandParser/acceptCommand': [Frame];
+        'commandParser/rejectCommand': [Frame];
+        'commandVerifier/acceptCommand': [Frame];
+        'commandVerifier/rejectCommand': [Frame];
+    }>;
     const protoScope = {
-        events: new EventEmitter() as TypedEventEmitter<{
-            'init/config': [Config];
-            'init/genesis': [Block];
-            'init/fs': [];
-            'init/end': [];
-
-            'start': [];
-            'stop': [];
-
-            'created/block': [Block];
-            'created/snapshot/user': [{ path: string, hash: WBuffer }];
-
-            'cadency/changed': [{ oldValue: number, newValue: number }],
-
-            'network/receiveCommand': [WBuffer];
-            'commandParser/acceptCommand': [Frame];
-            'commandParser/rejectCommand': [Frame];
-            'commandVerifier/acceptCommand': [Frame];
-            'commandVerifier/rejectCommand': [Frame];
-        }>
+        events, genesis,
+        // load initial config
+        config: extractConfig(genesis),
+        rootKey: extractRootKey(genesis),
     };
+
+    protoScope.config = createConfig(protoScope);
+
     const scope = {
-        events: protoScope.events,
-        config: createConfig(protoScope),
+        events, genesis,
+        rootKey: protoScope.rootKey,
+        config: protoScope.config,
+
         state: createState(protoScope),
         storeUser: createStoreUser(protoScope),
         storeAdmin: createStoreAdmin(protoScope),
@@ -64,20 +93,41 @@ export function createNode(params: {
 
         start: () => scope.events.emit('start'),
         stop: () => scope.events.emit('stop'),
+
+        whenInit() { return scope.initPromise; },
+        whenChainGrowsTo(height: number) {
+            const promise = getLazyPromise();
+            const check = () => {
+                if (scope.chainTop.getHeight() >= height) {
+                    scope.events.off('created/block', check);
+                    promise.resolve();
+                }
+            };
+
+            scope.events.on('created/block', check);
+
+            if (isProduction()) {
+                check();
+            }
+
+            return promise;
+        },
+        initPromise: getLazyPromise(),
     };
 
     Object.assign(protoScope, scope);
 
     Promise.all([
-        new Promise((resolve) => scope.events.on('init/config', () => resolve(null))),
+        new Promise((resolve) => scope.events.on('init/start', () => resolve(null))),
         new Promise((resolve) => scope.events.on('init/genesis', () => resolve(null))),
         new Promise((resolve) => scope.events.on('init/fs', () => resolve(null))),
     ]).then(() => {
         scope.events.emit('init/end');
+        scope.initPromise.resolve();
     });
 
-    scope.events.emit('init/config', getConfig(genesisBlock));
-    scope.events.on('init/fs', () => scope.events.emit('init/genesis', genesisBlock));
+    scope.events.on('init/fs', () => scope.events.emit('init/genesis', genesis));
+    scope.events.emit('init/start');
 
     return scope;
 }

@@ -2,6 +2,7 @@ import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { Key } from "@/objects/key";
 import { Command, ICommand, TYPE_ANCHOR_HASH, TYPE_ANCHOR_INDEX } from "@/objects/commands";
 import { isValidCommandVersion } from "@/modules/commandParser";
+import { doubleSha256 } from "@/libs/crypto/sha256";
 
 export type CommandAuthorData = {
     publicKey: Key;
@@ -212,5 +213,34 @@ export class Frame {
 
     public getHash() {
         return doubleSha256(this.toBuffer('hash'));
+    }
+
+    public setAnchor(anchor: number | WBuffer) {
+        if (anchor instanceof WBuffer) {
+            if (this.data.anchorTypeID !== TYPE_ANCHOR_HASH) {
+                throw new Error('Frame: set invalid anchor');
+            }
+
+            this.anchorHash = anchor;
+
+            return;
+        }
+
+        if (this.data.anchorTypeID !== TYPE_ANCHOR_INDEX) {
+            throw new Error('Frame: set invalid anchor');
+        }
+        
+        this.anchorIndex = anchor;
+    }
+
+    public addAuthor(key: Key) {
+        const item = {
+            publicKey: key,
+            signature: null as WBuffer
+        };
+
+        this.authors.push(item);
+
+        return (signature: WBuffer) => item.signature = signature;
     }
 }

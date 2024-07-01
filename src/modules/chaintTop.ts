@@ -1,6 +1,5 @@
-import Time from "@/libs/Time";
 import WBuffer from "@/libs/WBuffer";
-import { Block } from "@/objects/Block";
+import { Block } from "@/objects/block";
 import { Node } from '@/main';
 
 const sortBlocksByValues = (a: Block, b: Block) => {
@@ -64,7 +63,7 @@ export function createChainTop(refToNode: unknown) {
                 return 0;
             }
 
-            return Math.floor((Time.now() - genesisTime) / timeBetweenBlocks);
+            return Math.floor((node.time.now() - genesisTime) / timeBetweenBlocks);
         },
         getIndexOfLastBlock() {
             return module.currentHeight;

@@ -15,9 +15,8 @@ export function createConfig(refToNode: unknown) {
         timeBeforeAccountActivation: 0,
     };
 
-    node.events.on('init/config', (initialConfig) => {
-        Object.assign(module, initialConfig)
-    });
+    // set initial
+    Object.assign(module, node.config);
 
     return module;
 }
