@@ -42,7 +42,7 @@ export class AddVotingCommand implements ICommand {
 
         const { timeStart, timeEnd } = (frame.data as AddVotingCommand).voting;
 
-        if (node.cadency.isPeriodBreak(timeStart, timeEnd)) {
+        if (node.time.isPeriodBreak(timeStart, timeEnd)) {
             throw new Error('Cmd: Add Voting: Invalid voting period');
         }
 

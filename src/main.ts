@@ -12,8 +12,8 @@ import { createStoreBlock } from "@/modules/storeBlock";
 import { createCommandParser } from "@/modules/commandParser";
 import { createCommandVerifier } from "@/modules/commandVerifier";
 import { createCommandPool } from "@/modules/commandPool";
-import { createCadency } from "@/modules/cadency";
-import { Block } from "@/objects/Block";
+import { createTime } from "@/modules/time";
+import { Block } from "@/objects/block";
 import { Frame } from "@/objects/frame";
 import { createFs } from "@/modules/fs";
 import { getConfig } from "@/services/genesis";
@@ -56,7 +56,7 @@ export function createNode(params: {
         chainTop: createChainTop(protoScope),
         blockGenerator: createBlockGenerator(protoScope),
         fs: createFs(protoScope),
-        cadency: createCadency(protoScope),
+        time: createTime(protoScope),
 
         commandParser: createCommandParser(protoScope),
         commandVerifier: createCommandVerifier(protoScope),
