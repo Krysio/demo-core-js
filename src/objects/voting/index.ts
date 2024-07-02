@@ -1,5 +1,5 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
-import { sha256 } from "@/libs/crypto/sha256";
+import { doubleSha256 } from "@/libs/crypto/sha256";
 import { Key } from "@/objects/key";
 
 /******************************/
@@ -151,7 +151,7 @@ export class Voting {
     };
 
     getHash(): WBuffer {
-        return sha256(this.toBuffer());
+        return doubleSha256(this.toBuffer());
     }
 
     public toString() { return this.toBuffer().hex(); }

@@ -1,5 +1,5 @@
 import WBuffer from '@/libs/WBuffer';
-import { sha256 } from '@/libs/crypto/sha256';
+import { doubleSha256 } from '@/libs/crypto/sha256';
 import { Node } from '@/main';
 import { Voting } from '@/objects/voting';
 
@@ -14,7 +14,7 @@ export function createStoreVoting(refToNode: unknown) {
 
         async add(voting: Voting, intoNext = false) {
             const data = voting.toBuffer();
-            const key = sha256(data).hex();
+            const key = doubleSha256(data).hex();
 
             if (intoNext) {
                 return module.storeNext.set(key, data);
