@@ -1,14 +1,21 @@
 import WBuffer from "@/libs/WBuffer";
 import { COMMAND_TYPE_KEY_POOLING } from "./types";
-import { Type, CommandTypeMultiUser, ICommandImplementation } from "./command";
-import Key from "../key";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
+import { Key } from "@/objects/key";
+import { Frame } from "../frame";
+import { Node } from "@/main";
 
 @Type(COMMAND_TYPE_KEY_POOLING)
-export default class KeyPoolingCommand extends CommandTypeMultiUser implements ICommandImplementation {
-    listOfAreas: number[] = [];
-    listOfPublicKeys: Key[] = [];
+export class KeyPoolingCommand implements ICommand {
+    anchorTypeID = TYPE_ANCHOR_INDEX;
+    valueTypeID = TYPE_VALUE_SECONDARY;
+    isInternal = false;
+    isMultiAuthor = true;
+    isValueHasKey = false;
+
+    public listOfPublicKeys: Key[] = [];
   
-    addPublicKey(publicKey: Key) {
+    public addPublicKey(publicKey: Key) {
         if (this.listOfPublicKeys.filter((key) => 
             key.typeID == publicKey.typeID
             && WBuffer.compare(key.key, publicKey.key) === 0
@@ -24,49 +31,56 @@ export default class KeyPoolingCommand extends CommandTypeMultiUser implements I
         });
     }
 
-    addArea(area: number) {
-        this.listOfAreas.push(area);
-    }
-
     //#region buffer
 
-    fromBufferImplementation(buffer: WBuffer): void {
-        this.listOfAreas = [];
+    public parse(buffer: WBuffer) {
         this.listOfPublicKeys = [];
 
-        const countOfAreas = buffer.readUleb128();
-        
-        for (let i = 0; i < countOfAreas; i++) {
-            this.listOfAreas.push(buffer.readUleb128());
+        const countOfPublicKeys = buffer.readUleb128();
+
+        for (let i = 0; i < countOfPublicKeys; i++) {
+            this.listOfPublicKeys.push(Key.parse(buffer));
         }
 
-        for (let i = 0; i < this.countOfAuthors; i++) {
-            this.listOfPublicKeys.push(Key.fromBuffer(buffer));
-        }
+        return this;
     }
 
-    toBufferImplementation(): WBuffer {
+    public toBuffer(): WBuffer {
         return WBuffer.concat([
-            WBuffer.arrayOfUnsignetToBuffer(this.listOfAreas),
+            WBuffer.uleb128(this.listOfPublicKeys.length),
             ...this.listOfPublicKeys.map((key) => key.toBuffer())
         ]);
     }
 
     //#endregion buffer
 
-    isValidImplementation() {
-        if (this.listOfAreas.length === 0) return false;
-        if (this.listOfPublicKeys.length !== this.countOfAuthors) return false;
-        for (const key of this.listOfPublicKeys) {
-            if (key.isValid() === false) return false;
+    public async verify(node: Node, frame: Frame) {
+        for (const { publicKey: authorPublicKey } of frame.authors) {
+            const author = await node.storeVoter.get(authorPublicKey);
+
+            if (!author) {
+                throw new Error('Cmd: Key-pooling: One of authors does not exist');
+            }
         }
 
-        return true;
+        for (const publicKey of this.listOfPublicKeys) {
+            const result = await node.storeVoter.get(publicKey);
+    
+            if (result !== null) {
+                throw new Error('Cmd: Key-pooling: Duplicate key');
+            }
+        }
     }
 
-    async verifyImplementation(): Promise<boolean> {
-        return true;
-    }
+    public async apply(node: Node, frame: Frame) {
+        for (const { publicKey: authorPublicKey } of frame.authors) {
+            await node.storeVoter.del(authorPublicKey);
+        }
 
-    async getEffectsImplementation(): Promise<void> {}
+        const heightOfChain = node.chainTop.getHeight();
+
+        for (const publicKey of this.listOfPublicKeys) {
+            await node.storeVoter.add(publicKey, heightOfChain);
+        }
+    }
 };

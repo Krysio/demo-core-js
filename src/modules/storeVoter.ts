@@ -28,18 +28,32 @@ export function createStoreVoter(refToNode: unknown) {
 
             return module.storeCurrent.set(key, value);
         },
+        async del(publicKey: Key | WBuffer, fromNext = false) {
+            const key = dbKey(publicKey);
+
+            if (fromNext) {
+                return module.storeNext.delete(key);
+            }
+
+            return module.storeCurrent.delete(key);
+        },
+        async get(publicKey: Key | WBuffer, fromNext = false) {
+            const key = dbKey(publicKey);
+
+            if (fromNext) {
+                return module.storeNext.get(key) || null;
+            }
+
+            return module.storeCurrent.get(key) || null;
+        },
         async addNext(publicKey: Key | WBuffer, value: number) {
             module.add(publicKey, value, true);
         },
-        async get(publicKey: Key | WBuffer) {
-            const key = dbKey(publicKey);
-            const result = module.storeCurrent.get(key);
-
-            if (!result) {
-                return null;
-            }
-
-            return result;
+        async delNext(publicKey: Key | WBuffer) {
+            return module.del(publicKey, true);
+        },
+        async getNext(publicKey: Key | WBuffer) {
+            return module.get(publicKey, true);
         },
         swip() {
             module.storeCurrent = module.storeNext;
