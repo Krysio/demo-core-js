@@ -76,7 +76,7 @@ export function nodeCreator({ manualTime = false } = {}) {
             creator.scope.genesisTime = time;
             creator.mockTime();
 
-            return this;
+            return creator;
         },
         mockTime() {
             const { node, manualTime } = creator.scope;

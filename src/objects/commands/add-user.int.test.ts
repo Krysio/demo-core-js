@@ -1,9 +1,8 @@
 import WBuffer from "@/libs/WBuffer";
 import { createKey, nodeCreator } from "@/tests/helper";
+import { Admin, User } from "@/objects/users";
+import { Frame } from "@/objects/frame";
 import { AddUserCommand } from "./add-user";
-import { Admin, User } from "../users";
-import { Frame } from "../frame";
-import { timeEnd } from "console";
 
 describe('Adding an user by an admin', () => {
     //#region Given
@@ -29,8 +28,7 @@ describe('Adding an user by an admin', () => {
     
     test('Create a frame', () => {
         expect(creator.scope.node).not.toBe(null);
-        
-        const { node } = creator;
+
         const command = new AddUserCommand(addingUser);
         const frame = new Frame(command);
         const admin: Admin = creator.getAdmin();
