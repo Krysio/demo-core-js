@@ -64,12 +64,13 @@ describe('Verifivation', () => {
     test('When author is in the store: should do not throw error', async () => {
         //#region Given
         const { command, frame } = createCommand();
+        const iterStoreVoterGet = (function* (){
+            for (let i = 0; i < 4; i++) yield Promise.resolve({});
+            for (let i = 0; i < 4; i++) yield Promise.resolve(null);
+        })();
         const fakeNode = createFakeNode({
             storeVoter: {
-                get: ((results) => (() => results.next().value))((function* (){
-                    for (let i = 0; i < 4; i++) yield Promise.resolve({});
-                    for (let i = 0; i < 4; i++) yield Promise.resolve(null);
-                })())
+                get: () => iterStoreVoterGet.next().value,
             }
         });
         //#enregion Given
