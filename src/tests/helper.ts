@@ -37,13 +37,17 @@ export function createAdmin({
 
 export function createUser({
     key = createKey(),
-    parentKey = createKey()
+    parentKey = createKey(),
+    timeStart = 100,
+    timeEnd = 10000,
+    metaData = 'meta data'
 } = {}) {
     const user = new User(key);
 
     user.parentPublicKey = parentKey;
-    user.timeStart = 100;
-    user.timeEnd = 10000;
+    user.timeStart = timeStart;
+    user.timeEnd = timeEnd;
+    user.metaData = metaData;
 
     return { key, user };
 };

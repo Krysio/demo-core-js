@@ -5,10 +5,12 @@ test('Set & Get', async () => {
     //#region Given
     const fakeNode = createFakeNode();
     const store = createStoreUser(fakeNode);
-    const { user } = createUser();
-    const parentPublicKey = createKey();
+    const timeStart = 13;
+    const timeEnd = 1340;
+    const metaData = 'Test of storeUser';
+    const parentKey = createKey();
+    const { user, key: userPublicKey } = createUser({ timeStart, timeEnd, metaData, parentKey });
 
-    user.parentPublicKey = parentPublicKey;
     //#enregion Given
 
     //#region When
@@ -19,9 +21,12 @@ test('Set & Get', async () => {
     //#enregion When
 
     //#region Then
-    const adminBuffer = user.toBuffer();
+    const buffer = user.toBuffer();
 
-    expect(adminBuffer.isEqual(resultA.toBuffer())).toBe(true);
-    expect(adminBuffer.isEqual(resultB.toBuffer())).toBe(true);
+    expect(buffer.isEqual(resultA.toBuffer())).toBe(true);
+    expect(buffer.isEqual(resultB.toBuffer())).toBe(true);
+    expect(resultA.timeStart).toBe(timeStart);
+    expect(resultA.timeEnd).toBe(timeEnd);
+    expect(resultA.metaData).toBe(metaData);
     //#enregion Then
 });

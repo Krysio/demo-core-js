@@ -19,11 +19,11 @@ export function createStoreUser(refToNode: unknown) {
             const result = module.store.get(key);
 
             if (result) {
-                const admin = User.parse(result.seek(0), 'db');
+                const user = User.parse(result.seek(0), 'db');
 
-                admin.publicKey = publicKey;
+                user.publicKey = publicKey;
 
-                return admin;
+                return user;
             }
 
             return null;

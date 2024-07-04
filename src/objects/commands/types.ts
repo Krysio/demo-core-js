@@ -7,6 +7,7 @@ export const COMMAND_TYPE_ADD_USER = 17;
 export const COMMAND_TYPE_KEY_POOLING = 18;
 
 export const COMMAND_TYPE_ADD_VOTING = 19;
+export const COMMAND_TYPE_ACTIVATE_USER = 20;
 
 export const COMMAND_TYPE_VOTE = 64;
 export const COMMAND_TYPE_VOTE_FLOW = 65;

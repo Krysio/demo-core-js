@@ -23,7 +23,7 @@ export function createTime(refToNode: unknown) {
             return module.cadencyNumber;
         },
         isPeriodBreak(periodStart: number, periodEnd: number) {
-            const nextPeriodStart = cadencySize * (module.cadencyNumber + 1);
+            const nextPeriodStart = module.getHbTimeOfNextCadencyStart();
 
             if (
                 nextPeriodStart > periodStart
@@ -33,6 +33,12 @@ export function createTime(refToNode: unknown) {
             }
 
             return false;
+        },
+        getHbTimeOfCadencyStart() {
+            return cadencySize * module.cadencyNumber;
+        },
+        getHbTimeOfNextCadencyStart() {
+            return cadencySize * (module.cadencyNumber + 1);
         },
     };
 

@@ -60,7 +60,7 @@ export class User {
                 : EMPTY_BUFFER;
 
             const timeStart = WBuffer.uleb128(this.timeStart);
-            const timeEnd = WBuffer.uleb128(this.timeStart);
+            const timeEnd = WBuffer.uleb128(this.timeEnd);
             const sizeOfMeta = WBuffer.uleb128(this.metaData.length);
             const metaData = WBuffer.from(this.metaData, 'utf8');
 
