@@ -58,7 +58,7 @@ export class KeyPoolingCommand implements ICommand {
         for (const { publicKey: authorPublicKey } of frame.authors) {
             const author = await node.storeVoter.get(authorPublicKey);
 
-            if (!author) {
+            if (author === null) {
                 throw new Error('Cmd: Key-pooling: One of authors does not exist');
             }
         }

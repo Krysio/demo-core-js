@@ -1,16 +1,15 @@
 import { Node } from '@/main';
-import { doubleSha256 } from '@/libs/crypto/sha256';
 import { Frame } from "@/objects/frame";
 
 export function createCommandVerifier(refToNode: unknown) {
     const node = refToNode as Node;
 
     const module = {
-        verify(frame: Frame) {
+        async verify(frame: Frame) {
             try {
                 module.verifyAnchor(frame);
                 module.verifySignatures(frame);
-                frame.data.verify(node, frame);
+                await frame.data.verify(node, frame);
 
                 node.events.emit('commandVerifier/acceptCommand', frame);
             } catch (error) {
@@ -26,7 +25,7 @@ export function createCommandVerifier(refToNode: unknown) {
             // Sprawdzamy czy kotwica odwołuje się do istniejącego miejsca
         },
         verifySignatures(frame: Frame) {
-            const hash = doubleSha256(frame.bufferForHash);
+            const hash = frame.getHash();
 
             for (let i = 0; i < frame.authors.length; i++) {
                 const { publicKey, signature } = frame.authors[i];

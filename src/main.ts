@@ -98,17 +98,14 @@ export function createNode(params: {
         whenChainGrowsTo(height: number) {
             const promise = getLazyPromise();
             const check = () => {
-                if (scope.chainTop.getHeight() >= height) {
+                if (scope.chainTop.getIndexOfLastBlock() >= height) {
                     scope.events.off('created/block', check);
                     promise.resolve();
                 }
             };
 
             scope.events.on('created/block', check);
-
-            if (isProduction()) {
-                check();
-            }
+            check();
 
             return promise;
         },

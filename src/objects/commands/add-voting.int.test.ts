@@ -4,6 +4,7 @@ import { Admin } from "@/objects/users";
 import { Frame } from "@/objects/frame";
 import { VotingSimple } from "@/objects/voting";
 import { AddVotingCommand } from "./add-voting";
+import getLazyPromise from "@/libs/lazyPromise";
 
 describe('Adding a voting by an admin', () => {
     //#region Given
@@ -38,7 +39,7 @@ describe('Adding a voting by an admin', () => {
     //#endregion Given
 
     //#region When
-    test('Insert the command', () => {
+    test('Insert the command', async () => {
         expect(creator.scope.node).not.toBe(null);
         
         const { node } = creator;
@@ -49,6 +50,13 @@ describe('Adding a voting by an admin', () => {
 
         expect(result.invalidMsg).toBe(null);
         expect(result.isValid).toBe(true);
+
+        const promise = getLazyPromise();
+
+        node.events.once('commandVerifier/acceptCommand', () => promise.resolve());
+        node.events.once('commandVerifier/rejectCommand', (frame) => promise.reject(`Cmd rejected: ${frame.invalidMsg}`));
+
+        await promise;
     });
     //#endregion When
 

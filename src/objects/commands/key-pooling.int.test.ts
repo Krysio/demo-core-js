@@ -1,23 +1,25 @@
 import WBuffer from "@/libs/WBuffer";
 import { createKey, nodeCreator } from "@/tests/helper";
-import { AddAdminCommand } from "./add-admin";
-import { Admin } from "../users";
-import { Frame } from "../frame";
+import { Frame } from "@/objects/frame";
+import { KeyPoolingCommand } from "./key-pooling";
 import getLazyPromise from "@/libs/lazyPromise";
 
-describe('Adding an admin by the root', () => {
+describe('Key-pooling of 4 voters', () => {
     //#region Given
     let testedFrame: WBuffer = null;
 
     const creator = nodeCreator().manualTime(10001);
-    const addingAdminKey = createKey();
-    const addingAdminMeta = 'Some text';
-    const addingAdmin = new Admin(addingAdminKey, addingAdminMeta);
+    const listOfVoterKeys = [createKey(), createKey(), createKey(), createKey()];
+    const listOfAddedKeys = [createKey(), createKey(), createKey(), createKey()];
 
     test('Create a node', async () => {
         const { node } = creator;
 
         await node.whenInit();
+
+        for (const voterKey of listOfVoterKeys) {
+            node.storeVoter.add(voterKey, 0);
+        }
 
         node.start();
         
@@ -26,13 +28,20 @@ describe('Adding an admin by the root', () => {
     
     test('Create a frame', () => {
         expect(creator.scope.node).not.toBe(null);
-        
-        const { node } = creator;
-        const command = new AddAdminCommand(addingAdmin);
+
+        const command = new KeyPoolingCommand();
         const frame = new Frame(command);
 
+        for (const addingKey of listOfAddedKeys) {
+            command.addPublicKey(addingKey);
+        }
+
         frame.setAnchor(0);
-        frame.addAuthor(node.rootKey)(node.rootKey.sign(frame.getHash()));
+
+        listOfVoterKeys
+            .map((voterKey) => ({voterKey, setSignature: frame.addAuthor(voterKey)}))
+            .map(({voterKey, setSignature}) => setSignature(voterKey.sign(frame.getHash())))
+        ;
 
         testedFrame = frame.toBuffer();
     });
@@ -78,9 +87,8 @@ describe('Adding an admin by the root', () => {
         expect(node.chainTop.getHeight()).toBe(3);
         expect(node.commandPool.getByIndex(0).length).toBe(0);
 
-        const result = await node.storeAdmin.get(addingAdmin.publicKey);
-
-        expect(result).not.toBe(null);
+        await Promise.all(listOfVoterKeys.map((voterKey) => expect(node.storeVoter.get(voterKey)).resolves.toBe(null)));
+        await Promise.all(listOfAddedKeys.map((addedKey) => expect(node.storeVoter.get(addedKey)).resolves.not.toBe(null)));
     });
     //#endregion Then
 

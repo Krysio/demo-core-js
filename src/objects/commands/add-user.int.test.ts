@@ -3,6 +3,7 @@ import { createKey, nodeCreator } from "@/tests/helper";
 import { Admin, User } from "@/objects/users";
 import { Frame } from "@/objects/frame";
 import { AddUserCommand } from "./add-user";
+import getLazyPromise from "@/libs/lazyPromise";
 
 describe('Adding an user by an admin', () => {
     //#region Given
@@ -41,7 +42,7 @@ describe('Adding an user by an admin', () => {
     //#endregion Given
 
     //#region When
-    test('Insert the command', () => {
+    test('Insert the command', async () => {
         expect(creator.scope.node).not.toBe(null);
         
         const { node } = creator;
@@ -52,6 +53,13 @@ describe('Adding an user by an admin', () => {
 
         expect(result.invalidMsg).toBe(null);
         expect(result.isValid).toBe(true);
+
+        const promise = getLazyPromise();
+
+        node.events.once('commandVerifier/acceptCommand', () => promise.resolve());
+        node.events.once('commandVerifier/rejectCommand', (frame) => promise.reject(`Cmd rejected: ${frame.invalidMsg}`));
+
+        await promise;
     });
     //#endregion When
 

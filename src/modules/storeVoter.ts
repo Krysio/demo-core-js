@@ -41,10 +41,10 @@ export function createStoreVoter(refToNode: unknown) {
             const key = dbKey(publicKey);
 
             if (fromNext) {
-                return module.storeNext.get(key) || null;
+                return module.storeNext.get(key) ?? null;
             }
 
-            return module.storeCurrent.get(key) || null;
+            return module.storeCurrent.get(key) ?? null;
         },
         async addNext(publicKey: Key | WBuffer, value: number) {
             module.add(publicKey, value, true);

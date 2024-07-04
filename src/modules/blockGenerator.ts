@@ -32,9 +32,7 @@ export function createBlockGenerator(refToNode: unknown) {
                 requestCreateBlockTimeoutId = setTimeout(module.createNewBlocks, 1);
             }
         },
-        createNewBlocks() {
-            requestCreateBlockTimeoutId = null;
-
+        async createNewBlocks() {
             const currentHeight = node.chainTop.getHeight();
             const prevHeight = node.chainTop.getIndexOfLastBlock();
             const diff = currentHeight - prevHeight;
@@ -52,7 +50,7 @@ export function createBlockGenerator(refToNode: unknown) {
                 // apply all index-cmd
                 for (const command of commandsByPrevIndex) {
                     if (command.data.apply) {
-                        command.data.apply(node, command);
+                        await command.data.apply(node, command);
                     }
                 }
 
@@ -82,6 +80,7 @@ export function createBlockGenerator(refToNode: unknown) {
                 node.commandPool.cleanByIndex(index - 2);
             }
 
+            requestCreateBlockTimeoutId = null;
             module.requestCreateBlock();
         }
     };

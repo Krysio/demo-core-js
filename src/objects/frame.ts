@@ -193,10 +193,7 @@ export class Frame {
             return this.authors[0].signature;
         }
 
-        return WBuffer.concat([
-            WBuffer.uleb128(this.authors.length),
-            ...this.authors.map((author) => author.signature)
-        ]);
+        return WBuffer.concat(this.authors.map((author) => author.signature));
     }
 
     public getKeyOfValue(): WBuffer {
