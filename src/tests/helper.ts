@@ -9,10 +9,6 @@ import { Frame } from '@/objects/frame';
 import { ConfigCommand } from '@/objects/commands/config';
 import { BHTime, MS, UnixTime } from '@/modules/time';
 
-type DeepPartial<T> = {
-	[P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
-
 export function createKey() {
     const [privateKey, publicKey] = getKeyPair();
 
