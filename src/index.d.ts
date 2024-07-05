@@ -1,6 +1,10 @@
 declare const brand: unique symbol;
 declare type Brand<T, TBrandName extends string> = T & { [brand]: TBrandName }
 
+declare type DeepPartial<T> = {
+	[P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
 declare module "node:stream" {    
     export type Listener = (...args: any[]) => void;
 
