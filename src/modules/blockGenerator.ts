@@ -1,4 +1,3 @@
-import Time from "@/libs/Time";
 import { Block } from "@/objects/block";
 import { Node } from '@/main';
 import { Frame } from "@/objects/frame";
@@ -25,7 +24,7 @@ export function createBlockGenerator(refToNode: unknown) {
             if (isProduction()) {
                 const height = node.chainTop.getHeight();
                 const { genesisTime, timeBetweenBlocks } = node.config;
-                const timeToWaint = (genesisTime + timeBetweenBlocks * (height + 1)) - node.time.now();
+                const timeToWaint = (genesisTime + timeBetweenBlocks * (height + 1)) - node.time.nowUnix();
     
                 requestCreateBlockTimeoutId = setTimeout(module.createNewBlocks, timeToWaint);
             } else {

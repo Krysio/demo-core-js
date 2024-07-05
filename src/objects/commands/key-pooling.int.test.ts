@@ -3,12 +3,13 @@ import { createKey, nodeCreator } from "@/tests/helper";
 import { Frame } from "@/objects/frame";
 import { KeyPoolingCommand } from "./key-pooling";
 import getLazyPromise from "@/libs/lazyPromise";
+import { MS, UnixTime } from "@/modules/time";
 
 describe('Key-pooling of 4 voters', () => {
     //#region Given
     let testedFrame: WBuffer = null;
 
-    const creator = nodeCreator().manualTime(10001);
+    const creator = nodeCreator().manualTime(10001 as UnixTime);
     const listOfVoterKeys = [createKey(), createKey(), createKey(), createKey()];
     const listOfAddedKeys = [createKey(), createKey(), createKey(), createKey()];
 
@@ -75,13 +76,13 @@ describe('Key-pooling of 4 voters', () => {
         
         const { node } = creator;
 
-        creator.addTime(10);
+        creator.addTime(10 as MS);
         await node.whenChainGrowsTo(1);
 
         expect(node.chainTop.getHeight()).toBe(1);
         expect(node.commandPool.getByIndex(0).length).toBe(1);
 
-        creator.addTime(20);
+        creator.addTime(20 as MS);
         await node.whenChainGrowsTo(3);
 
         expect(node.chainTop.getHeight()).toBe(3);

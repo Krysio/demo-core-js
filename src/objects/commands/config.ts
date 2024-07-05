@@ -4,6 +4,7 @@ import { COMMAND_TYPE_CONFIG } from "./types";
 import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_PRIMARY } from ".";
 import { Config } from "@/modules/config";
 import { Frame } from "@/objects/frame";
+import { BHTime, MS, UnixTime } from "@/modules/time";
 
 @Type(COMMAND_TYPE_CONFIG)
 export class ConfigCommand implements ICommand {
@@ -14,29 +15,30 @@ export class ConfigCommand implements ICommand {
     valueTypeID = TYPE_VALUE_PRIMARY;
 
     public values: Config = {
-        genesisTime: 0,
-        timeBetweenBlocks: 0,
-        cadencySize: 0,
+        genesisTime: 0 as UnixTime,
+        timeBetweenBlocks: 0 as MS,
+        cadencySize: 0 as BHTime,
         countOfVoteTransfer: 0,
         countOfSupportGiving: 0,
-        timeLiveOfUserAccount: 0,
-        timeBeforeAccountActivation: 0,
+        timeLiveOfUserAccount: 0 as BHTime,
+        timeBeforeAccountActivation: 0 as BHTime,
     };
     
     constructor(config: Partial<Config> = {}) {
         for (const key in config) {
-            this.values[key as keyof typeof config] = config[key as keyof typeof config];
+            //@ts-ignore
+            this.values[key] = config[key];
         }
     }
 
     public parse(buffer: WBuffer) {
-        this.values.genesisTime = buffer.readUleb128();
-        this.values.timeBetweenBlocks = buffer.readUleb128();
-        this.values.cadencySize = buffer.readUleb128();
+        this.values.genesisTime = buffer.readUleb128() as UnixTime;
+        this.values.timeBetweenBlocks = buffer.readUleb128() as MS;
+        this.values.cadencySize = buffer.readUleb128() as BHTime;
         this.values.countOfVoteTransfer = buffer.readUleb128();
         this.values.countOfSupportGiving = buffer.readUleb128();
-        this.values.timeLiveOfUserAccount = buffer.readUleb128();
-        this.values.timeBeforeAccountActivation = buffer.readUleb128();
+        this.values.timeLiveOfUserAccount = buffer.readUleb128() as BHTime;
+        this.values.timeBeforeAccountActivation = buffer.readUleb128() as BHTime;
 
         return this;
     }

@@ -3,6 +3,7 @@ import { Frame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
 import { sha256 } from "@/libs/crypto/sha256";
 import { AddUserCommand } from "./add-user";
+import { BHTime } from "@/modules/time";
 
 function createCommand({
     user = createUser(),
@@ -117,7 +118,7 @@ describe('Verifivation', () => {
             const { command, frame, user } = createCommand();
             const fakeNode = createFakeNode(fakeNodeDefaults);
     
-            user.user.timeStart = 5 + 2;
+            user.user.timeStart = 5 + 2 as BHTime;
             //#enregion Given
 
             //#region When
@@ -136,7 +137,7 @@ describe('Verifivation', () => {
             const { command, frame, user } = createCommand();
             const fakeNode = createFakeNode(fakeNodeDefaults);
     
-            user.user.timeStart = 6 + 2;
+            user.user.timeStart = 6 + 2 as BHTime;
             //#enregion Given
 
             //#region When
@@ -155,7 +156,7 @@ describe('Verifivation', () => {
             const { command, frame, user } = createCommand();
             const fakeNode = createFakeNode(fakeNodeDefaults);
     
-            user.user.timeEnd = 6 + 2 + 10000;
+            user.user.timeEnd = 6 + 2 + 10000 as BHTime;
             //#enregion Given
 
             //#region When
@@ -174,7 +175,7 @@ describe('Verifivation', () => {
             const { command, frame, user } = createCommand();
             const fakeNode = createFakeNode(fakeNodeDefaults);
     
-            user.user.timeEnd = 6 + 2 + 9999;
+            user.user.timeEnd = 6 + 2 + 9999 as BHTime;
             //#enregion Given
 
             //#region When

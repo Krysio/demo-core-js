@@ -7,6 +7,7 @@ import { GenesisCommand } from '@/objects/commands/genesis';
 import { Block } from '@/objects/block';
 import { Frame } from '@/objects/frame';
 import { ConfigCommand } from '@/objects/commands/config';
+import { BHTime, MS, UnixTime } from '@/modules/time';
 
 type DeepPartial<T> = {
 	[P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
@@ -38,8 +39,8 @@ export function createAdmin({
 export function createUser({
     key = createKey(),
     parentKey = createKey(),
-    timeStart = 100,
-    timeEnd = 10000,
+    timeStart = 100 as BHTime,
+    timeEnd = 10000 as BHTime,
     metaData = 'meta data'
 } = {}) {
     const user = new User(key);
@@ -64,17 +65,17 @@ export function createFakeNode(override: DeepPartial<Node> = {}) {
 export function nodeCreator({ manualTime = false } = {}) {
     const creator = {
         scope: (() => ({
-            timeOfNode: 0,
+            timeOfNode: 0 as UnixTime,
             manualTime,
             manifest: 'Content of manifest',
             rootKey: null as Key,
-            genesisTime: Date.now(),
-            timeBetweenBlocks: 10,
+            genesisTime: Date.now() as UnixTime,
+            timeBetweenBlocks: 10 as MS,
             genesis: null as Block,
             listOfAdmin: [] as [Admin, Key][],
             node: null as Node,
         }))(),
-        manualTime(time: number = 0) {
+        manualTime(time = 0 as UnixTime) {
             creator.scope.manualTime = true;
             creator.scope.timeOfNode = time;
             creator.scope.genesisTime = time;
@@ -87,22 +88,22 @@ export function nodeCreator({ manualTime = false } = {}) {
 
             if (node) {
                 if (manualTime) {
-                    node.time.now = () => creator.scope.timeOfNode;
+                    node.time.nowUnix = () => creator.scope.timeOfNode as UnixTime;
                 } else {
-                    node.time.now = () => Date.now();
+                    node.time.nowUnix = () => Date.now() as UnixTime;
                 }
             }
         },
-        addTime(time: number) {
-            creator.scope.timeOfNode+= time;
+        addTime(time: MS) {
+            creator.scope.timeOfNode = creator.scope.timeOfNode + time as UnixTime;
         },
         manifest(value: string) {
             creator.scope.manifest = value; return creator;
         },
-        genesisTime(value: number) {
+        genesisTime(value: UnixTime) {
             creator.scope.genesisTime = value; return creator;
         },
-        blockTime(value: number) {
+        blockTime(value: MS) {
             creator.scope.timeBetweenBlocks = value; return creator;
         },
         rootKey(value: Key) {
@@ -130,8 +131,8 @@ export function nodeCreator({ manualTime = false } = {}) {
             );
             const configCommand = new ConfigCommand({
                 genesisTime, timeBetweenBlocks,
-                timeBeforeAccountActivation: 10,
-                timeLiveOfUserAccount: 1000
+                timeBeforeAccountActivation: 10 as BHTime,
+                timeLiveOfUserAccount: 1000 as BHTime,
             });
 
             creator.scope.genesis = new Block();

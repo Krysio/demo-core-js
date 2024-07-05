@@ -1,11 +1,12 @@
+import { BHTime } from "@/modules/time";
 import { VotingSimple } from "./simple";
 
 test('To & from buffer should result the same data', () => {
     //#region Given
     const votingA = new VotingSimple();
 
-    votingA.timeStart = 10;
-    votingA.timeEnd = 40;
+    votingA.timeStart = 10 as BHTime;
+    votingA.timeEnd = 40 as BHTime;
     //#enregion Given
 
     //#region When

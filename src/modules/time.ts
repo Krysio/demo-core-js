@@ -1,15 +1,18 @@
 import { Node } from '@/main';
 
+export type BHTime = Brand<number, 'Block Height Time'>;
+export type UnixTime = Brand<number, 'Unix Time'>;
+export type MS = Brand<number, 'Millisecond'>;
+
 export function createTime(refToNode: unknown) {
     const node = refToNode as Node;
     const { cadencySize } = node.config;
 
     const module = {
         cadencyNumber: 0,
-        now() { return Date.now(); },
         getCadencyNumber() { return module.cadencyNumber; },
         calcCadencyNumber() {
-            const heightOfChain = node.chainTop.getHeight();
+            const heightOfChain = node.chainTop.getIndexOfLastBlock();
             const newValue = Math.floor(heightOfChain / cadencySize);
 
             if (module.cadencyNumber !== newValue) {
@@ -22,8 +25,18 @@ export function createTime(refToNode: unknown) {
 
             return module.cadencyNumber;
         },
-        isPeriodBreak(periodStart: number, periodEnd: number) {
-            const nextPeriodStart = module.getHbTimeOfNextCadencyStart();
+        nowUnix() { return Date.now() as UnixTime; },
+        nowBlockHeight() {
+            const { genesisTime, timeBetweenBlocks } = node.config;
+
+            if (timeBetweenBlocks === 0) {
+                return 0 as BHTime;
+            }
+
+            return Math.floor((module.nowUnix() - genesisTime) / timeBetweenBlocks) as BHTime;
+        },
+        isPeriodBreak(periodStart: BHTime, periodEnd: BHTime) {
+            const nextPeriodStart = module.getTimeOfNextCadencyStart();
 
             if (
                 nextPeriodStart > periodStart
@@ -34,11 +47,17 @@ export function createTime(refToNode: unknown) {
 
             return false;
         },
-        getHbTimeOfCadencyStart() {
-            return cadencySize * module.cadencyNumber;
+        getTimeOfCadencyStart() {
+            return (cadencySize * module.cadencyNumber) as BHTime;
         },
-        getHbTimeOfNextCadencyStart() {
-            return cadencySize * (module.cadencyNumber + 1);
+        getTimeOfNextCadencyStart() {
+            return (cadencySize * (module.cadencyNumber + 1)) as BHTime;
+        },
+        wait(ms: MS) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        },
+        timeToSQL(time: UnixTime) {
+            return (new Date(time)).toISOString().replace('T', ' ').substring(0, 19);
         },
     };
 

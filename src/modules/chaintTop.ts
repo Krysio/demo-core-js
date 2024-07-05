@@ -55,15 +55,11 @@ export function createChainTop(refToNode: unknown) {
 
             return list;
         },
-
+        /**
+         * @deprecated
+         */
         getHeight() {
-            const { genesisTime, timeBetweenBlocks } = node.config;
-
-            if (timeBetweenBlocks === 0) {
-                return 0;
-            }
-
-            return Math.floor((node.time.now() - genesisTime) / timeBetweenBlocks);
+            return node.time.nowBlockHeight();
         },
         getIndexOfLastBlock() {
             return module.currentHeight;

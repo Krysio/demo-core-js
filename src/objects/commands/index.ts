@@ -2,12 +2,12 @@ import WBuffer from "@/libs/WBuffer";
 import { Node } from "@/main";
 import { Frame } from "@/objects/frame";
 
-type AnchorTypeID = number & { __TYPE__: 'AnchorTypeID' };
+type AnchorTypeID = Brand<number, 'AnchorTypeID'>;
 
 export const TYPE_ANCHOR_HASH = 0 as AnchorTypeID;
 export const TYPE_ANCHOR_INDEX = 1 as AnchorTypeID;
 
-type ValueTypeID = number & { __TYPE__: 'ValueTypeID' };
+type ValueTypeID = Brand<number, 'ValueTypeID'>;
 
 export const TYPE_VALUE_PRIMARY = 0 as ValueTypeID;
 export const TYPE_VALUE_SECONDARY = 1 as ValueTypeID;

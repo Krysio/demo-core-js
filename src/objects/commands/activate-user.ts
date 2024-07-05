@@ -47,7 +47,7 @@ export class ActivateUserCommand implements ICommand {
         }
 
         const hbTime = this.isNextCadency()
-            ? node.time.getHbTimeOfNextCadencyStart()
+            ? node.time.getTimeOfNextCadencyStart()
             : frame.anchorIndex + 2;
 
         if (author.timeStart > hbTime) {
@@ -71,11 +71,11 @@ export class ActivateUserCommand implements ICommand {
         const { publicKey } = frame.authors[0];
 
         if (this.isNextCadency()) {
-            const hbTimeOfAdded = node.time.getHbTimeOfNextCadencyStart();
+            const hbTimeOfAdded = node.time.getTimeOfNextCadencyStart();
 
             await node.storeVoter.addNext(publicKey, hbTimeOfAdded);
         } else {
-            const hbTimeOfAdded = node.time.getHbTimeOfCadencyStart();
+            const hbTimeOfAdded = node.time.getTimeOfCadencyStart();
 
             await node.storeVoter.add(publicKey, hbTimeOfAdded);
         }

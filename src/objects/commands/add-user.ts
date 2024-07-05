@@ -4,6 +4,7 @@ import { COMMAND_TYPE_ADD_USER } from "./types";
 import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
 import { Frame } from "@/objects/frame";
 import { User } from "@/objects/users";
+import { BHTime } from "@/modules/time";
 
 @Type(COMMAND_TYPE_ADD_USER)
 export class AddUserCommand implements ICommand {
@@ -45,14 +46,14 @@ export class AddUserCommand implements ICommand {
 
         const { timeBeforeAccountActivation, timeLiveOfUserAccount } = node.config;
         const { timeStart, timeEnd } = this.user;
-        const timeNow = frame.anchorIndex + 2;
+        const timeNow = frame.anchorIndex + 2 as BHTime;
         const minTimeStart = timeNow + timeBeforeAccountActivation;
         
         if (minTimeStart >= timeStart) {
             throw new Error('Cmd: Add User: TimeStart too low');
         }
 
-        const maxTimeEnd = timeNow + timeBeforeAccountActivation + timeLiveOfUserAccount;
+        const maxTimeEnd = timeNow + timeBeforeAccountActivation + timeLiveOfUserAccount as BHTime;
 
         if (maxTimeEnd < timeEnd) {
             throw new Error('Cmd: Add User: TimeEnd too hight');

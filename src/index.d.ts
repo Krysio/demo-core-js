@@ -1,4 +1,7 @@
-declare module "node:stream" {
+declare const brand: unique symbol;
+declare type Brand<T, TBrandName extends string> = T & { [brand]: TBrandName }
+
+declare module "node:stream" {    
     export type Listener = (...args: any[]) => void;
 
     export class TypedEventEmitter<EventList extends { [key: string]: any[] } = any> {

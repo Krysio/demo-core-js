@@ -1,18 +1,23 @@
 import WBuffer from "@/libs/WBuffer";
-import { createKey, nodeCreator } from "@/tests/helper";
+import { nodeCreator } from "@/tests/helper";
 import { Admin } from "@/objects/users";
 import { Frame } from "@/objects/frame";
 import { VotingSimple } from "@/objects/voting";
 import { AddVotingCommand } from "./add-voting";
 import getLazyPromise from "@/libs/lazyPromise";
+import { BHTime, MS, UnixTime } from "@/modules/time";
 
 describe('Adding a voting by an admin', () => {
     //#region Given
     let testedFrame: WBuffer = null;
 
-    const creator = nodeCreator().manualTime(10001);
+    const creator = nodeCreator().manualTime(10001 as UnixTime);
     const addingVotingMeta = 'Some text';
-    const addingVoting = new VotingSimple(20, 100, addingVotingMeta);
+    const addingVoting = new VotingSimple(
+        20 as BHTime,
+        100 as BHTime,
+        addingVotingMeta
+    );
 
     test('Create a node', async () => {
         const { node } = creator;
@@ -66,13 +71,13 @@ describe('Adding a voting by an admin', () => {
         
         const { node } = creator;
 
-        creator.addTime(10);
+        creator.addTime(10 as MS);
         await node.whenChainGrowsTo(1);
 
         expect(node.chainTop.getHeight()).toBe(1);
         expect(node.commandPool.getByIndex(0).length).toBe(1);
 
-        creator.addTime(20);
+        creator.addTime(20 as MS);
         await node.whenChainGrowsTo(3);
 
         expect(node.chainTop.getHeight()).toBe(3);

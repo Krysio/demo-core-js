@@ -1,5 +1,4 @@
 import { isProduction } from '@/helper';
-import Time from '@/libs/Time';
 import WBuffer from '@/libs/WBuffer';
 import { Node } from '@/main';
 import * as fs from 'fs/promises';
@@ -26,7 +25,7 @@ export function createFs(refToNode: unknown) {
                 }
             }
 
-            const name = Time.timeToSQL(node.config.genesisTime).replaceAll(':', '-');
+            const name = node.time.timeToSQL(node.config.genesisTime).replaceAll(':', '-');
 
             module.mainDir = path.join(DIR_RUN, name);
             module.blockDir = path.join(DIR_RUN, name, 'blocks');

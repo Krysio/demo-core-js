@@ -1,11 +1,12 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
+import { BHTime } from "@/modules/time";
 import { Key } from "@/objects/key";
 
 export class User {
     publicKey: Key;
     parentPublicKey: Key = null;
-    timeStart: number = 0;
-    timeEnd: number = 0;
+    timeStart = 0 as BHTime;
+    timeEnd = 0 as BHTime;
     metaData: string = '';
 
     constructor(
@@ -35,8 +36,8 @@ export class User {
                 this.parentPublicKey = Key.parse(buffer);
             }
     
-            this.timeStart = buffer.readUleb128();
-            this.timeEnd = buffer.readUleb128();
+            this.timeStart = buffer.readUleb128() as BHTime;
+            this.timeEnd = buffer.readUleb128() as BHTime;
             this.metaData = buffer.read(buffer.readUleb128()).utf8();
 
             return this;

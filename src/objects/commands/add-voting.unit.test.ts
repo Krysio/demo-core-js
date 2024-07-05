@@ -4,12 +4,13 @@ import { Admin } from "@/objects/users";
 import { VotingSimple } from "@/objects/voting";
 import { sha256 } from "@/libs/crypto/sha256";
 import { AddVotingCommand } from "./add-voting";
+import { BHTime } from "@/modules/time";
 
 function createCommand({
     authorKey = createKey(),
     meta = ''
 } = {}) {
-    const voting = new VotingSimple(10, 1000, meta);
+    const voting = new VotingSimple(10 as BHTime, 1000 as BHTime, meta);
     const command = new AddVotingCommand(voting);
     const frame = new Frame(command);
     const author = new Admin(authorKey);

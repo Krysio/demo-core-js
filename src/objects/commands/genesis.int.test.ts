@@ -1,7 +1,8 @@
+import { UnixTime } from "@/modules/time";
 import { nodeCreator } from "@/tests/helper";
 
 test('Create a node', async () => {
-    const creator = nodeCreator().manualTime(10001);
+    const creator = nodeCreator().manualTime(10001 as UnixTime);
     const { node, scope: { rootKey } } = creator;
 
     await node.whenInit();

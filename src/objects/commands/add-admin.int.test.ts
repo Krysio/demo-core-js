@@ -4,12 +4,13 @@ import { AddAdminCommand } from "./add-admin";
 import { Admin } from "../users";
 import { Frame } from "../frame";
 import getLazyPromise from "@/libs/lazyPromise";
+import { MS, UnixTime } from "@/modules/time";
 
 describe('Adding an admin by the root', () => {
     //#region Given
     let testedFrame: WBuffer = null;
 
-    const creator = nodeCreator().manualTime(10001);
+    const creator = nodeCreator().manualTime(10001 as UnixTime);
     const addingAdminKey = createKey();
     const addingAdminMeta = 'Some text';
     const addingAdmin = new Admin(addingAdminKey, addingAdminMeta);
@@ -66,13 +67,13 @@ describe('Adding an admin by the root', () => {
         
         const { node } = creator;
 
-        creator.addTime(10);
+        creator.addTime(10 as MS);
         await node.whenChainGrowsTo(1);
 
         expect(node.chainTop.getHeight()).toBe(1);
         expect(node.commandPool.getByIndex(0).length).toBe(1);
 
-        creator.addTime(20);
+        creator.addTime(20 as MS);
         await node.whenChainGrowsTo(3);
 
         expect(node.chainTop.getHeight()).toBe(3);

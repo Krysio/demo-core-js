@@ -4,18 +4,19 @@ import { Admin, User } from "@/objects/users";
 import { Frame } from "@/objects/frame";
 import { AddUserCommand } from "./add-user";
 import getLazyPromise from "@/libs/lazyPromise";
+import { BHTime, MS, UnixTime } from "@/modules/time";
 
 describe('Adding an user by an admin', () => {
     //#region Given
     let testedFrame: WBuffer = null;
 
-    const creator = nodeCreator().manualTime(10001);
+    const creator = nodeCreator().manualTime(10001 as UnixTime);
     const addingUserKey = createKey();
     const addingUserMeta = 'Some text';
     const addingUser = new User(addingUserKey, addingUserMeta);
 
-    addingUser.timeStart = 20;
-    addingUser.timeEnd = 100;
+    addingUser.timeStart = 20 as BHTime;
+    addingUser.timeEnd = 100 as BHTime;
 
     test('Create a node', async () => {
         const { node } = creator;
@@ -69,13 +70,13 @@ describe('Adding an user by an admin', () => {
         
         const { node } = creator;
 
-        creator.addTime(10);
+        creator.addTime(10 as MS);
         await node.whenChainGrowsTo(1);
 
         expect(node.chainTop.getHeight()).toBe(1);
         expect(node.commandPool.getByIndex(0).length).toBe(1);
 
-        creator.addTime(20);
+        creator.addTime(20 as MS);
         await node.whenChainGrowsTo(3);
 
         expect(node.chainTop.getHeight()).toBe(3);

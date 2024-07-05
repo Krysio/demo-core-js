@@ -1,5 +1,6 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { doubleSha256 } from "@/libs/crypto/sha256";
+import { BHTime } from "@/modules/time";
 import { Key } from "@/objects/key";
 
 /******************************/
@@ -31,16 +32,16 @@ export interface IVoting {
 export class Voting {
     public buffer: WBuffer;
     public typeID: number;
-    public timeStart: number = 0;
-    public timeEnd: number = 0;
+    public timeStart = 0 as BHTime;
+    public timeEnd = 0 as BHTime;
     public meta: string = '';
     public isAllowFlow: boolean = true;
     public isSecret: boolean = false;
     public publicKey: Key = null;
 
     constructor(
-        timeStart?: number,
-        timeEnd?: number,
+        timeStart?: BHTime,
+        timeEnd?: BHTime,
         meta = ''
     ) {
         if (timeStart) this.timeStart = timeStart;
@@ -82,8 +83,8 @@ export class Voting {
             const cursor = buffer.cursor;
 
             this.typeID = buffer.readUleb128();
-            this.timeStart = buffer.readUleb128();
-            this.timeEnd = buffer.readUleb128();
+            this.timeStart = buffer.readUleb128() as BHTime;
+            this.timeEnd = buffer.readUleb128() as BHTime;
             this.meta = buffer.read(buffer.readUleb128()).utf8();
             this.buffer = buffer.subarray(cursor, buffer.cursor);
 

@@ -1,12 +1,12 @@
 import { createFakeNode } from "@/tests/helper";
-import { createTime } from "./time";
+import { BHTime, createTime } from "./time";
 
 describe('Calc candency number', () => {
     function createTest(givenValue: number, expectValue: number) {
         //#region Given
         const fakeNode = createFakeNode({
             config: { cadencySize: 10  },
-            chainTop: { getHeight: () => givenValue },
+            chainTop: { getIndexOfLastBlock: () => givenValue },
         });
         const module = createTime(fakeNode);
         //#enregion Given
@@ -27,14 +27,14 @@ describe('Calc candency number', () => {
 describe('Is period has a break', () => {
     function createTest(
         givenValue: number,
-        periodStart: number,
-        periodEnd: number,
+        periodStart: BHTime,
+        periodEnd: BHTime,
         expectValue: boolean
     ) {
         //#region Given
         const fakeNode = createFakeNode({
             config: { cadencySize: 10  },
-            chainTop: { getHeight: () => givenValue },
+            chainTop: { getIndexOfLastBlock: () => givenValue },
         });
         const module = createTime(fakeNode);
         
@@ -48,10 +48,10 @@ describe('Is period has a break', () => {
         });
     };
 
-    createTest(1, 2, 7, false);
-    createTest(1, 2, 9, false);
-    createTest(1, 2, 10, true);
-    createTest(1, 2, 17, true);
-    createTest(12, 13, 17, false);
-    createTest(12, 13, 22, true);
+    createTest(1, 2 as BHTime, 7 as BHTime, false);
+    createTest(1, 2 as BHTime, 9 as BHTime, false);
+    createTest(1, 2 as BHTime, 10 as BHTime, true);
+    createTest(1, 2 as BHTime, 17 as BHTime, true);
+    createTest(12, 13 as BHTime, 17 as BHTime, false);
+    createTest(12, 13 as BHTime, 22 as BHTime, true);
 });
