@@ -31,15 +31,10 @@ export class KeySecp256k1 extends Key implements IKey {
 
         if (!key) throw new Error(ERROR_NO_PRIVATE_KEY);
 
-        try {
-            return signSecp256k1(
-                key,
-                hash
-            );
-        } catch (error) {
-            console.log([key, hash]);
-            throw error;
-        }
+        return signSecp256k1(
+            key,
+            hash
+        );
     }
 
     verify(hash: WBuffer, signature: WBuffer): boolean {

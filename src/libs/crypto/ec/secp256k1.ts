@@ -56,8 +56,13 @@ export function decryptAES256GCM(
  */
 export function getKeyPair() {
     const ec = crypto.createECDH('secp256k1');
-    const publicKey = ec.generateKeys(undefined, 'compressed') as unknown as Buffer;
-    const privateKey = ec.getPrivateKey();
+    let publicKey: Buffer;
+    let privateKey: Buffer;
+
+    do {
+        publicKey = ec.generateKeys(undefined, 'compressed') as unknown as Buffer;
+        privateKey = ec.getPrivateKey();
+    } while (privateKey.length !== 32);
 
     return [
         WBuffer.from(privateKey),
