@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "lint": "npx eslint .",
+    "lint": "npx eslint src",
     "test-new": "npx jest --verbose \".new.test.ts\"",
     "test-unit": "npx jest --verbose \".unit.test.ts\"",
     "test-int": "npx jest --verbose \".int.test.ts\"",
