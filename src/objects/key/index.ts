@@ -2,7 +2,6 @@ import WBuffer from "@/libs/WBuffer";
 
 /******************************/
 
-export const TYPE_KEY_Testing = 0;
 export const TYPE_KEY_Secp256k1 = 1;
 
 const mapOftypes = new Map<number, Function>();
@@ -47,10 +46,10 @@ export interface IKey {
 }
 
 export class Key {
-    buffer: WBuffer;
-    typeID: number;
-    key: WBuffer;
-    privateKey: WBuffer = null;
+    public buffer: WBuffer;
+    public typeID: number;
+    public key: WBuffer;
+    public privateKey: WBuffer = null;
 
     constructor(
         publicKey?: WBuffer,
@@ -60,7 +59,7 @@ export class Key {
         this.privateKey = privateKey || null;
     }
 
-    setType(typeID: number) {
+    public setType(typeID: number) {
         this.typeID = typeID;
 
         const Typed = mapOftypes.get(typeID) as typeof Key;
@@ -70,9 +69,15 @@ export class Key {
         }
     }
 
+    public isEqual(key: Key) {
+        if (this.typeID !== key.typeID) return false;
+        if (!this.key.isEqual(key.key)) return false;
+        return true;
+    }
+
     //#region buffer
 
-    static parse(buffer: WBuffer) {
+    public static parse(buffer: WBuffer) {
         try {
             const cursor = buffer.cursor;
             const typeID = buffer.readUleb128();
@@ -89,7 +94,7 @@ export class Key {
         }
     }
 
-    parse(buffer: WBuffer): Key {
+    public parse(buffer: WBuffer): Key {
         try {
             const cursor = buffer.cursor;
 
@@ -103,7 +108,7 @@ export class Key {
         }
     }
 
-    toBuffer(): WBuffer {
+    public toBuffer(): WBuffer {
         try {
             return this.buffer = WBuffer.concat([
                 WBuffer.uleb128(this.typeID),
@@ -114,7 +119,7 @@ export class Key {
         }
     }
 
-    parseSignature(buffer: WBuffer) {
+    public parseSignature(buffer: WBuffer) {
         const sizeOfSingature = buffer.readUleb128();
         const signature = buffer.read(sizeOfSingature);
 
@@ -122,26 +127,22 @@ export class Key {
     }
 
     //#endregion buffer
-
-    isEqual(key: Key) {
-        if (this.typeID !== key.typeID) return false;
-        if (!this.key.isEqual(key.key)) return false;
-        return true;
-    }
-
     //#region crypto
 
-    @virtual sign(hash: WBuffer, privateKey?: WBuffer): WBuffer { return null as WBuffer; }
-    @virtual verify(hash: WBuffer, signature: WBuffer): boolean { return null as boolean; }
-    @virtual encrypt(message: WBuffer): WBuffer { return null as WBuffer; }
-    @virtual decrypt(message: WBuffer, privateKey?: WBuffer): WBuffer { return null as WBuffer; }
+    @virtual public sign(hash: WBuffer, privateKey?: WBuffer): WBuffer { return null as WBuffer; }
+    @virtual public verify(hash: WBuffer, signature: WBuffer): boolean { return null as boolean; }
+    @virtual public encrypt(message: WBuffer): WBuffer { return null as WBuffer; }
+    @virtual public decrypt(message: WBuffer, privateKey?: WBuffer): WBuffer { return null as WBuffer; }
 
     //#endregion crypto
+    //#region inspect
 
     public toString() { return this.toBuffer().hex(); }
     public inspect() { return `<${this.constructor.name}:${WBuffer.hex(this.key)}>`; }
     public toJSON() { return this.inspect(); }
     [Symbol.for('nodejs.util.inspect.custom')]() { return this.inspect(); }
+
+    //#endregion inspect
 }
 
 export * from "./secp256k1";
