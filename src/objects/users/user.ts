@@ -2,6 +2,9 @@ import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { BHTime } from "@/modules/time";
 import { Key } from "@/objects/key";
 
+// 0: none, 1: activation locked
+const flagActivationLocked = 1 << 0;
+
 export class User {
     public publicKey: Key;
     public parentPublicKey: Key = null;
@@ -18,7 +21,18 @@ export class User {
         if (metaData) this.metaData = metaData;
     }
 
+    //#region flags
 
+    public isActivationLocked() {
+        return !!(this.flags & flagActivationLocked);
+    }
+    public setActivationLocked(flag: boolean) {
+        this.flags = flag
+            ? this.flags | flagActivationLocked
+            : this.flags & (0xff ^ flagActivationLocked);
+    }
+
+    //#endregion flags
     //#region buffer
 
     public static parse(
@@ -42,6 +56,7 @@ export class User {
     
             this.timeStart = buffer.readUleb128() as BHTime;
             this.timeEnd = buffer.readUleb128() as BHTime;
+            this.flags = buffer.readUleb128();
             this.metaData = buffer.read(buffer.readUleb128()).utf8();
 
             return this;
@@ -66,6 +81,7 @@ export class User {
 
             const timeStart = WBuffer.uleb128(this.timeStart);
             const timeEnd = WBuffer.uleb128(this.timeEnd);
+            const flags = WBuffer.uleb128(this.flags);
             const sizeOfMeta = WBuffer.uleb128(this.metaData.length);
             const metaData = WBuffer.from(this.metaData, 'utf8');
 
@@ -74,6 +90,7 @@ export class User {
                 parentPublicKey,
                 timeStart,
                 timeEnd,
+                flags,
                 sizeOfMeta,
                 metaData
             ]);
@@ -91,6 +108,7 @@ export class User {
             parentPublicKey: this.parentPublicKey,
             timeStart: this.timeStart,
             timeEnd: this.timeEnd,
+            flags: this.flags,
             metaData: this.metaData,
         }, null, '  ')}>`;
     }

@@ -55,7 +55,11 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand();
         const fakeNode = createFakeNode({
-            storeUser: { get: () => Promise.resolve({ timeStart: 10, timeEnd: 100 }) },
+            storeUser: { get: () => Promise.resolve({
+                timeStart: 10,
+                timeEnd: 100,
+                isActivationLocked: () => false,
+            }) },
             storeVoter: { get: () => Promise.resolve(null) },
         });
         //#enregion Given
@@ -71,11 +75,39 @@ describe('Verifivation', () => {
         //#enregion Then
     });
 
+    test('When author is locked: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeUser: { get: () => Promise.resolve({
+                timeStart: 10,
+                timeEnd: 100,
+                isActivationLocked: () => true,
+            }) },
+            storeVoter: { get: () => Promise.resolve(null) },
+        });
+        //#enregion Given
+
+        //#region When
+        const result = await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })());
+        //#enregion When
+    
+        //#region Then
+        result.rejects.toThrow('Cmd: Activate User: Account locked');
+        //#enregion Then
+    });
+
     test('When action is too early: should throw error', async () => {
         //#region Given
         const { command, frame } = createCommand({ anchor: 5 });
         const fakeNode = createFakeNode({
-            storeUser: { get: () => Promise.resolve({ timeStart: 10, timeEnd: 100 }) },
+            storeUser: { get: () => Promise.resolve({
+                timeStart: 10,
+                timeEnd: 100,
+                isActivationLocked: () => false,
+            }) },
         });
         //#enregion Given
 
@@ -94,7 +126,11 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand({ anchor: 25 });
         const fakeNode = createFakeNode({
-            storeUser: { get: () => Promise.resolve({ timeStart: 10, timeEnd: 100 }) },
+            storeUser: { get: () => Promise.resolve({
+                timeStart: 10,
+                timeEnd: 100,
+                isActivationLocked: () => false,
+            }) },
             storeVoter: { get: () => Promise.resolve(1) },
         });
         //#enregion Given
@@ -114,7 +150,11 @@ describe('Verifivation', () => {
         //#region Given
         const { command, frame } = createCommand({ anchor: 105 });
         const fakeNode = createFakeNode({
-            storeUser: { get: () => Promise.resolve({ timeStart: 10, timeEnd: 100 }) },
+            storeUser: { get: () => Promise.resolve({
+                timeStart: 10,
+                timeEnd: 100,
+                isActivationLocked: () => false,
+            }) },
         });
         //#enregion Given
 
