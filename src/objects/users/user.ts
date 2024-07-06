@@ -3,11 +3,12 @@ import { BHTime } from "@/modules/time";
 import { Key } from "@/objects/key";
 
 export class User {
-    publicKey: Key;
-    parentPublicKey: Key = null;
-    timeStart = 0 as BHTime;
-    timeEnd = 0 as BHTime;
-    metaData: string = '';
+    public publicKey: Key;
+    public parentPublicKey: Key = null;
+    public timeStart = 0 as BHTime;
+    public timeEnd = 0 as BHTime;
+    public flags = 0;
+    public metaData: string = '';
 
     constructor(
         publicKey?: Key,
@@ -17,7 +18,10 @@ export class User {
         if (metaData) this.metaData = metaData;
     }
 
-    static parse(
+
+    //#region buffer
+
+    public static parse(
         buffer: WBuffer,
         source: 'db' | 'net' = 'net'
     ) {
@@ -78,6 +82,9 @@ export class User {
         }
     }
 
+    //#endregion buffer
+    //#region inspect
+
     public inspect() {
         return `<${this.constructor.name}:${JSON.stringify({
             publicKey: this.publicKey,
@@ -93,4 +100,6 @@ export class User {
     [Symbol.for('nodejs.util.inspect.custom')]() {
         return this.inspect();
     }
+
+    //#endregion inspect
 }

@@ -8,11 +8,15 @@ import { doubleSha256 } from "@/libs/crypto/sha256";
 
 @Type(COMMAND_TYPE_ADD_VOTING)
 export class AddVotingCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = false;
     isMultiAuthor = false;
     isValueHasKey = false;
     valueTypeID = TYPE_VALUE_SECONDARY;
+
+    //#enregion cmd config
 
     public voting: Voting = null;
 
@@ -21,6 +25,8 @@ export class AddVotingCommand implements ICommand {
     ) {
         if (voting) this.voting = voting;
     }
+
+    //#region buffer
 
     public parse(buffer: WBuffer) {
         this.voting = Voting.parse(buffer);
@@ -31,6 +37,8 @@ export class AddVotingCommand implements ICommand {
     public toBuffer(): WBuffer {
         return this.voting.toBuffer();
     }
+
+    //#enregion buffer
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];

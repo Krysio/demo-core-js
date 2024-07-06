@@ -7,11 +7,15 @@ import { Node } from "@/main";
 
 @Type(COMMAND_TYPE_KEY_POOLING)
 export class KeyPoolingCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_INDEX;
     valueTypeID = TYPE_VALUE_SECONDARY;
     isInternal = false;
     isMultiAuthor = true;
     isValueHasKey = false;
+
+    //#enregion cmd config
 
     public listOfPublicKeys: Key[] = [];
   

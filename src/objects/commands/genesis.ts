@@ -7,17 +7,23 @@ import { Node } from '@/main';
 
 @Type(COMMAND_TYPE_GENESIS)
 export class GenesisCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = true;
     isMultiAuthor = false;
     isValueHasKey = false;
     valueTypeID = TYPE_VALUE_PRIMARY;
 
+    //#enregion cmd config
+
     constructor(
         public rootPublicKey: Key = null,
         public listOfAdminAccounts: Admin[] = [],
         public manifest: string = '',
     ) {}
+
+    //#region buffer
 
     public parse(buffer: WBuffer) {
         const sizeOfManifest = buffer.readUleb128();
@@ -62,6 +68,8 @@ export class GenesisCommand implements ICommand {
             manifest
         ]);
     }
+
+    //#enregion buffer
 
     public async verify(node: Node): Promise<void> {
         if (node.chainTop.getHeight() !== 0) {

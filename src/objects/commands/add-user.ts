@@ -8,17 +8,23 @@ import { BHTime } from "@/modules/time";
 
 @Type(COMMAND_TYPE_ADD_USER)
 export class AddUserCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = false;
     isMultiAuthor = false;
     isValueHasKey = false;
     valueTypeID = TYPE_VALUE_SECONDARY;
 
+    //#enregion cmd config
+
     public user: User = null;
 
     constructor(user?: User) {
         if (user) this.user = user;
     }
+
+    //#region buffer
 
     public parse(buffer: WBuffer) {
         this.user = User.parse(buffer);
@@ -29,6 +35,8 @@ export class AddUserCommand implements ICommand {
     public toBuffer(): WBuffer {
         return this.user.toBuffer();
     }
+
+    //#enregion buffer
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];

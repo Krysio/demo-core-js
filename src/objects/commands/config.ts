@@ -6,11 +6,15 @@ import { BHTime, MS, UnixTime } from "@/modules/time";
 
 @Type(COMMAND_TYPE_CONFIG)
 export class ConfigCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = true;
     isMultiAuthor = false;
     isValueHasKey = false;
     valueTypeID = TYPE_VALUE_PRIMARY;
+
+    //#enregion cmd config
 
     public values: Config = {
         genesisTime: 0 as UnixTime,
@@ -28,6 +32,8 @@ export class ConfigCommand implements ICommand {
             this.values[key as KeyConfig] = config[key as KeyConfig] as any;
         }
     }
+
+    //#region buffer
 
     public parse(buffer: WBuffer) {
         this.values.genesisTime = buffer.readUleb128() as UnixTime;
@@ -60,6 +66,8 @@ export class ConfigCommand implements ICommand {
             timeBeforeAccountActivation
         ]);
     }
+
+    //#enregion buffer
 
     public async verify() {}
 }

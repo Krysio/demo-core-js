@@ -7,11 +7,15 @@ import { Key } from "@/objects/key";
 
 @Type(COMMAND_TYPE_VOTE_FLOW)
 export class FlowVoteCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_HASH;
     isInternal = false;
     isMultiAuthor = false;
     isValueHasKey = true;
     valueTypeID = TYPE_VALUE_PRIMARY;
+
+    //#enregion cmd config
 
     public votingHash: WBuffer = null;
     public voterPublicKey: Key = null;
@@ -23,6 +27,8 @@ export class FlowVoteCommand implements ICommand {
         if (votingHash) this.votingHash = votingHash;
         if (voterPublicKey) this.voterPublicKey = voterPublicKey;
     }
+
+    //#region buffer
 
     public parse(buffer: WBuffer) {
         this.votingHash = buffer.read(32);
@@ -37,6 +43,8 @@ export class FlowVoteCommand implements ICommand {
             this.voterPublicKey.toBuffer(),
         ]);
     }
+
+    //#enregion buffer
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];

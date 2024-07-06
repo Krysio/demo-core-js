@@ -2,10 +2,10 @@ import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { Key } from "@/objects/key";
 
 export class Admin {
-    publicKey: Key;
-    parentPublicKey: Key = null;
-    level: number = 0;
-    metaData: string = '';
+    public publicKey: Key;
+    public parentPublicKey: Key = null;
+    public level: number = 0;
+    public metaData: string = '';
 
     constructor(
         publicKey?: Key,
@@ -15,7 +15,9 @@ export class Admin {
         if (metaData) this.metaData = metaData;
     }
 
-    static parse(
+    //#region buffer
+
+    public static parse(
         buffer: WBuffer,
         source: 'db' | 'net' = 'net'
     ) {
@@ -73,6 +75,9 @@ export class Admin {
         }
     }
 
+    //#enregion buffer
+    //#region inspect
+
     public inspect() {
         return `<${this.constructor.name}:${JSON.stringify({
             publicKey: this.publicKey,
@@ -87,4 +92,6 @@ export class Admin {
     public [Symbol.for('nodejs.util.inspect.custom')]() {
         return this.inspect();
     }
+
+    //#endregion inspect
 }

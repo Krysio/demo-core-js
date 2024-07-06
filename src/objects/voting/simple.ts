@@ -10,7 +10,7 @@ import { Voting, IVoting, TYPE_VOTING_SIMPLE, Type } from ".";
 
 @Type(TYPE_VOTING_SIMPLE)
 export class VotingSimple extends Voting implements IVoting {
-    parseValue(buffer: WBuffer): number {
+    public parseValue(buffer: WBuffer): number {
         const value = buffer.readUleb128();
 
         if (value > 2) {
@@ -20,7 +20,7 @@ export class VotingSimple extends Voting implements IVoting {
         return value;
     }
 
-    toBufferValue(value: number): WBuffer {
+    public toBufferValue(value: number): WBuffer {
         return WBuffer.uleb128(value);
     }
 }

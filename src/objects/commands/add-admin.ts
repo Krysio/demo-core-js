@@ -7,17 +7,23 @@ import { Admin } from "@/objects/users";
 
 @Type(COMMAND_TYPE_ADD_ADMIN)
 export class AddAdminCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = false;
     isMultiAuthor = false;
     isValueHasKey = false;
     valueTypeID = TYPE_VALUE_SECONDARY;
 
+    //#enregion cmd config
+
     public admin: Admin = null;
 
     constructor(admin?: Admin) {
         if (admin) this.admin = admin;
     }
+
+    //#region buffer
 
     public parse(buffer: WBuffer) {
         this.admin = Admin.parse(buffer);
@@ -28,6 +34,8 @@ export class AddAdminCommand implements ICommand {
     public toBuffer(): WBuffer {
         return this.admin.toBuffer();
     }
+
+    //#enregion buffer
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];

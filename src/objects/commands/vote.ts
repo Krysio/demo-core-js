@@ -6,11 +6,15 @@ import { Frame } from "@/objects/frame";
 
 @Type(COMMAND_TYPE_VOTE)
 export class VoteCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_HASH;
     isInternal = false;
     isMultiAuthor = false;
     isValueHasKey = true;
     valueTypeID = TYPE_VALUE_PRIMARY;
+
+    //#enregion cmd config
 
     public votingHash: WBuffer = null;
     public value: WBuffer = null;
@@ -22,6 +26,8 @@ export class VoteCommand implements ICommand {
         if (votingHash) this.votingHash = votingHash;
         if (value) this.value = value;
     }
+
+    //#region buffer
 
     public parse(buffer: WBuffer) {
         this.votingHash = buffer.read(32);
@@ -37,6 +43,8 @@ export class VoteCommand implements ICommand {
             this.value,
         ]);
     }
+
+    //#enregion buffer
 
     public async verify(node: Node, frame: Frame) {
         const { publicKey: authorPublicKey } = frame.authors[0];

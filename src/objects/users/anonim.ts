@@ -2,8 +2,8 @@ import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { Key } from "@/objects/key";
 
 export class Anonim {
-    publicKey: Key;
-    level: number = 0;
+    public publicKey: Key;
+    public level: number = 0;
 
     constructor(
         publicKey?: Key
@@ -13,11 +13,13 @@ export class Anonim {
         }
     }
 
-    static parse(buffer: WBuffer) {
+    //#region buffer
+
+    public static parse(buffer: WBuffer) {
         return new Anonim().parse(buffer);
     }
 
-    parse(
+    public parse(
         buffer: WBuffer,
         source: 'db' | 'net' = 'net'
     ) {
@@ -34,7 +36,7 @@ export class Anonim {
         }
     }
 
-    toBuffer(target: 'db' | 'net' = 'net'): WBuffer {
+    public toBuffer(target: 'db' | 'net' = 'net'): WBuffer {
         try {
             const publicKey = target !== 'db'
                 ? this.publicKey.toBuffer()
@@ -51,6 +53,9 @@ export class Anonim {
         }
     }
 
+    //#enregion buffer
+    //#region inspect
+
     public inspect() {
         return `<${this.constructor.name}:${JSON.stringify({
             publicKey: this.publicKey,
@@ -63,4 +68,6 @@ export class Anonim {
     [Symbol.for('nodejs.util.inspect.custom')]() {
         return this.inspect();
     }
+
+    //#endregion inspect
 }

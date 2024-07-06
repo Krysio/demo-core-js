@@ -4,24 +4,30 @@ import { COMMAND_TYPE_ACTIVATE_USER } from "./types";
 import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
 import { Frame } from "@/objects/frame";
 
+// 0: current cadency, 1: next cademcy
+const flagNextCadency = 1 << 0;
+
 @Type(COMMAND_TYPE_ACTIVATE_USER)
 export class ActivateUserCommand implements ICommand {
+    //#region cmd config
+
     anchorTypeID = TYPE_ANCHOR_INDEX;
     isInternal = false;
     isMultiAuthor = false;
     isValueHasKey = false;
     valueTypeID = TYPE_VALUE_SECONDARY;
 
+    //#enregion cmd config
+
     public value = 0;
-    /** (this.value & 1)
-     * 0: current cadency
-     * 1: next cademcy
-     */
-    public isNextCadency() {return this.value & 1}
 
     constructor(value?: number) {
         if (value) this.value = value;
     }
+
+    public isNextCadency() { return !!(this.value & flagNextCadency); }
+
+    //#region buffer
 
     public parse(buffer: WBuffer) {
         this.value = buffer.readUleb128();
@@ -33,8 +39,11 @@ export class ActivateUserCommand implements ICommand {
         return WBuffer.uleb128(this.value);
     }
 
+    //#enregion buffer
+
     public async verify(node: Node, frame: Frame) {
         const errorMsgUnknownAuthor = 'Cmd: Activate User: Author does not exist';
+        const errorMsgLocked = 'Cmd: Activate User: Account locked';
         const errorMsgTooEarly = 'Cmd: Activate User: Action induced too early';
         const errorMsgExpired = 'Cmd: Activate User: Account expired';
         const errorMsgDuplicateKey = 'Cmd: Activate User: Duplicate key';
@@ -44,6 +53,10 @@ export class ActivateUserCommand implements ICommand {
 
         if (author === null) {
             throw new Error(errorMsgUnknownAuthor);
+        }
+
+        if (author.isActivationLocked()) {
+            throw new Error(errorMsgLocked);
         }
 
         const hbTime = this.isNextCadency()

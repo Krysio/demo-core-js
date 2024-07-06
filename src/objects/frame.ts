@@ -34,6 +34,41 @@ export class Frame {
         }
     }
 
+    public getHash() {
+        return doubleSha256(this.toBuffer('hash'));
+    }
+
+    public setAnchor(anchor: number | WBuffer) {
+        if (anchor instanceof WBuffer) {
+            if (this.data.anchorTypeID !== TYPE_ANCHOR_HASH) {
+                throw new Error('Frame: set invalid anchor');
+            }
+
+            this.anchorHash = anchor;
+
+            return;
+        }
+
+        if (this.data.anchorTypeID !== TYPE_ANCHOR_INDEX) {
+            throw new Error('Frame: set invalid anchor');
+        }
+        
+        this.anchorIndex = anchor;
+    }
+
+    public addAuthor(key: Key) {
+        const item = {
+            publicKey: key,
+            signature: null as WBuffer
+        };
+
+        this.authors.push(item);
+
+        return (signature: WBuffer) => item.signature = signature;
+    }
+
+    //#region buffer
+
     public static parse(buffer: WBuffer, source: 'block' | 'net' = 'net'): Frame {
         return new Frame().parse(buffer, source);
     }
@@ -134,7 +169,7 @@ export class Frame {
 
         const { buffer } = this;
     
-        for (let author of this.authors) {
+        for (const author of this.authors) {
             author.signature = author.publicKey.parseSignature(buffer);
         }
     }
@@ -196,6 +231,8 @@ export class Frame {
         return WBuffer.concat(this.authors.map((author) => author.signature));
     }
 
+    //#enregion buffer
+
     public getKeyOfValue(): WBuffer {
         if (this.data.getKeyOfValue) {
             return this.data.getKeyOfValue(this);
@@ -206,38 +243,5 @@ export class Frame {
         }
 
         return this.toBufferAuthors();
-    }
-
-    public getHash() {
-        return doubleSha256(this.toBuffer('hash'));
-    }
-
-    public setAnchor(anchor: number | WBuffer) {
-        if (anchor instanceof WBuffer) {
-            if (this.data.anchorTypeID !== TYPE_ANCHOR_HASH) {
-                throw new Error('Frame: set invalid anchor');
-            }
-
-            this.anchorHash = anchor;
-
-            return;
-        }
-
-        if (this.data.anchorTypeID !== TYPE_ANCHOR_INDEX) {
-            throw new Error('Frame: set invalid anchor');
-        }
-        
-        this.anchorIndex = anchor;
-    }
-
-    public addAuthor(key: Key) {
-        const item = {
-            publicKey: key,
-            signature: null as WBuffer
-        };
-
-        this.authors.push(item);
-
-        return (signature: WBuffer) => item.signature = signature;
     }
 }

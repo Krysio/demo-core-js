@@ -29,6 +29,9 @@ export interface ICommand {
     getKeyOfValue?: (frame: Frame) => WBuffer;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-types */
+
 const mapOftypes = new Map<number, Function>();
 export const Type = (typeID: number) => {
     return (target: new (...args: any[]) => any) => {
@@ -43,6 +46,9 @@ export const Type = (typeID: number) => {
         return ref[target.prototype.constructor.name] as unknown as void;
     }
 };
+
+/* eslint-enable @typescript-eslint/no-explicit-any */
+/* eslint-enable @typescript-eslint/ban-types */
 
 export class Command {
     static type(typeID: number) {
