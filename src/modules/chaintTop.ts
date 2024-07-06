@@ -25,7 +25,7 @@ export function createChainTop(refToNode: unknown) {
 
         addBlock(block: Block) {
             const index = block.index;
-            let existList = this.blockCache.get(index);
+            const existList = this.blockCache.get(index);
 
             if (existList) {
                 existList.push(block);

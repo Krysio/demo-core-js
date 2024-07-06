@@ -1,12 +1,11 @@
-import { createFakeNode, createRandomHash } from "@/tests/helper";
+import { createRandomHash } from "@/tests/helper";
 import { createStoreVoting } from "./storeVoting";
 import { VotingSimple } from "@/objects/voting";
 import { BHTime } from "./time";
 
 test('Swap', () => {
     //#region Given
-    const fakeNode = createFakeNode();
-    const store = createStoreVoting(fakeNode);
+    const store = createStoreVoting();
     const refToCurrent = store.storeCurrent;
     const refToNext = store.storeNext;
     //#enregion Given
@@ -25,8 +24,7 @@ test('Swap', () => {
 describe('Set & Get', () => {
     test('Into current', async () => {
         //#region Given
-        const fakeNode = createFakeNode();
-        const store = createStoreVoting(fakeNode);
+        const store = createStoreVoting();
         const voting = new VotingSimple(10 as BHTime, 20 as BHTime, 'meta');
         const votingHash = voting.getHash();
         const votingStr = voting.toString();
@@ -49,8 +47,7 @@ describe('Set & Get', () => {
 
     test('Into next', async () => {
         //#region Given
-        const fakeNode = createFakeNode();
-        const store = createStoreVoting(fakeNode);
+        const store = createStoreVoting();
         const voting = new VotingSimple(10 as BHTime, 20 as BHTime, 'meta');
         const votingHash = voting.getHash();
         const votingStr = voting.toString();

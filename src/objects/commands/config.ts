@@ -1,9 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
-import { Node } from "@/main";
 import { COMMAND_TYPE_CONFIG } from "./types";
 import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_PRIMARY } from ".";
-import { Config } from "@/modules/config";
-import { Frame } from "@/objects/frame";
+import { Config, KeyConfig } from "@/modules/config";
 import { BHTime, MS, UnixTime } from "@/modules/time";
 
 @Type(COMMAND_TYPE_CONFIG)
@@ -26,8 +24,8 @@ export class ConfigCommand implements ICommand {
     
     constructor(config: Partial<Config> = {}) {
         for (const key in config) {
-            //@ts-ignore
-            this.values[key] = config[key];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.values[key as KeyConfig] = config[key as KeyConfig] as any;
         }
     }
 
@@ -63,5 +61,5 @@ export class ConfigCommand implements ICommand {
         ]);
     }
 
-    public async verify(node: Node, frame: Frame) {}
+    public async verify() {}
 }

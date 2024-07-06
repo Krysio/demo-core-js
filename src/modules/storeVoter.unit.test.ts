@@ -1,10 +1,9 @@
-import { createFakeNode, createKey } from "@/tests/helper";
+import { createKey } from "@/tests/helper";
 import { createStoreVoter } from "./storeVoter";
 
 test('Swap', () => {
     //#region Given
-    const fakeNode = createFakeNode();
-    const store = createStoreVoter(fakeNode);
+    const store = createStoreVoter();
     const refToCurrent = store.storeCurrent;
     const refToNext = store.storeNext;
     //#enregion Given
@@ -23,8 +22,7 @@ test('Swap', () => {
 describe('Set & Get', () => {
     test('Into current', async () => {
         //#region Given
-        const fakeNode = createFakeNode();
-        const store = createStoreVoter(fakeNode);
+        const store = createStoreVoter();
         const voterKey = createKey();
         //#enregion Given
 
@@ -45,8 +43,7 @@ describe('Set & Get', () => {
 
     test('Into next', async () => {
         //#region Given
-        const fakeNode = createFakeNode();
-        const store = createStoreVoter(fakeNode);
+        const store = createStoreVoter();
         const voterKey = createKey();
         //#enregion Given
 

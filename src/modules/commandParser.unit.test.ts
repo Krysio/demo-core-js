@@ -26,7 +26,7 @@ describe('Testing parser', () => {
             return this;
         }
         public toBuffer() { return null as WBuffer; }
-        public async verify(node: Node, frame: Frame) {};
+        public async verify() {};
     };
     const fakeNode = {
         events: new EventEmitter() as Node['events']
@@ -59,7 +59,7 @@ describe('Testing parser', () => {
             expect(parsingResult.authors[0].signature.isEqual(signature)).toBe(true);
     
             expect(parsingResult.data).toBeInstanceOf(TestCommand);
-            expect((parsingResult.data as any).foo.isEqual(WBuffer.hex`99`)).toBe(true);
+            expect((parsingResult.data as TestCommand).foo.isEqual(WBuffer.hex`99`)).toBe(true);
             expect(parsingResult.bufferForHash.isEqual(command)).toBe(true);
         });
 

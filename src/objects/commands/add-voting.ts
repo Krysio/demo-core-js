@@ -54,7 +54,7 @@ export class AddVotingCommand implements ICommand {
         }
     }
 
-    public async apply(node: Node, frame: Frame) {
+    public async apply(node: Node) {
         await node.storeVoting.add(this.voting);
     }
 }

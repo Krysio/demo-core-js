@@ -23,3 +23,4 @@ export function createConfig(refToNode: unknown) {
 }
 
 export type Config = ReturnType<typeof createConfig>;
+export type KeyConfig = keyof Config;

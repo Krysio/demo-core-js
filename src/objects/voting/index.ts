@@ -7,6 +7,9 @@ import { Key } from "@/objects/key";
 
 export const TYPE_VOTING_SIMPLE = 0;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-types */
+
 const mapOftypes = new Map<number, Function>();
 export const Type = (typeID: number) => {
     return (target: new (...args: any[]) => any) => {
@@ -22,12 +25,15 @@ export const Type = (typeID: number) => {
     }
 };
 
-/******************************/
-
 export interface IVoting {
     parseValue(buffer: WBuffer): any;
     toBufferValue(value: any): WBuffer;
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */
+/* eslint-enable @typescript-eslint/ban-types */
+
+/******************************/
 
 export class Voting {
     public buffer: WBuffer;
@@ -57,6 +63,20 @@ export class Voting {
         if (Typed) {
             Object.setPrototypeOf(this, Typed.prototype);
         }
+    }
+
+    public isValidValue(buffer: WBuffer): boolean {
+        try {
+            (this as unknown as IVoting).parseValue(buffer);
+        } catch (error) {
+            return false
+        }
+
+        return true;
+    };
+
+    public getHash(): WBuffer {
+        return doubleSha256(this.toBuffer());
     }
 
     //#region buffer
@@ -140,25 +160,14 @@ export class Voting {
     }
 
     //#endregion buffer
-
-    isValidValue(buffer: WBuffer): boolean {
-        try {
-            (this as unknown as IVoting).parseValue(buffer);
-        } catch (error) {
-            return false
-        }
-
-        return true;
-    };
-
-    getHash(): WBuffer {
-        return doubleSha256(this.toBuffer());
-    }
+    //#region inspect
 
     public toString() { return this.toBuffer().hex(); }
     public inspect() { return `<${this.constructor.name}{time:[${this.timeStart},${this.timeEnd}],secret:${this.isSecret},flow:${this.isAllowFlow}}>`; }
     public toJSON() { return this.inspect(); }
     [Symbol.for('nodejs.util.inspect.custom')]() { return this.inspect(); }
+
+    //#endregion inspect
 }
 
 export * from "./simple";

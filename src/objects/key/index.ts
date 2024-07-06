@@ -4,6 +4,9 @@ import WBuffer from "@/libs/WBuffer";
 
 export const TYPE_KEY_Secp256k1 = 1;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-types */
+
 const mapOftypes = new Map<number, Function>();
 export const Type = (typeID: number) => {
     return (target: new (...args: any[]) => any) => {
@@ -25,6 +28,7 @@ export const Type = (typeID: number) => {
         return ref[target.prototype.constructor.name] as unknown as void;
     }
 };
+
 const virtual = (
     target: any,
     propertyName: string | symbol,
@@ -32,6 +36,9 @@ const virtual = (
 ) => {
     descriptor.value = () => { throw new Error(`Method "${propertyName.toString()}" of class "${target.constructor.name}" is virtual`) };
 };
+
+/* eslint-enable @typescript-eslint/no-explicit-any */
+/* eslint-enable @typescript-eslint/ban-types */
 
 /******************************/
 
@@ -94,11 +101,17 @@ export class Key {
         }
     }
 
+    /**
+     * @param {WBuffer} buffer
+     * @param {Function} refToOverrideFunction See Type implementation 
+     * @returns {Key | null}
+     */
     public parse(buffer: WBuffer): Key {
         try {
             const cursor = buffer.cursor;
 
             this.typeID = buffer.readUleb128();
+            // eslint-disable-next-line prefer-rest-params
             arguments[1].call(this, buffer);
             this.buffer = buffer.subarray(cursor, buffer.cursor);
 
@@ -108,10 +121,15 @@ export class Key {
         }
     }
 
+    /**
+     * @param {Function} refToOverrideFunction See Type implementation
+     * @returns {WBuffer}
+     */
     public toBuffer(): WBuffer {
         try {
             return this.buffer = WBuffer.concat([
                 WBuffer.uleb128(this.typeID),
+                // eslint-disable-next-line prefer-rest-params
                 arguments[0].call(this)
             ]);
         } catch (error) {
@@ -128,12 +146,14 @@ export class Key {
 
     //#endregion buffer
     //#region crypto
+    /* eslint-disable @typescript-eslint/no-unused-vars */
 
     @virtual public sign(hash: WBuffer, privateKey?: WBuffer): WBuffer { return null as WBuffer; }
     @virtual public verify(hash: WBuffer, signature: WBuffer): boolean { return null as boolean; }
     @virtual public encrypt(message: WBuffer): WBuffer { return null as WBuffer; }
     @virtual public decrypt(message: WBuffer, privateKey?: WBuffer): WBuffer { return null as WBuffer; }
 
+    /* eslint-enable @typescript-eslint/no-unused-vars */
     //#endregion crypto
     //#region inspect
 

@@ -13,7 +13,7 @@ test('Create a node', async () => {
 
     const { listOfAdmin } = creator.scope;
 
-    for (let [admin, key] of listOfAdmin) {
+    for (const [admin] of listOfAdmin) {
         const result = await node.storeAdmin.get(admin.publicKey);
         
         expect(result).not.toBe(null);

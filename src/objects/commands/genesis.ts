@@ -4,7 +4,6 @@ import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_PRIMARY } from "@/objects
 import { Key } from "@/objects/key";
 import { Admin } from "@/objects/users/admin";
 import { Node } from '@/main';
-import { Frame } from "@/objects/frame";
 
 @Type(COMMAND_TYPE_GENESIS)
 export class GenesisCommand implements ICommand {
@@ -64,7 +63,7 @@ export class GenesisCommand implements ICommand {
         ]);
     }
 
-    public async verify(node: Node, frame: Frame): Promise<void> {
+    public async verify(node: Node): Promise<void> {
         if (node.chainTop.getHeight() !== 0) {
             throw new Error(`${GenesisCommand.name}: Invalid height of blockChain`);
         }

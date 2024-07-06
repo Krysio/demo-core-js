@@ -304,10 +304,10 @@ export default class WBuffer extends Buffer {
     public static from(data: Uint8Array): WBuffer;
     public static from(obj: { valueOf(): string | object } | { [Symbol.toPrimitive](hint: 'string'): string }, byteOffset?: number, length?: number): WBuffer;
     public static from(str: string, encoding?: BufferEncoding): WBuffer;
-    public static from(...args: any[]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public static from(...args: any) {
         return WBuffer.create(
-            //@ts-ignore
-            super.from(...args)
+            super.from(...args as Parameters<typeof Buffer.from>)
         );
     }
 
@@ -320,20 +320,24 @@ export default class WBuffer extends Buffer {
     public static compare(a: WBuffer, b: WBuffer) {
         return super.compare(a, b);
     }
+
     public static isEqual(a: WBuffer, b: WBuffer) {
         return super.compare(a, b) === 0;
     }
+
     public isEqual(b: WBuffer) {
         return WBuffer.compare(this, b) === 0;
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore rewrite
-    public slice(...args: Parameters<iBuffer['slice']>): WBuffer {
+    public slice(...args: Parameters<iBuffer['slice']>) {
         return WBuffer.create(
             super.slice(...args)
         );
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore rewrite
     public subarray(...args: Parameters<iBuffer['subarray']>) {
         return WBuffer.create(
@@ -344,10 +348,13 @@ export default class WBuffer extends Buffer {
     public inspect() {
         return `<WB:${this.length}:${this.toString('hex')}:${this.cursor}>`;
     }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore rewrite
     public toJSON() {
         return this.inspect();
     }
+
     public [SymInspect]() {
         return this.inspect();
     }
@@ -355,9 +362,19 @@ export default class WBuffer extends Buffer {
     public toString (format: Parameters<iBuffer['toString']>[0] = 'hex') {
         return super.toString(format);
     }
+
     public hex() {
         return this.toString('hex');
     }
+
+    public utf8() {
+        return this.toString('utf8');
+    }
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    /* eslint-disable @typescript-eslint/ban-types */
+    /* eslint-disable prefer-rest-params */
+
     public static hex(arg: TemplateStringsArray, ...args: any[]): WBuffer; // WBuffer.hex`00` == WBuffer.from('00', 'hex')
     public static hex(str: string): WBuffer;
     public static hex(buffer: Buffer | Uint8Array): string;
@@ -369,10 +386,6 @@ export default class WBuffer extends Buffer {
             return WBuffer.from(arg0, 'hex');
         }
         return WBuffer.from(arg0).toString('hex');
-    }
-
-    public utf8() {
-        return this.toString('utf8');
     }
     public static utf8(arg: TemplateStringsArray, ...args: any[]): WBuffer; // WBuffer.utf8`00` == WBuffer.from('00', 'utf8')
     public static utf8(str: string): WBuffer;
@@ -386,6 +399,10 @@ export default class WBuffer extends Buffer {
         }
         return WBuffer.from(arg0).toString('utf8');
     }
+
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    /* eslint-enable @typescript-eslint/ban-types */
+    /* eslint-enable prefer-rest-params */
 
     public clone() {
         return WBuffer.from(this);

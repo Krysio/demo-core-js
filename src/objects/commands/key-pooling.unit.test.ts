@@ -2,7 +2,7 @@ import { createFakeNode, createKey } from "@/tests/helper";
 import { Frame } from "@/objects/frame";
 import { KeyPoolingCommand } from "./key-pooling";
 
-function createCommand({} = {}) {
+function createCommand() {
     const command = new KeyPoolingCommand();
     const frame = new Frame(command);
     const listOfAuthors = [];

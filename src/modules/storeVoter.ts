@@ -6,12 +6,9 @@
  */
 
 import WBuffer from '@/libs/WBuffer';
-import { Node } from '@/main';
 import { Key } from '@/objects/key';
 
-export function createStoreVoter(refToNode: unknown) {
-    const node = refToNode as Node;
-
+export function createStoreVoter() {
     const dbKey = (publicKey: Key | WBuffer) => (publicKey instanceof Key ? publicKey.toBuffer() : publicKey).hex();
     const createStore = () => new Map<string, number>();
 

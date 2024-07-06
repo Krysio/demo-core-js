@@ -22,7 +22,7 @@ export function doubleSha256(input: WBuffer): WBuffer {
 export function sha256File(
     pathToFile: string
 ): Promise<WBuffer> {
-    return new Promise<WBuffer>((resolve, reject) => {
+    return new Promise<WBuffer>((resolve) => {
         const fileStream = fs.createReadStream(pathToFile);
         const hasher = crypto.createHash('sha256');
     

@@ -6,8 +6,10 @@ declare type DeepPartial<T> = {
 };
 
 declare module "node:stream" {    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     export type Listener = (...args: any[]) => void;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     export class TypedEventEmitter<EventList extends { [key: string]: any[] } = any> {
         $eventList: EventList;
 

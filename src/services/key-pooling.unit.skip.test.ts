@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import WBuffer from "@/libs/WBuffer";
-import { getKeyPair, verify as verifySignature } from "@/libs/crypto/ec/secp256k1";
+import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import PoolingProcess, { UserConnection } from "@/services/key-pooling";
 import { KeySecp256k1 } from "@/objects/key";
 import Client from "@/tests/process/key-pooling/client";

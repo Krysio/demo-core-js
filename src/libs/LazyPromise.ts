@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default function getLazyPromise<T = void>() {
     const api = {};
     const promise = new Promise<T>((resolve, reject) => Object.assign(api, {resolve, reject}));

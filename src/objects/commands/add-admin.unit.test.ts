@@ -3,7 +3,6 @@ import { Frame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
 import { sha256 } from "@/libs/crypto/sha256";
 import { AddAdminCommand } from "./add-admin";
-import WBuffer from "@/libs/WBuffer";
 
 function createCommand({
     admin = createAdmin(),
@@ -92,10 +91,10 @@ describe('Verifivation', () => {
     test('When author is the root: should do not throw error', async () => {
         //#region Given
         const rootKey = createKey();
-        const { command, frame, author } = createCommand({ authorKey: rootKey });
+        const { command, frame } = createCommand({ authorKey: rootKey });
         const fakeNode = createFakeNode({
             storeAdmin: {
-                get: (key: WBuffer) => Promise.resolve(null),
+                get: () => Promise.resolve(null),
             },
             rootKey,
         });

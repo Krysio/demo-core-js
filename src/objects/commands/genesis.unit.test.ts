@@ -4,7 +4,7 @@ import { KeySecp256k1 } from "@/objects/key";
 
 test('To & from buffer should result the same data', () => {
     //#region Given
-    const [privateKey, publicKey] = getKeyPair();
+    const [, publicKey] = getKeyPair();
     const key = new KeySecp256k1(publicKey);
     const manifest = 'Content of manifest 😁';
     const command = new GenesisCommand(key, [], manifest);

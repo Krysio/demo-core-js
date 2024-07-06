@@ -1,16 +1,15 @@
-import { createUser, createKey, createFakeNode } from "@/tests/helper";
+import { createUser, createKey } from "@/tests/helper";
 import { createStoreUser } from "./storeUser";
 import { BHTime } from "./time";
 
 test('Set & Get', async () => {
     //#region Given
-    const fakeNode = createFakeNode();
-    const store = createStoreUser(fakeNode);
+    const store = createStoreUser();
     const timeStart = 13 as BHTime;
     const timeEnd = 1340 as BHTime;
     const metaData = 'Test of storeUser';
     const parentKey = createKey();
-    const { user, key: userPublicKey } = createUser({ timeStart, timeEnd, metaData, parentKey });
+    const { user } = createUser({ timeStart, timeEnd, metaData, parentKey });
 
     //#enregion Given
 

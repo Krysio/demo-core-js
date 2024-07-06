@@ -19,6 +19,7 @@ export function createCommandVerifier(refToNode: unknown) {
                 node.events.emit('commandVerifier/rejectCommand', frame);
             }
         },
+        // eslint-disable-next-line
         verifyAnchor(frame: Frame) {
             // TODO 
             // Sprawdzamy czy kotwica jest prawidłowego typu

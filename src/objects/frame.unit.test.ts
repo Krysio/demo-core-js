@@ -1,6 +1,5 @@
 import { createKey } from "@/tests/helper";
 import WBuffer from "@/libs/WBuffer";
-import { Node } from "@/main";
 import { Frame } from "@/objects/frame";
 import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from "@/objects/commands";
 import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
@@ -20,7 +19,7 @@ class TestCommand implements ICommand {
     public toBuffer() {
         return WBuffer.hex('11223344');
     }
-    public async verify(node: Node, frame: Frame) {};
+    public async verify() {};
 }
 
 function createFrame({

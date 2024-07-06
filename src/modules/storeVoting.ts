@@ -1,11 +1,8 @@
 import WBuffer from '@/libs/WBuffer';
 import { doubleSha256 } from '@/libs/crypto/sha256';
-import { Node } from '@/main';
 import { Voting } from '@/objects/voting';
 
-export function createStoreVoting(refToNode: unknown) {
-    const node = refToNode as Node;
-
+export function createStoreVoting() {
     const createStore = () => new Map<string, WBuffer>();
 
     const module = {

@@ -1,8 +1,6 @@
 import WBuffer from '@/libs/WBuffer';
-import { Node } from '@/main';
 
-export function createStoreActiveUser(refToNode: unknown) {
-    const node = refToNode as Node;
+export function createStoreActiveUser() {
     const module = {
         currentCadency: new Map<string, WBuffer>(),
         nextCadency: new Map<string, WBuffer>(),

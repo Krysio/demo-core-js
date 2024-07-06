@@ -1,6 +1,6 @@
 import WBuffer from "@/libs/WBuffer";
 import { EventEmitter, TypedEventEmitter } from "node:stream";
-import { createConfig, Config } from "@/modules/config";
+import { createConfig } from "@/modules/config";
 import { createState } from "@/modules/state";
 import { createBlockGenerator } from "@/modules/blockGenerator";
 import { createChainTop } from "@/modules/chaintTop";
@@ -20,7 +20,6 @@ import getLazyPromise from "@/libs/lazyPromise";
 import { COMMAND_TYPE_CONFIG, COMMAND_TYPE_GENESIS } from "@/objects/commands/types";
 import { ConfigCommand } from "@/objects/commands/config";
 import { GenesisCommand } from "./objects/commands/genesis";
-import { isProduction } from "./helper";
 
 function extractConfig(genesisBlock: Block) {
     for (const command of genesisBlock.listOfCommands) {
@@ -77,10 +76,10 @@ export function createNode(params: {
         config: protoScope.config,
 
         state: createState(protoScope),
-        storeUser: createStoreUser(protoScope),
+        storeUser: createStoreUser(),
         storeAdmin: createStoreAdmin(protoScope),
-        storeVoter: createStoreVoter(protoScope),
-        storeVoting: createStoreVoting(protoScope),
+        storeVoter: createStoreVoter(),
+        storeVoting: createStoreVoting(),
         storeBlock: createStoreBlock(protoScope),
         chainTop: createChainTop(protoScope),
         blockGenerator: createBlockGenerator(protoScope),
