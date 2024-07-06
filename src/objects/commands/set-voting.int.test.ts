@@ -1,22 +1,23 @@
 import WBuffer from "@/libs/WBuffer";
-import { createKey, nodeCreator } from "@/tests/helper";
-import { Admin, User } from "@/objects/users";
+import { nodeCreator } from "@/tests/helper";
+import { Admin } from "@/objects/users";
 import { Frame } from "@/objects/frame";
-import { AddUserCommand } from "./add-user";
+import { VotingSimple } from "@/objects/voting";
+import { SetVotingCommand } from "./set-voting";
 import getLazyPromise from "@/libs/lazyPromise";
 import { BHTime, MS, UnixTime } from "@/modules/time";
 
-describe('Adding an user by an admin', () => {
+describe('Adding a voting by an admin', () => {
     //#region Given
     let testedFrame: WBuffer = null;
 
     const creator = nodeCreator().manualTime(10001 as UnixTime);
-    const addingUserKey = createKey();
-    const addingUserMeta = 'Some text';
-    const addingUser = new User(addingUserKey, addingUserMeta);
-
-    addingUser.timeStart = 20 as BHTime;
-    addingUser.timeEnd = 100 as BHTime;
+    const addingVotingMeta = 'Some text';
+    const addingVoting = new VotingSimple(
+        20 as BHTime,
+        100 as BHTime,
+        addingVotingMeta
+    );
 
     test('Create a node', async () => {
         const { node } = creator;
@@ -31,7 +32,7 @@ describe('Adding an user by an admin', () => {
     test('Create a frame', () => {
         expect(creator.scope.node).not.toBe(null);
 
-        const command = new AddUserCommand(addingUser);
+        const command = new SetVotingCommand(addingVoting);
         const frame = new Frame(command);
         const admin: Admin = creator.getAdmin();
 
@@ -82,7 +83,7 @@ describe('Adding an user by an admin', () => {
         expect(node.chainTop.getHeight()).toBe(3);
         expect(node.commandPool.getByIndex(0).length).toBe(0);
 
-        const result = await node.storeUser.get(addingUser.publicKey);
+        const result = await node.storeVoting.get(addingVoting.getHash());
 
         expect(result).not.toBe(null);
     });

@@ -10,7 +10,7 @@ export function createStoreAdmin(refToNode: unknown) {
     const module = {
         store: new Map<string, WBuffer>(),
 
-        async add(admin: Admin) {
+        async set(admin: Admin) {
             const key = admin.publicKey.toBuffer().hex();
             const data = admin.toBuffer('db');
 
@@ -39,7 +39,7 @@ export function createStoreAdmin(refToNode: unknown) {
 
                 for (const adminAccount of listOfAdminAccounts) {
                     adminAccount.parentPublicKey = rootPublicKey;
-                    module.add(adminAccount);
+                    module.set(adminAccount);
                 }
             }
         }

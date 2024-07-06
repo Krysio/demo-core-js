@@ -1,19 +1,22 @@
 import WBuffer from "@/libs/WBuffer";
 import { createKey, nodeCreator } from "@/tests/helper";
-import { AddAdminCommand } from "./add-admin";
-import { Admin } from "../users";
-import { Frame } from "../frame";
+import { Admin, User } from "@/objects/users";
+import { Frame } from "@/objects/frame";
+import { SetUserCommand } from "./set-user";
 import getLazyPromise from "@/libs/lazyPromise";
-import { MS, UnixTime } from "@/modules/time";
+import { BHTime, MS, UnixTime } from "@/modules/time";
 
-describe('Adding an admin by the root', () => {
+describe('Adding an user by an admin', () => {
     //#region Given
     let testedFrame: WBuffer = null;
 
     const creator = nodeCreator().manualTime(10001 as UnixTime);
-    const addingAdminKey = createKey();
-    const addingAdminMeta = 'Some text';
-    const addingAdmin = new Admin(addingAdminKey, addingAdminMeta);
+    const addingUserKey = createKey();
+    const addingUserMeta = 'Some text';
+    const addingUser = new User(addingUserKey, addingUserMeta);
+
+    addingUser.timeStart = 20 as BHTime;
+    addingUser.timeEnd = 100 as BHTime;
 
     test('Create a node', async () => {
         const { node } = creator;
@@ -27,13 +30,13 @@ describe('Adding an admin by the root', () => {
     
     test('Create a frame', () => {
         expect(creator.scope.node).not.toBe(null);
-        
-        const { node } = creator;
-        const command = new AddAdminCommand(addingAdmin);
+
+        const command = new SetUserCommand(addingUser);
         const frame = new Frame(command);
+        const admin: Admin = creator.getAdmin();
 
         frame.setAnchor(0);
-        frame.addAuthor(node.rootKey)(node.rootKey.sign(frame.getHash()));
+        frame.addAuthor(admin.publicKey)(admin.publicKey.sign(frame.getHash()));
 
         testedFrame = frame.toBuffer();
     });
@@ -79,7 +82,7 @@ describe('Adding an admin by the root', () => {
         expect(node.chainTop.getHeight()).toBe(3);
         expect(node.commandPool.getByIndex(0).length).toBe(0);
 
-        const result = await node.storeAdmin.get(addingAdmin.publicKey);
+        const result = await node.storeUser.get(addingUser.publicKey);
 
         expect(result).not.toBe(null);
     });

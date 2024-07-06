@@ -2,14 +2,14 @@ import { createFakeNode, createKey, createUser } from "@/tests/helper";
 import { Frame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
 import { sha256 } from "@/libs/crypto/sha256";
-import { AddUserCommand } from "./add-user";
+import { SetUserCommand } from "./set-user";
 import { BHTime } from "@/modules/time";
 
 function createCommand({
     user = createUser(),
     authorKey = createKey(),
 } = {}) {
-    const command = new AddUserCommand(user.user);
+    const command = new SetUserCommand(user.user);
     const frame = new Frame(command);
     const author = new Admin(authorKey);
 
@@ -46,7 +46,7 @@ test('To & from buffer should result the same data', () => {
 
     //#region When
     const bufferA = command.toBuffer();
-    const bufferB = new AddUserCommand().parse(bufferA).toBuffer();
+    const bufferB = new SetUserCommand().parse(bufferA).toBuffer();
     //#enregion When
 
     //#region Then
@@ -71,7 +71,7 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        .rejects.toThrow('Cmd: Add User: Author does not exist');
+        .rejects.toThrow('Cmd: Set User: Author does not exist');
         //#enregion Then
     });
 
@@ -108,7 +108,7 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        .rejects.toThrow('Cmd: Add User: Duplicate key');
+        .rejects.toThrow('Cmd: Set User: Duplicate key');
         //#enregion Then
     });
 
@@ -128,7 +128,7 @@ describe('Verifivation', () => {
             //#enregion When
     
             //#region Then
-            .rejects.toThrow('Cmd: Add User: TimeStart too low');
+            .rejects.toThrow('Cmd: Set User: TimeStart too low');
             //#enregion Then
         });
 
@@ -166,7 +166,7 @@ describe('Verifivation', () => {
             //#enregion When
     
             //#region Then
-            .rejects.toThrow('Cmd: Add User: TimeEnd too hight');
+            .rejects.toThrow('Cmd: Set User: TimeEnd too hight');
             //#enregion Then
         });
 

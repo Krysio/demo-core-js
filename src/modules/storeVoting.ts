@@ -9,7 +9,7 @@ export function createStoreVoting() {
         storeCurrent: createStore(),
         storeNext: createStore(),
 
-        async add(voting: Voting, intoNext = false) {
+        async set(voting: Voting, intoNext = false) {
             const data = voting.toBuffer();
             const key = doubleSha256(data).hex();
 
@@ -19,8 +19,8 @@ export function createStoreVoting() {
 
             return module.storeCurrent.set(key, data);
         },
-        async addNext(voting: Voting) {
-            module.add(voting, true);
+        async setNext(voting: Voting) {
+            module.set(voting, true);
         },
         async get(hash: WBuffer) {
             const key = hash.hex();

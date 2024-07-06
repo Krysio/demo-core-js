@@ -31,7 +31,7 @@ describe('Set & Get', () => {
         //#enregion Given
 
         //#region When
-        await store.add(voting);
+        await store.set(voting);
 
         const resultA = await store.get(votingHash);
         const resultB = await store.get(votingHash);
@@ -54,7 +54,7 @@ describe('Set & Get', () => {
         //#enregion Given
 
         //#region When
-        await store.addNext(voting);
+        await store.setNext(voting);
         store.swip();
 
         const resultA = await store.get(votingHash);

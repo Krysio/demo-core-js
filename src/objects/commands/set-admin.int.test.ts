@@ -1,23 +1,19 @@
 import WBuffer from "@/libs/WBuffer";
-import { nodeCreator } from "@/tests/helper";
-import { Admin } from "@/objects/users";
-import { Frame } from "@/objects/frame";
-import { VotingSimple } from "@/objects/voting";
-import { AddVotingCommand } from "./add-voting";
+import { createKey, nodeCreator } from "@/tests/helper";
+import { SetAdminCommand } from "./set-admin";
+import { Admin } from "../users";
+import { Frame } from "../frame";
 import getLazyPromise from "@/libs/lazyPromise";
-import { BHTime, MS, UnixTime } from "@/modules/time";
+import { MS, UnixTime } from "@/modules/time";
 
-describe('Adding a voting by an admin', () => {
+describe('Adding an admin by the root', () => {
     //#region Given
     let testedFrame: WBuffer = null;
 
     const creator = nodeCreator().manualTime(10001 as UnixTime);
-    const addingVotingMeta = 'Some text';
-    const addingVoting = new VotingSimple(
-        20 as BHTime,
-        100 as BHTime,
-        addingVotingMeta
-    );
+    const addingAdminKey = createKey();
+    const addingAdminMeta = 'Some text';
+    const addingAdmin = new Admin(addingAdminKey, addingAdminMeta);
 
     test('Create a node', async () => {
         const { node } = creator;
@@ -31,13 +27,13 @@ describe('Adding a voting by an admin', () => {
     
     test('Create a frame', () => {
         expect(creator.scope.node).not.toBe(null);
-
-        const command = new AddVotingCommand(addingVoting);
+        
+        const { node } = creator;
+        const command = new SetAdminCommand(addingAdmin);
         const frame = new Frame(command);
-        const admin: Admin = creator.getAdmin();
 
         frame.setAnchor(0);
-        frame.addAuthor(admin.publicKey)(admin.publicKey.sign(frame.getHash()));
+        frame.addAuthor(node.rootKey)(node.rootKey.sign(frame.getHash()));
 
         testedFrame = frame.toBuffer();
     });
@@ -83,7 +79,7 @@ describe('Adding a voting by an admin', () => {
         expect(node.chainTop.getHeight()).toBe(3);
         expect(node.commandPool.getByIndex(0).length).toBe(0);
 
-        const result = await node.storeVoting.get(addingVoting.getHash());
+        const result = await node.storeAdmin.get(addingAdmin.publicKey);
 
         expect(result).not.toBe(null);
     });

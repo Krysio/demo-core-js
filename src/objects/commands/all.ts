@@ -1,9 +1,9 @@
 export * from "./genesis";
 export * from "./config";
 
-export * from "./add-admin";
-export * from "./add-user";
-export * from "./add-voting";
+export * from "./set-admin";
+export * from "./set-user";
+export * from "./set-voting";
 export * from "./key-pooling";
 
 export * from "./vote";

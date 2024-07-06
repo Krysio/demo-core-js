@@ -3,7 +3,7 @@ import { Frame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
 import { VotingSimple } from "@/objects/voting";
 import { sha256 } from "@/libs/crypto/sha256";
-import { AddVotingCommand } from "./add-voting";
+import { SetVotingCommand } from "./set-voting";
 import { BHTime } from "@/modules/time";
 
 function createCommand({
@@ -11,7 +11,7 @@ function createCommand({
     meta = ''
 } = {}) {
     const voting = new VotingSimple(10 as BHTime, 1000 as BHTime, meta);
-    const command = new AddVotingCommand(voting);
+    const command = new SetVotingCommand(voting);
     const frame = new Frame(command);
     const author = new Admin(authorKey);
 
@@ -35,7 +35,7 @@ test('To & from buffer should result the same data', () => {
 
     //#region When
     const bufferA = command.toBuffer();
-    const bufferB = new AddVotingCommand().parse(bufferA).toBuffer();
+    const bufferB = new SetVotingCommand().parse(bufferA).toBuffer();
     //#enregion When
 
     //#region Then
@@ -59,7 +59,7 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        .rejects.toThrow('Cmd: Add Voting: Author does not exist');
+        .rejects.toThrow('Cmd: Set Voting: Author does not exist');
         //#enregion Then
     });
 
@@ -101,7 +101,7 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        .rejects.toThrow('Cmd: Add Voting: Duplicate voting hash');
+        .rejects.toThrow('Cmd: Set Voting: Duplicate voting hash');
         //#enregion Then
     });
 
@@ -122,7 +122,7 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        .rejects.toThrow('Cmd: Add Voting: Invalid voting period');
+        .rejects.toThrow('Cmd: Set Voting: Invalid voting period');
         //#enregion Then
     });
 });

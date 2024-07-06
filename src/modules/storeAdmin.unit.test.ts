@@ -12,7 +12,7 @@ test('Set & Get', async () => {
     //#enregion Given
 
     //#region When
-    await store.add(admin);
+    await store.set(admin);
 
     const resultA = await store.get(admin.publicKey);
     const resultB = await store.get(admin.publicKey);

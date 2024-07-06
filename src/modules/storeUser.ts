@@ -6,7 +6,7 @@ export function createStoreUser() {
     const module = {
         store: new Map<string, WBuffer>(),
 
-        async add(user: User) {
+        async set(user: User) {
             const key = user.publicKey.toBuffer().hex();
             const data = user.toBuffer('db');
 

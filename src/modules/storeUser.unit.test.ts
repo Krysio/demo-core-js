@@ -14,7 +14,7 @@ test('Set & Get', async () => {
     //#enregion Given
 
     //#region When
-    await store.add(user);
+    await store.set(user);
 
     const resultA = await store.get(user.publicKey);
     const resultB = await store.get(user.publicKey);

@@ -16,7 +16,7 @@ describe('Activate a user account in the current cadency', () => {
         const { node } = creator;
 
         await node.whenInit();
-        await node.storeUser.add(user);
+        await node.storeUser.set(user);
 
         node.start();
         
@@ -98,7 +98,7 @@ describe('Activate a user account in the next cadency', () => {
         const { node } = creator;
 
         await node.whenInit();
-        await node.storeUser.add(user);
+        await node.storeUser.set(user);
 
         node.start();
         

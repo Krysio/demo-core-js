@@ -2,13 +2,13 @@ import { createKey, createAdmin, createFakeNode } from "@/tests/helper";
 import { Frame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
 import { sha256 } from "@/libs/crypto/sha256";
-import { AddAdminCommand } from "./add-admin";
+import { SetAdminCommand } from "./set-admin";
 
 function createCommand({
     admin = createAdmin(),
     authorKey = createKey(),
 } = {}) {
-    const command = new AddAdminCommand(admin.admin);
+    const command = new SetAdminCommand(admin.admin);
     const frame = new Frame(command);
     const author = new Admin(authorKey);
 
@@ -34,7 +34,7 @@ test('To & from buffer should result the same data', () => {
 
     //#region When
     const bufferA = command.toBuffer();
-    const bufferB = new AddAdminCommand().parse(bufferA).toBuffer();
+    const bufferB = new SetAdminCommand().parse(bufferA).toBuffer();
     //#enregion When
 
     //#region Then
@@ -59,7 +59,7 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        result.rejects.toThrow('Cmd: Add Admin: Author does not exist');
+        result.rejects.toThrow('Cmd: Set Admin: Author does not exist');
         //#enregion Then
     });
 
@@ -133,7 +133,7 @@ describe('Verifivation', () => {
         //#enregion When
     
         //#region Then
-        result.rejects.toThrow('Cmd: Add Admin: duplicate key');
+        result.rejects.toThrow('Cmd: Set Admin: Duplicate key');
         //#enregion Then
     });
 
@@ -160,7 +160,7 @@ describe('Verifivation', () => {
             })());
     
             //#region Then
-            result.rejects.toThrow('Cmd: Add Admin: level too height');
+            result.rejects.toThrow('Cmd: Set Admin: Level too height');
             //#enregion Then
         }
     });
