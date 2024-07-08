@@ -30,6 +30,8 @@ export class User {
         this.flags = flag
             ? this.flags | flagActivationLocked
             : this.flags & (0xff ^ flagActivationLocked);
+
+        return this;
     }
 
     //#endregion flags

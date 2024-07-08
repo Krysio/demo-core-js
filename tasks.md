@@ -13,3 +13,8 @@
    - [ ] activate user
    - Inprove
      - [ ] key-pooling: next cadency option
+ - TODO
+   - [ ] Root can do nothing
+   - [ ] To set/del an Admin with highest level you need 3 signatures from Admin with highest level, 2 signatures to del/set a user or voter
+     - [ ] Set/del admin cmd as multiauthor cmd
+     - [ ] Tests
