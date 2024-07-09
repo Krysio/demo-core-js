@@ -18,22 +18,6 @@ export class KeyPoolingCommand implements ICommand {
     //#enregion cmd config
 
     public listOfPublicKeys: Key[] = [];
-  
-    public addPublicKey(publicKey: Key) {
-        if (this.listOfPublicKeys.filter((key) => 
-            key.typeID == publicKey.typeID
-            && WBuffer.compare(key.key, publicKey.key) === 0
-        ).length) {
-            return;
-        }
-
-        this.listOfPublicKeys.push(publicKey);
-        this.listOfPublicKeys.sort((a, b) => {
-            if (a.typeID === b.typeID) {
-                return WBuffer.compare(a.key, b.key);
-            }
-        });
-    }
 
     //#region buffer
 
@@ -87,4 +71,22 @@ export class KeyPoolingCommand implements ICommand {
             await node.storeVoter.add(publicKey, heightOfChain);
         }
     }
-};
+}
+
+export class ExKeyPoolingCommand extends KeyPoolingCommand {
+    public addPublicKey(publicKey: Key) {
+        if (this.listOfPublicKeys.filter((key) => 
+            key.typeID == publicKey.typeID
+            && WBuffer.compare(key.key, publicKey.key) === 0
+        ).length) {
+            return;
+        }
+
+        this.listOfPublicKeys.push(publicKey);
+        this.listOfPublicKeys.sort((a, b) => {
+            if (a.typeID === b.typeID) {
+                return WBuffer.compare(a.key, b.key);
+            }
+        });
+    }
+}

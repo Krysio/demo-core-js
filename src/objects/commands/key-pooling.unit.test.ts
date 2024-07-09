@@ -1,9 +1,9 @@
 import { createFakeNode, createKey } from "@/tests/helper";
 import { ExFrame } from "@/objects/frame";
-import { KeyPoolingCommand } from "./key-pooling";
+import { ExKeyPoolingCommand } from "./key-pooling";
 
 function createCommand() {
-    const command = new KeyPoolingCommand();
+    const command = new ExKeyPoolingCommand();
     const frame = new ExFrame(command);
     const listOfAuthorsKeys = [];
     const listOfNewKeys = [];
@@ -38,7 +38,7 @@ test('To & from buffer should result the same data', () => {
 
     //#region When
     const bufferA = command.toBuffer();
-    const bufferB = new KeyPoolingCommand().parse(bufferA).toBuffer();
+    const bufferB = new ExKeyPoolingCommand().parse(bufferA).toBuffer();
     //#enregion When
 
     //#region Then

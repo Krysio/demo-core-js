@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { createKey, nodeCreator } from "@/tests/helper";
 import { ExFrame } from "@/objects/frame";
-import { KeyPoolingCommand } from "./key-pooling";
+import { ExKeyPoolingCommand } from "./key-pooling";
 import getLazyPromise from "@/libs/lazyPromise";
 import { MS, UnixTime } from "@/modules/time";
 
@@ -30,7 +30,7 @@ describe('Key-pooling of 4 voters', () => {
     test('Create a frame', () => {
         expect(creator.scope.node).not.toBe(null);
 
-        const command = new KeyPoolingCommand();
+        const command = new ExKeyPoolingCommand();
         const frame = new ExFrame(command);
 
         frame.setAnchor(0);
