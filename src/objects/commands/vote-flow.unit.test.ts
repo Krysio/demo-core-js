@@ -1,6 +1,6 @@
 import { createFakeNode, createKey } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
-import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
+import { ExFrame } from "@/objects/frame";
+import { EMPTY_HASH } from "@/libs/crypto/sha256";
 import { FlowVoteCommand } from "./vote-flow";
 
 function createCommand({
@@ -9,29 +9,22 @@ function createCommand({
     key = createKey(),
 } = {}) {
     const command = new FlowVoteCommand(vottingHash, key);
-    const frame = new Frame(command);
+    const frame = new ExFrame(command);
 
-    frame.anchorHash = EMPTY_HASH;
-    frame.authors.push({
-        publicKey: authorKey,
-        signature: null
-    });
-
-    frame.authors[0].signature = authorKey.sign(
-        sha256(frame.toBuffer('hash'))
-    );
+    frame.setAnchor(EMPTY_HASH);
+    frame.addAuthor(authorKey)(authorKey.sign(frame.getHash()));
 
     return { frame, command, authorKey };
 }
 
 test('To & from buffer should result the same data', () => {
     //#region Given
-    const { frame } = createCommand();
+    const { command } = createCommand();
     //#enregion Given
 
     //#region When
-    const bufferA = frame.toBuffer();
-    const bufferB = Frame.parse(bufferA).toBuffer();
+    const bufferA = command.toBuffer();
+    const bufferB = new FlowVoteCommand().parse(bufferA).toBuffer();
     //#enregion When
 
     //#region Then

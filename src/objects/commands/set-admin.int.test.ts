@@ -2,7 +2,7 @@ import WBuffer from "@/libs/WBuffer";
 import { createKey, nodeCreator } from "@/tests/helper";
 import { SetAdminCommand } from "./set-admin";
 import { Admin } from "../users";
-import { Frame } from "../frame";
+import { ExFrame } from "../frame";
 import getLazyPromise from "@/libs/lazyPromise";
 import { MS, UnixTime } from "@/modules/time";
 
@@ -30,7 +30,7 @@ describe('Adding an admin by the root', () => {
         
         const { node } = creator;
         const command = new SetAdminCommand(addingAdmin);
-        const frame = new Frame(command);
+        const frame = new ExFrame(command);
 
         frame.setAnchor(0);
         frame.addAuthor(node.rootKey)(node.rootKey.sign(frame.getHash()));

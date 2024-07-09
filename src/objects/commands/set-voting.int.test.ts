@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { nodeCreator } from "@/tests/helper";
 import { Admin } from "@/objects/users";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { VotingSimple } from "@/objects/voting";
 import { SetVotingCommand } from "./set-voting";
 import getLazyPromise from "@/libs/lazyPromise";
@@ -33,7 +33,7 @@ describe('Adding a voting by an admin', () => {
         expect(creator.scope.node).not.toBe(null);
 
         const command = new SetVotingCommand(addingVoting);
-        const frame = new Frame(command);
+        const frame = new ExFrame(command);
         const admin: Admin = creator.getAdmin();
 
         frame.setAnchor(0);

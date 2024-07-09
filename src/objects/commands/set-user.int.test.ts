@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { createKey, nodeCreator } from "@/tests/helper";
 import { Admin, User } from "@/objects/users";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { SetUserCommand } from "./set-user";
 import getLazyPromise from "@/libs/lazyPromise";
 import { BHTime, MS, UnixTime } from "@/modules/time";
@@ -32,7 +32,7 @@ describe('Adding an user by an admin', () => {
         expect(creator.scope.node).not.toBe(null);
 
         const command = new SetUserCommand(addingUser);
-        const frame = new Frame(command);
+        const frame = new ExFrame(command);
         const admin: Admin = creator.getAdmin();
 
         frame.setAnchor(0);

@@ -1,5 +1,5 @@
 import { createKey, createFakeNode } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { ActivateUserCommand } from "./activate-user";
 
 function createCommand({
@@ -8,7 +8,7 @@ function createCommand({
     anchor = 10,
 } = {}) {
     const command = new ActivateUserCommand(value);
-    const frame = new Frame(command);
+    const frame = new ExFrame(command);
 
     frame.setAnchor(anchor);
     frame.addAuthor(authorKey)(authorKey.sign(frame.getHash()));

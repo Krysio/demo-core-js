@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import getLazyPromise from "@/libs/lazyPromise";
 import { createUser, nodeCreator } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { ActivateUserCommand } from "./activate-user";
 import { BHTime, MS, UnixTime } from "@/modules/time";
 
@@ -27,7 +27,7 @@ describe('Activate a user account in the current cadency', () => {
         expect(creator.scope.node).not.toBe(null);
 
         const command = new ActivateUserCommand(0);
-        const frame = new Frame(command);
+        const frame = new ExFrame(command);
 
         frame.setAnchor(0);
         frame.addAuthor(userPublicKey)(userPublicKey.sign(frame.getHash()));
@@ -109,7 +109,7 @@ describe('Activate a user account in the next cadency', () => {
         expect(creator.scope.node).not.toBe(null);
 
         const command = new ActivateUserCommand(1);
-        const frame = new Frame(command);
+        const frame = new ExFrame(command);
 
         frame.setAnchor(0);
         frame.addAuthor(userPublicKey)(userPublicKey.sign(frame.getHash()));

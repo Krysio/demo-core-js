@@ -1,8 +1,7 @@
 import { createFakeNode, createKey } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
 import { VotingSimple } from "@/objects/voting";
-import { sha256 } from "@/libs/crypto/sha256";
 import { SetVotingCommand } from "./set-voting";
 import { BHTime } from "@/modules/time";
 
@@ -12,18 +11,11 @@ function createCommand({
 } = {}) {
     const voting = new VotingSimple(10 as BHTime, 1000 as BHTime, meta);
     const command = new SetVotingCommand(voting);
-    const frame = new Frame(command);
+    const frame = new ExFrame(command);
     const author = new Admin(authorKey);
 
-    frame.anchorIndex = 0;
-    frame.authors.push({
-        publicKey: authorKey,
-        signature: null
-    });
-
-    frame.authors[0].signature = authorKey.sign(
-        sha256(frame.toBuffer('hash'))
-    );
+    frame.setAnchor(0);
+    frame.addAuthor(authorKey)(authorKey.sign(frame.getHash()));
 
     return { frame, command, author };
 }

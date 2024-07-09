@@ -1,29 +1,34 @@
 import { createFakeNode, createKey } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { KeyPoolingCommand } from "./key-pooling";
 
 function createCommand() {
     const command = new KeyPoolingCommand();
-    const frame = new Frame(command);
-    const listOfAuthors = [];
-    const listOfKeys = [];
+    const frame = new ExFrame(command);
+    const listOfAuthorsKeys = [];
+    const listOfNewKeys = [];
 
-    frame.anchorIndex = 0;
+    frame.setAnchor(0);
 
     for (let i = 0; i < 4; i++) {
         const authorKey = createKey();
         const newKey = createKey();
 
-        listOfAuthors.push(authorKey);
-        listOfKeys.push(newKey);
-        command.addPublicKey(newKey);
-        frame.authors.push({
-            publicKey: authorKey,
-            signature: null
-        });
+        listOfAuthorsKeys.push(authorKey);
+        listOfNewKeys.push(newKey);
     }
 
-    return { frame, command, listOfAuthors, listOfKeys };
+    listOfNewKeys.forEach((newKey) => {
+        command.addPublicKey(newKey);
+    });
+    listOfAuthorsKeys.forEach((authorKey) => {
+        frame.addAuthor(authorKey);
+    });
+    listOfAuthorsKeys.forEach((authorKey) => {
+        frame.addSignature(authorKey, authorKey.sign(frame.getHash()));
+    });
+
+    return { frame, command, listOfAuthorsKeys, listOfNewKeys };
 }
 
 test('To & from buffer should result the same data', () => {

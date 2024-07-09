@@ -1,7 +1,6 @@
 import { createFakeNode, createKey, createUser } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
-import { sha256 } from "@/libs/crypto/sha256";
 import { SetUserCommand } from "./set-user";
 import { BHTime } from "@/modules/time";
 
@@ -10,18 +9,11 @@ function createCommand({
     authorKey = createKey(),
 } = {}) {
     const command = new SetUserCommand(user.user);
-    const frame = new Frame(command);
+    const frame = new ExFrame(command);
     const author = new Admin(authorKey);
 
-    frame.anchorIndex = 0;
-    frame.authors.push({
-        publicKey: authorKey,
-        signature: null
-    });
-
-    frame.authors[0].signature = authorKey.sign(
-        sha256(frame.toBuffer('hash'))
-    );
+    frame.setAnchor(0);
+    frame.addAuthor(authorKey)(authorKey.sign(frame.getHash()));
 
     return { frame, command, author, user };
 }

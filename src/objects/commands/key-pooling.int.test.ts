@@ -1,6 +1,6 @@
 import WBuffer from "@/libs/WBuffer";
 import { createKey, nodeCreator } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { KeyPoolingCommand } from "./key-pooling";
 import getLazyPromise from "@/libs/lazyPromise";
 import { MS, UnixTime } from "@/modules/time";
@@ -31,18 +31,18 @@ describe('Key-pooling of 4 voters', () => {
         expect(creator.scope.node).not.toBe(null);
 
         const command = new KeyPoolingCommand();
-        const frame = new Frame(command);
-
-        for (const addingKey of listOfAddedKeys) {
-            command.addPublicKey(addingKey);
-        }
+        const frame = new ExFrame(command);
 
         frame.setAnchor(0);
-
-        listOfVoterKeys
-            .map((voterKey) => ({voterKey, setSignature: frame.addAuthor(voterKey)}))
-            .map(({voterKey, setSignature}) => setSignature(voterKey.sign(frame.getHash())))
-        ;
+        listOfAddedKeys.forEach((publicKey) => {
+            command.addPublicKey(publicKey);
+        });
+        listOfVoterKeys.forEach((publicKey) => {
+            frame.addAuthor(publicKey);
+        });
+        listOfVoterKeys.forEach((publicKey) => {
+            frame.addSignature(publicKey, publicKey.sign(frame.getHash()));
+        });
 
         testedFrame = frame.toBuffer();
     });

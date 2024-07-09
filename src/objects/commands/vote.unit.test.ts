@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { createKey, createFakeNode } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
-import { sha256, EMPTY_HASH } from "@/libs/crypto/sha256";
+import { ExFrame } from "@/objects/frame";
+import { EMPTY_HASH } from "@/libs/crypto/sha256";
 import { VoteCommand } from "./vote";
 
 function createCommand({
@@ -10,17 +10,10 @@ function createCommand({
     value = WBuffer.hex`00`,
 } = {}) {
     const command = new VoteCommand(vottingHash, value);
-    const frame = new Frame(command);
+    const frame = new ExFrame(command);
 
-    frame.anchorHash = EMPTY_HASH;
-    frame.authors.push({
-        publicKey: authorKey,
-        signature: null
-    });
-
-    frame.authors[0].signature = authorKey.sign(
-        sha256(frame.toBuffer('hash'))
-    );
+    frame.setAnchor(EMPTY_HASH);
+    frame.addAuthor(authorKey)(authorKey.sign(frame.getHash()));
 
     return { frame, command, authorKey };
 }

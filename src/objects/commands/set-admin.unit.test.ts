@@ -1,7 +1,6 @@
 import { createKey, createAdmin, createFakeNode } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { Admin } from "@/objects/users";
-import { sha256 } from "@/libs/crypto/sha256";
 import { SetAdminCommand } from "./set-admin";
 
 function createCommand({
@@ -9,20 +8,14 @@ function createCommand({
     authorKey = createKey(),
 } = {}) {
     const command = new SetAdminCommand(admin.admin);
-    const frame = new Frame(command);
+    const frame = new ExFrame(command);
     const author = new Admin(authorKey);
 
     author.level = 5;
     command.admin.level = 10;
 
-    frame.authors.push({
-        publicKey: authorKey,
-        signature: null
-    });
-
-    frame.authors[0].signature = authorKey.sign(
-        sha256(frame.toBuffer('hash'))
-    );
+    frame.setAnchor(0);
+    frame.addAuthor(authorKey)(authorKey.sign(frame.getHash()));
 
     return { frame, command, author, admin };
 }

@@ -38,35 +38,6 @@ export class Frame {
         return doubleSha256(this.toBuffer('hash'));
     }
 
-    public setAnchor(anchor: number | WBuffer) {
-        if (anchor instanceof WBuffer) {
-            if (this.data.anchorTypeID !== TYPE_ANCHOR_HASH) {
-                throw new Error('Frame: set invalid anchor');
-            }
-
-            this.anchorHash = anchor;
-
-            return;
-        }
-
-        if (this.data.anchorTypeID !== TYPE_ANCHOR_INDEX) {
-            throw new Error('Frame: set invalid anchor');
-        }
-        
-        this.anchorIndex = anchor;
-    }
-
-    public addAuthor(key: Key) {
-        const item = {
-            publicKey: key,
-            signature: null as WBuffer
-        };
-
-        this.authors.push(item);
-
-        return (signature: WBuffer) => item.signature = signature;
-    }
-
     //#region buffer
 
     public static parse(buffer: WBuffer, source: 'block' | 'net' = 'net'): Frame {
@@ -231,7 +202,7 @@ export class Frame {
         return WBuffer.concat(this.authors.map((author) => author.signature));
     }
 
-    //#enregion buffer
+    //#endregion buffer
 
     public getKeyOfValue(): WBuffer {
         if (this.data.getKeyOfValue) {
@@ -243,5 +214,47 @@ export class Frame {
         }
 
         return this.toBufferAuthors();
+    }
+}
+
+export class ExFrame extends Frame {
+    public setAnchor(anchor: number | WBuffer) {
+        if (anchor instanceof WBuffer) {
+            if (this.data.anchorTypeID !== TYPE_ANCHOR_HASH) {
+                throw new Error('Frame: set invalid anchor');
+            }
+
+            this.anchorHash = anchor;
+
+            return;
+        }
+
+        if (this.data.anchorTypeID !== TYPE_ANCHOR_INDEX) {
+            throw new Error('Frame: set invalid anchor');
+        }
+        
+        this.anchorIndex = anchor;
+    }
+
+    public addAuthor(key: Key) {
+        const item = {
+            publicKey: key,
+            signature: null as WBuffer
+        };
+
+        this.authors.push(item);
+
+        return (signature: WBuffer) => item.signature = signature;
+    }
+
+    public addSignature(publicKey: Key, signature: WBuffer) {
+        for (const authorData of this.authors) {
+            if (authorData.publicKey.isEqual(publicKey)) {
+                authorData.signature = signature;
+                return;
+            }
+        }
+
+        throw new Error('User\'s mistake');
     }
 }

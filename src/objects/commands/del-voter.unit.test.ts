@@ -1,7 +1,7 @@
 import { createFakeNode, createKey } from "@/tests/helper";
-import { Frame } from "@/objects/frame";
+import { ExFrame } from "@/objects/frame";
 import { DelVoterCommand } from "./del-voter";
-import { Key } from "../key";
+import { Key } from "@/objects/key";
 
 function createCommand({
     reason = '',
@@ -11,26 +11,24 @@ function createCommand({
 } = {}) {
     const voterKey = createKey();
     const command = new DelVoterCommand(voterKey, reason, flags);
-    const frame = new Frame(command);
-    const listOfAuthorKey: Key[] = [];
+    const frame = new ExFrame(command);
+    const listOfAuthorsKey: Key[] = [];
 
     command.setNextCadency(nextCadency);
 
     for (let i = 0; i < countOfAuthors; i++) {
-        listOfAuthorKey.push(createKey());
+        listOfAuthorsKey.push(createKey());
     }
 
     frame.setAnchor(0);
-    listOfAuthorKey
-        .map((authorKey) => ({
-            authorKey,
-            setSignature: frame.addAuthor(authorKey)
-        }))
-        .forEach(({ authorKey, setSignature }) => {
-            setSignature(authorKey.sign(frame.getHash()));
-        });
+    listOfAuthorsKey.forEach((publicKey) => {
+        frame.addAuthor(publicKey);
+    });
+    listOfAuthorsKey.forEach((publicKey) => {
+        frame.addSignature(publicKey, publicKey.sign(frame.getHash()));
+    });
 
-    return { frame, command, listOfAuthorKey };
+    return { frame, command, listOfAuthorsKey };
 }
 
 test('To & from buffer should result the same data', () => {
