@@ -24,7 +24,7 @@ import { GenesisCommand } from "./objects/commands/genesis";
 function extractConfig(genesisBlock: Block) {
     for (const command of genesisBlock.listOfCommands) {
         if (command.typeID === COMMAND_TYPE_CONFIG) {
-            return (command.data as ConfigCommand).values;
+            return (command.data as ConfigCommand).data;
         }
     }
 }

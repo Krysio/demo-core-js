@@ -55,6 +55,7 @@ export function createFakeNode(override: DeepPartial<Node> = {}) {
             on: () => null as () => void,
             emit: () => null as () => void,
         },
+        config: {},
     }, override) as unknown as Node;
 };
 
