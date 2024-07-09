@@ -14,6 +14,15 @@ export function createConfig(refToNode: unknown) {
 
         timeLiveOfUserAccount: 0 as BHTime,
         timeBeforeAccountActivation: 0 as BHTime,
+
+        rules: {
+            admin: {
+                delVoter: {
+                    minSignatures: 2,
+                    maxLevel: 2
+                }
+            }
+        }
     };
 
     // set initial

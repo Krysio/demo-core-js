@@ -85,6 +85,25 @@ describe('Verifivation', () => {
         //#enregion Then
     });
 
+    test('When author\'s level is too hight: should throw error', async () => {
+        //#region Given
+        const { command, frame } = createCommand();
+        const fakeNode = createFakeNode({
+            storeAdmin: { get: () => Promise.resolve({ level: 3 }) },
+        });
+        //#enregion Given
+
+        //#region When
+        await expect((async () => {
+            await command.verify(fakeNode, frame);
+        })())
+        //#enregion When
+    
+        //#region Then
+        .rejects.toThrow('Cmd: Del Voter: One of author have no perrmisions');
+        //#enregion Then
+    });
+
     test('When voter is out of the store of the current cadency: should throw error', async () => {
         //#region Given
         const { command, frame } = createCommand();

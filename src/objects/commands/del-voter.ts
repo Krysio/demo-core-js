@@ -6,6 +6,7 @@ import { Frame } from "@/objects/frame";
 import { Key } from "../key";
 
 const errorMsgTooFewAuthors = 'Cmd: Del Voter: Too few authors';
+const errorMsgPermissions = 'Cmd: Del Voter: One of author have no perrmisions';
 const errorMsgUnknownAuthor = 'Cmd: Del Voter: Author does not exist';
 const errorMsgNotFound = 'Cmd: Del Voter: Voter not found';
 
@@ -80,9 +81,10 @@ export class DelVoterCommand implements ICommand {
     //#enregion buffer
 
     public async verify(node: Node, frame: Frame) {
+        const { minSignatures, maxLevel } = node.config.rules.admin.delVoter;
         const { length: countOfAuthors } = frame.authors;
 
-        if (countOfAuthors < 2) {
+        if (countOfAuthors < minSignatures) {
             throw new Error(errorMsgTooFewAuthors);
         }
 
@@ -92,6 +94,10 @@ export class DelVoterCommand implements ICommand {
             if (!author) {
                 throw new Error(errorMsgUnknownAuthor);
             }
+
+            if (author.level > maxLevel) {
+                throw new Error(errorMsgPermissions);
+            } 
         }
 
         const result = this.isNextCadency()

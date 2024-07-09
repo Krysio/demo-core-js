@@ -8,6 +8,7 @@ import { Block } from '@/objects/block';
 import { Frame } from '@/objects/frame';
 import { ConfigCommand } from '@/objects/commands/config';
 import { BHTime, MS, UnixTime } from '@/modules/time';
+import { createConfig } from '@/modules/config';
 
 export function createKey() {
     const [privateKey, publicKey] = getKeyPair();
@@ -55,7 +56,7 @@ export function createFakeNode(override: DeepPartial<Node> = {}) {
             on: () => null as () => void,
             emit: () => null as () => void,
         },
-        config: {},
+        config: createConfig({ config: {} }),
     }, override) as unknown as Node;
 };
 
