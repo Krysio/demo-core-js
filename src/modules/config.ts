@@ -18,6 +18,11 @@ export function createConfig(refToNode: unknown) {
 
         rules: {
             admin: {
+                delAdmin: {
+                    minSignaturesLowerLevel: 1,
+                    minSignaturesSameLevel: 3,
+                    maxLevel: 1
+                },
                 delUser: {
                     minSignatures: 2,
                     maxLevel: 2
