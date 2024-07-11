@@ -1,9 +1,9 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { Node } from "@/main";
-import { COMMAND_TYPE_DEL_USER } from "./types";
+import { COMMAND_TYPE_DEL_VOTER } from "./types";
 import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
 import { Frame } from "@/objects/frame";
-import { Key } from "../key";
+import { Key } from "@/objects/key";
 
 const errorMsgTooFewAuthors = 'Cmd: Del Voter: Too few authors';
 const errorMsgPermissions = 'Cmd: Del Voter: One of author have no perrmisions';
@@ -13,7 +13,7 @@ const errorMsgNotFound = 'Cmd: Del Voter: Voter not found';
 // 0: current cadency, 1: next cademcy
 const flagNextCadency = 1 << 0;
 
-@Type(COMMAND_TYPE_DEL_USER)
+@Type(COMMAND_TYPE_DEL_VOTER)
 export class DelVoterCommand implements ICommand {
     //#region cmd config
 
@@ -41,13 +41,6 @@ export class DelVoterCommand implements ICommand {
 
     public isNextCadency() {
         return !!(this.flags & flagNextCadency);
-    }
-    public setNextCadency(flag: boolean) {
-        this.flags = flag
-            ? this.flags | flagNextCadency
-            : this.flags & (0xff ^ flagNextCadency);
-
-        return this;
     }
 
     //#region buffer
@@ -111,5 +104,15 @@ export class DelVoterCommand implements ICommand {
 
     public async apply(node: Node) {
         await node.storeVoter.del(this.voterPublicKey);
+    }
+}
+
+export class ExDelVoterCommand extends DelVoterCommand {
+    public setNextCadency(flag: boolean) {
+        this.flags = flag
+            ? this.flags | flagNextCadency
+            : this.flags & (0xff ^ flagNextCadency);
+
+        return this;
     }
 }

@@ -1,16 +1,15 @@
 import { createFakeNode, createKey } from "@/tests/helper";
 import { ExFrame } from "@/objects/frame";
-import { DelVoterCommand } from "./del-voter";
+import { ExDelVoterCommand } from "./del-voter";
 import { Key } from "@/objects/key";
 
 function createCommand({
     reason = '',
-    flags = 0,
     countOfAuthors = 2,
     nextCadency = false
 } = {}) {
     const voterKey = createKey();
-    const command = new DelVoterCommand(voterKey, reason, flags);
+    const command = new ExDelVoterCommand(voterKey, reason);
     const frame = new ExFrame(command);
     const listOfAuthorsKey: Key[] = [];
 
@@ -38,7 +37,7 @@ test('To & from buffer should result the same data', () => {
 
     //#region When
     const bufferA = command.toBuffer();
-    const bufferB = new DelVoterCommand().parse(bufferA).toBuffer();
+    const bufferB = new ExDelVoterCommand().parse(bufferA).toBuffer();
     //#enregion When
 
     //#region Then
@@ -47,7 +46,7 @@ test('To & from buffer should result the same data', () => {
 });
 
 describe('Verifivation', () => {
-    test('When count of authors are less than 2: should throw error', async () => {
+    test('When count of authors are less than a rule value: should throw error', async () => {
         //#region Given
         const { command, frame } = createCommand({countOfAuthors: 1});
         const fakeNode = createFakeNode();
