@@ -38,6 +38,10 @@ export class Frame {
         return doubleSha256(this.toBuffer('hash'));
     }
 
+    public getAuthor() {
+        return this.authors[0];
+    }
+
     //#region buffer
 
     public static parse(buffer: WBuffer, source: 'block' | 'net' = 'net'): Frame {

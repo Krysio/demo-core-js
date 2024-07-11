@@ -25,7 +25,12 @@ export function createStoreUser() {
             }
 
             return null;
-        }
+        },
+        async del(publicKey: Key) {
+            const key = publicKey.toBuffer().hex();
+
+            return module.store.delete(key);
+        },
     };
 
     return module;
