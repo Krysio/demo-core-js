@@ -7,12 +7,12 @@
  - Apply system
    - [ ] move into the one prev block
  - CMD
-   - [ ] remove admin
-   - [ ] remove user
-   - [ ] remove voter
-   - [ ] activate user
+   - [x] remove admin
+   - [x] remove user
+   - [x] remove voter
+   - [x] activate user
    - Inprove
-     - [ ] key-pooling: next cadency option
+     - [x] key-pooling: next cadency option
  - TODO
    - [ ] Root can do nothing
    - [ ] To set/del an Admin with highest level you need 3 signatures from Admin with highest level, 2 signatures to del/set a user or voter

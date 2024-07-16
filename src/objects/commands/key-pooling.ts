@@ -5,6 +5,9 @@ import { Key } from "@/objects/key";
 import { Frame } from "../frame";
 import { Node } from "@/main";
 
+// 0: current cadency, 1: next cademcy
+const flagNextCadency = 1 << 0;
+
 @Type(COMMAND_TYPE_KEY_POOLING)
 export class KeyPoolingCommand implements ICommand {
     //#region cmd config
@@ -17,11 +20,17 @@ export class KeyPoolingCommand implements ICommand {
 
     //#enregion cmd config
 
+    public flags = 0;
     public listOfPublicKeys: Key[] = [];
+
+    public isNextCadency() {
+        return !!(this.flags & flagNextCadency);
+    }
 
     //#region buffer
 
     public parse(buffer: WBuffer) {
+        this.flags = buffer.readUleb128();
         this.listOfPublicKeys = [];
 
         const countOfPublicKeys = buffer.readUleb128();
@@ -35,6 +44,7 @@ export class KeyPoolingCommand implements ICommand {
 
     public toBuffer(): WBuffer {
         return WBuffer.concat([
+            WBuffer.uleb128(this.flags),
             WBuffer.uleb128(this.listOfPublicKeys.length),
             ...this.listOfPublicKeys.map((key) => key.toBuffer())
         ]);
@@ -43,8 +53,12 @@ export class KeyPoolingCommand implements ICommand {
     //#endregion buffer
 
     public async verify(node: Node, frame: Frame) {
+        const isNextCadency = this.isNextCadency();
+
         for (const { publicKey: authorPublicKey } of frame.authors) {
-            const author = await node.storeVoter.get(authorPublicKey);
+            const author = isNextCadency
+                ? await node.storeVoter.getNext(authorPublicKey)
+                : await node.storeVoter.get(authorPublicKey);
 
             if (author === null) {
                 throw new Error('Cmd: Key-pooling: One of authors does not exist');
@@ -52,8 +66,10 @@ export class KeyPoolingCommand implements ICommand {
         }
 
         for (const publicKey of this.listOfPublicKeys) {
-            const result = await node.storeVoter.get(publicKey);
-    
+            const result = isNextCadency
+                ? await node.storeVoter.getNext(publicKey)
+                : await node.storeVoter.get(publicKey);
+
             if (result !== null) {
                 throw new Error('Cmd: Key-pooling: Duplicate key');
             }
@@ -61,19 +77,44 @@ export class KeyPoolingCommand implements ICommand {
     }
 
     public async apply(node: Node, frame: Frame) {
+        const isNextCadency = this.isNextCadency();
+
         for (const { publicKey: authorPublicKey } of frame.authors) {
-            await node.storeVoter.del(authorPublicKey);
+            if (isNextCadency) {
+                await node.storeVoter.delNext(authorPublicKey);
+            } else {
+                await node.storeVoter.del(authorPublicKey);
+            }
         }
 
         const heightOfChain = node.chainTop.getHeight();
 
         for (const publicKey of this.listOfPublicKeys) {
-            await node.storeVoter.add(publicKey, heightOfChain);
+            if (isNextCadency) {
+                await node.storeVoter.addNext(publicKey, heightOfChain);
+            } else {
+                await node.storeVoter.add(publicKey, heightOfChain);
+            }
         }
     }
 }
 
 export class ExKeyPoolingCommand extends KeyPoolingCommand {
+    constructor({
+        flags = 0
+    } = {}) {
+        super();
+        if (flags) this.flags = flags;
+    }
+
+    public setNextCadency(flag: boolean) {
+        this.flags = flag
+            ? this.flags | flagNextCadency
+            : this.flags & (0xff ^ flagNextCadency);
+
+        return this;
+    }
+
     public addPublicKey(publicKey: Key) {
         if (this.listOfPublicKeys.filter((key) => 
             key.typeID == publicKey.typeID
