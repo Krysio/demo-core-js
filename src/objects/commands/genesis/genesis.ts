@@ -1,5 +1,5 @@
 import WBuffer from "@/libs/WBuffer";
-import { COMMAND_TYPE_GENESIS } from "./types";
+import { COMMAND_TYPE_GENESIS } from "../types";
 import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_PRIMARY } from "@/objects/commands";
 import { Key } from "@/objects/key";
 import { Admin } from "@/objects/users/admin";

@@ -1,9 +1,9 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { Node } from "@/main";
-import { COMMAND_TYPE_SET_VOTING } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
+import { COMMAND_TYPE_SET_VOTING } from "../types";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from "..";
 import { Frame } from "@/objects/frame";
-import { Voting } from "../voting";
+import { Voting } from "@/objects/voting";
 import { doubleSha256 } from "@/libs/crypto/sha256";
 
 const errorMsgUnknownAuthor = 'Cmd: Set Voting: Author does not exist';

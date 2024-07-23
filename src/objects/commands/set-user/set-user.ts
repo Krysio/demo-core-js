@@ -1,7 +1,7 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { Node } from "@/main";
-import { COMMAND_TYPE_SET_USER } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
+import { COMMAND_TYPE_SET_USER } from "../types";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from "..";
 import { Frame } from "@/objects/frame";
 import { User } from "@/objects/users";
 import { BHTime } from "@/modules/time";

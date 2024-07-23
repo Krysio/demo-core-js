@@ -2,8 +2,8 @@ import WBuffer from "@/libs/WBuffer";
 import getLazyPromise from "@/libs/lazyPromise";
 import { createUser, nodeCreator } from "@/tests/helper";
 import { ExFrame } from "@/objects/frame";
-import { ActivateUserCommand } from "./activate-user";
 import { BHTime, MS, UnixTime } from "@/modules/time";
+import { ActivateUserCommand } from "./activate-user";
 
 describe('Activate a user account in the current cadency', () => {
     //#region Given

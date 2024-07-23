@@ -1,9 +1,9 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { Node } from "@/main";
-import { COMMAND_TYPE_DEL_USER } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
+import { COMMAND_TYPE_DEL_USER } from "../types";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from "..";
 import { Frame } from "@/objects/frame";
-import { Key } from "../key";
+import { Key } from "@/objects/key";
 import { BHTime } from "@/modules/time";
 
 const errorMsgTooFewAuthors = 'Cmd: Del User: Too few authors';

@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { Node } from "@/main";
-import { COMMAND_TYPE_VOTE } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_HASH, TYPE_VALUE_PRIMARY } from ".";
+import { COMMAND_TYPE_VOTE } from "../types";
+import { Type, ICommand, TYPE_ANCHOR_HASH, TYPE_VALUE_PRIMARY } from "..";
 import { Frame } from "@/objects/frame";
 
 @Type(COMMAND_TYPE_VOTE)

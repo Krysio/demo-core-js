@@ -1,9 +1,9 @@
 import WBuffer from "@/libs/WBuffer";
+import getLazyPromise from "@/libs/lazyPromise";
 import { createKey, nodeCreator } from "@/tests/helper";
 import { SetAdminCommand } from "./set-admin";
-import { Admin } from "../users";
-import { ExFrame } from "../frame";
-import getLazyPromise from "@/libs/lazyPromise";
+import { Admin } from "@/objects/users";
+import { ExFrame } from "@/objects/frame";
 import { MS, UnixTime } from "@/modules/time";
 
 describe('Adding an admin by the root', () => {

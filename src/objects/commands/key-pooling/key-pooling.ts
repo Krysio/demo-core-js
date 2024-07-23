@@ -1,8 +1,8 @@
 import WBuffer from "@/libs/WBuffer";
-import { COMMAND_TYPE_KEY_POOLING } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
+import { COMMAND_TYPE_KEY_POOLING } from "../types";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from "..";
 import { Key } from "@/objects/key";
-import { Frame } from "../frame";
+import { Frame } from "@/objects/frame";
 import { Node } from "@/main";
 
 // 0: current cadency, 1: next cademcy

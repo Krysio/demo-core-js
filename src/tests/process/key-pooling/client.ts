@@ -1,7 +1,7 @@
 import WBuffer, { EMPTY_BUFFER } from "@/libs/WBuffer";
 import { getKeyPair } from "@/libs/crypto/ec/secp256k1";
 import { Command } from "@/objects/commands/command";
-import KeyPoolingCommand from "@/objects/commands/key-pooling";
+import KeyPoolingCommand from "@/objects/commands/key-pooling/key-pooling";
 import Key, { KeySecp256k1 } from "@/objects/key";
 import { mark, measure } from "@/performance";
 

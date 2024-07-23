@@ -1,6 +1,6 @@
 import WBuffer from "@/libs/WBuffer";
-import { COMMAND_TYPE_CONFIG } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_PRIMARY } from ".";
+import { COMMAND_TYPE_CONFIG } from "../types";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_PRIMARY } from "..";
 import { Config } from "@/modules/config";
 
 @Type(COMMAND_TYPE_CONFIG)

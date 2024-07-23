@@ -1,7 +1,7 @@
 import WBuffer from "@/libs/WBuffer";
 import { Node } from "@/main";
-import { COMMAND_TYPE_ACTIVATE_USER } from "./types";
-import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from ".";
+import { COMMAND_TYPE_ACTIVATE_USER } from "../types";
+import { Type, ICommand, TYPE_ANCHOR_INDEX, TYPE_VALUE_SECONDARY } from "..";
 import { Frame } from "@/objects/frame";
 
 // 0: current cadency, 1: next cademcy
