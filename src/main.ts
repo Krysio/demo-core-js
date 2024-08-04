@@ -1,4 +1,5 @@
 import WBuffer from "@/libs/WBuffer";
+import getLazyPromise from "@/libs/lazyPromise";
 import { EventEmitter, TypedEventEmitter } from "node:stream";
 import { createConfig } from "@/modules/config";
 import { createState } from "@/modules/state";
@@ -13,10 +14,10 @@ import { createCommandParser } from "@/modules/commandParser";
 import { createCommandVerifier } from "@/modules/commandVerifier";
 import { createCommandPool } from "@/modules/commandPool";
 import { createTime } from "@/modules/time";
+import { createFs } from "@/modules/fs";
+import { createServiceHttp } from "@/services/http";
 import { Block } from "@/objects/block";
 import { Frame } from "@/objects/frame";
-import { createFs } from "@/modules/fs";
-import getLazyPromise from "@/libs/lazyPromise";
 import { COMMAND_TYPE_CONFIG, COMMAND_TYPE_GENESIS } from "@/objects/commands/types";
 import { ConfigCommand } from "@/objects/commands/config";
 import { GenesisCommand } from "./objects/commands/genesis";
@@ -89,6 +90,8 @@ export function createNode(params: {
         commandParser: createCommandParser(protoScope),
         commandVerifier: createCommandVerifier(protoScope),
         commandPool: createCommandPool(protoScope),
+
+        serviceHttp: createServiceHttp(),
 
         start: () => scope.events.emit('start'),
         stop: () => scope.events.emit('stop'),

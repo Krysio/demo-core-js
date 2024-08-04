@@ -1,4 +1,4 @@
-import { isProduction } from '@/helper';
+import { isProductionEnv } from '@/helper';
 import WBuffer from '@/libs/WBuffer';
 import { Node } from '@/main';
 import * as fs from 'fs/promises';
@@ -12,7 +12,7 @@ export function createFs(refToNode: unknown) {
         mainDir: DIR_RUN,
         blockDir: DIR_RUN,
         async createRunFolder() {
-            if (!isProduction()) {
+            if (!isProductionEnv()) {
                 node.events.emit('init/fs');
                 return;
             }

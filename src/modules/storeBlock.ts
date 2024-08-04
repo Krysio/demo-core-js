@@ -1,7 +1,7 @@
 import { Block } from "@/objects/block";
 import { Node } from '@/main';
 import WBuffer from "@/libs/WBuffer";
-import { isProduction } from "@/helper";
+import { isProductionEnv } from "@/helper";
 
 export function createStoreBlock(refToNode: unknown) {
     const node = refToNode as Node;
@@ -9,7 +9,7 @@ export function createStoreBlock(refToNode: unknown) {
         mapIndexToHash: new Map<number, WBuffer[]>(),
         storeByindex: new Map<number, WBuffer[]>(),
         storeByHash: new Map<string, WBuffer>(),
-        isFsUsed: isProduction() ? true : false,
+        isFsUsed: isProductionEnv() ? true : false,
 
         getBlockName(block: Block) {
             const hexIndex = `0000000${block.index.toString(16)}`.substring(-8);

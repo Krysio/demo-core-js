@@ -1,7 +1,7 @@
 import { Block } from "@/objects/block";
 import { Node } from '@/main';
 import { Frame } from "@/objects/frame";
-import { isProduction } from "@/helper";
+import { isProductionEnv } from "@/helper";
 
 export function createBlockGenerator(refToNode: unknown) {
     let requestCreateBlockTimeoutId: ReturnType<typeof setTimeout> = null;
@@ -21,7 +21,7 @@ export function createBlockGenerator(refToNode: unknown) {
                 return;
             }
 
-            if (isProduction()) {
+            if (isProductionEnv()) {
                 const height = node.chainTop.getHeight();
                 const { genesisTime, timeBetweenBlocks } = node.config;
                 const timeToWaint = (genesisTime + timeBetweenBlocks * (height + 1)) - node.time.nowUnix();
