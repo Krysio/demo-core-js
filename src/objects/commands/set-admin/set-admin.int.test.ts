@@ -35,7 +35,7 @@ describe('Adding an admin by the root', () => {
         frame.setAnchor(0);
         frame.addAuthor(node.rootKey)(node.rootKey.sign(frame.getHash()));
 
-        testedFrame = frame.toBuffer();
+        testedFrame = frame.toBuffer('net');
     });
     //#endregion Given
 

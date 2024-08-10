@@ -38,7 +38,7 @@ describe('Adding an user by an admin', () => {
         frame.setAnchor(0);
         frame.addAuthor(admin.publicKey)(admin.publicKey.sign(frame.getHash()));
 
-        testedFrame = frame.toBuffer();
+        testedFrame = frame.toBuffer('net');
     });
     //#endregion Given
 

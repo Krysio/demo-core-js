@@ -22,7 +22,7 @@ export function createCommandParser(refToNode: unknown) {
         },
         parseCommand(buffer: WBuffer, frame = new Frame()) {
             try {
-                frame.parse(buffer);
+                frame.parse(buffer, 'net');
                 frame.isValid = true;
             } catch (error) {
                 frame.isValid = false;

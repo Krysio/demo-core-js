@@ -32,7 +32,7 @@ describe('Activate a user account in the current cadency', () => {
         frame.setAnchor(0);
         frame.addAuthor(userPublicKey)(userPublicKey.sign(frame.getHash()));
 
-        testedFrame = frame.toBuffer();
+        testedFrame = frame.toBuffer('net');
     });
     //#endregion Given
 
@@ -114,7 +114,7 @@ describe('Activate a user account in the next cadency', () => {
         frame.setAnchor(0);
         frame.addAuthor(userPublicKey)(userPublicKey.sign(frame.getHash()));
 
-        testedFrame = frame.toBuffer();
+        testedFrame = frame.toBuffer('net');
     });
     //#endregion Given
 

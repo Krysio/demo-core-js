@@ -89,7 +89,7 @@ export class Block {
 
         for (const frame of this.listOfCommands) {
             listOfHashes.push(
-                sha256(frame.toBuffer())
+                sha256(frame.toBuffer('net'))
             );
         }
 

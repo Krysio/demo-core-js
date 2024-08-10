@@ -44,7 +44,7 @@ describe('Key-pooling of 4 voters', () => {
             frame.addSignature(publicKey, publicKey.sign(frame.getHash()));
         });
 
-        testedFrame = frame.toBuffer();
+        testedFrame = frame.toBuffer('net');
     });
     //#endregion Given
 

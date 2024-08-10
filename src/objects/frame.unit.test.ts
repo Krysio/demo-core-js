@@ -48,8 +48,8 @@ test('To & from buffer should result the same data', () => {
     //#enregion Given
 
     //#region When
-    const bufferA = frame.toBuffer();
-    const bufferB = Frame.parse(bufferA).toBuffer();
+    const bufferA = frame.toBuffer('net');
+    const bufferB = Frame.parse(bufferA, 'net').toBuffer('net');
     //#enregion When
 
     //#region Then

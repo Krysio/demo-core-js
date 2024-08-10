@@ -9,7 +9,10 @@ export type CommandAuthorData = {
     signature: WBuffer;
 };
 
-export class Frame {
+/**
+ * Common implementation for each command
+ */
+export class Frame<CommandDataType extends ICommand = ICommand> {
     public version: number = 1;
     public typeID: number = null;
 
@@ -18,7 +21,7 @@ export class Frame {
 
     public authors: CommandAuthorData[] = [];
 
-    public data: ICommand = null;
+    public data: CommandDataType = null;
 
     public isValid: boolean = null;
     public invalidMsg: string = null;
@@ -27,9 +30,9 @@ export class Frame {
     public bufferForHash: WBuffer = null;
     public bufferForBlock: WBuffer = null;
 
-    constructor(data?: ICommand) {
+    constructor(data?: CommandDataType) {
         if (data) {
-            this.data = data as ICommand;
+            this.data = data;
             this.typeID = this.data.typeID;
         }
     }
@@ -44,11 +47,15 @@ export class Frame {
 
     //#region buffer
 
-    public static parse(buffer: WBuffer, source: 'block' | 'net' = 'net'): Frame {
+    /**
+     * Create instance by reading bytedata
+     * Code used: Frame.parse(bufferData);
+     */
+    public static parse(buffer: WBuffer, source: 'block' | 'net'): Frame {
         return new Frame().parse(buffer, source);
     }
 
-    public parse(buffer: WBuffer, source: 'block' | 'net' = 'net'): Frame {
+    public parse(buffer: WBuffer, source: 'block' | 'net'): Frame {
         this.buffer = buffer;
 
         const cursor = buffer.cursor;
@@ -78,11 +85,11 @@ export class Frame {
         }
     }
 
-    public parseType(source: 'block' | 'net' = 'net'): void {
+    public parseType(source: 'block' | 'net'): void {
         const { buffer } = this;
 
-        this.data = Command.type(buffer.readUleb128()) as ICommand;
-    
+        this.data = Command.type(buffer.readUleb128()) as CommandDataType;
+
         if (this.data === null) {
             throw new Error('Frame parse: Unsupportet command type');
         }
@@ -92,7 +99,7 @@ export class Frame {
         }
     }
 
-    public parseAnchor(source: 'block' | 'net' = 'net'): void {
+    public parseAnchor(source: 'block' | 'net'): void {
         if (source === 'block') {
             return;
         }
@@ -134,7 +141,7 @@ export class Frame {
     public parseData(): void {
         const { buffer } = this;
     
-        this.data = this.data.parse(buffer) as ICommand;
+        this.data = this.data.parse(buffer) as CommandDataType;
     }
 
     public parseSignatures(): void {
@@ -149,7 +156,7 @@ export class Frame {
         }
     }
 
-    public toBuffer(target: 'block' | 'hash' | 'net' = 'net') {
+    public toBuffer(target: 'block' | 'hash' | 'net') {
         return WBuffer.concat([
             WBuffer.uleb128(1),
             WBuffer.uleb128(this.data.typeID),
@@ -160,7 +167,7 @@ export class Frame {
         ]);
     }
 
-    public toBufferAnchor(target: 'block' | 'hash' | 'net' = 'net') {
+    public toBufferAnchor(target: 'block' | 'hash' | 'net') {
         if (target === 'block') {
             return EMPTY_BUFFER;
         }
@@ -190,7 +197,7 @@ export class Frame {
         ]);
     }
 
-    public toBufferSignatures(target: 'block' | 'hash' | 'net' = 'net') {
+    public toBufferSignatures(target: 'block' | 'hash' | 'net') {
         if (target === 'hash') {
             return EMPTY_BUFFER;
         }
@@ -208,6 +215,10 @@ export class Frame {
 
     //#endregion buffer
 
+    /**
+     * Used to generate a unique identifier, like a checksum,
+     * that allows the system to identify and track repeated values searched for by the system
+     */
     public getKeyOfValue(): WBuffer {
         if (this.data.getKeyOfValue) {
             return this.data.getKeyOfValue(this);
@@ -221,6 +232,10 @@ export class Frame {
     }
 }
 
+/**
+ * Extending the class {Frame} with useful functions 
+ * from a client or testing perspective
+ */
 export class ExFrame extends Frame {
     public setAnchor(anchor: number | WBuffer) {
         if (anchor instanceof WBuffer) {
